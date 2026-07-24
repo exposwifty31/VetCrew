@@ -1,0 +1,233 @@
+/* ============================================================================
+   VetCrew — COLOR
+   Layer 1 PRIMITIVE ramps · Layer 2 SEMANTIC aliases · Layer 3 THEME scopes
+   Direction: "Instrument Calm" — cool matte clinical neutrals, ONE petrol-teal
+   action color, deep desaturated "monitor dark".
+   Coherence rule (locked with the founder):
+     · teal  = interactive / action ONLY (never severity, never status)
+     · a healthy patient is QUIET — "normal" severity is neutral, uncolored
+     · severity lights up only when something is wrong: watch→elevated→critical
+     · session "running" is its own green, distinct from teal and from severity
+   Severity & status are NEVER encoded by hue alone — see semantic.css / the
+   components, which pair every level with a unique icon shape + label.
+   ========================================================================== */
+
+:root {
+  /* ---- PRIMITIVE · cool neutrals ---------------------------------------- */
+  --c-white: #ffffff;
+  --n-25:  #fbfcfc;
+  --n-50:  #f4f6f7;
+  --n-100: #eef1f2;
+  --n-150: #e5eaec;
+  --n-200: #d6dde0;
+  --n-300: #bcc7cb;
+  --n-400: #98a7ad;
+  --n-500: #6f8188;
+  --n-600: #556770;
+  --n-700: #3f515a;
+  --n-800: #2a3a42;
+  --n-850: #212f36;
+  --n-900: #18242b;
+  --n-950: #0f181d;
+  --n-975: #0a1216;
+
+  /* ---- PRIMITIVE · petrol-teal (ACTION) --------------------------------- */
+  --teal-100: #e2f3f5;
+  --teal-200: #b7e3e7;
+  --teal-300: #74c9d0;
+  --teal-400: #35a7b2;
+  --teal-500: #0e7c86;   /* action, light theme */
+  --teal-600: #0b646d;
+  --teal-700: #094f57;
+  --teal-800: #073b42;
+
+  /* ---- PRIMITIVE · severity · WATCH (blue) ------------------------------ */
+  --blue-700: #17568f;
+  --blue-600: #1f74c2;   /* AA text on white */
+  --blue-500: #3a8ed6;
+  --blue-400: #66aee6;
+  --blue-300: #93c8f0;
+  --blue-fill-l: #e6f0fa;
+  --blue-fill-d: #14324c;
+
+  /* ---- PRIMITIVE · severity · ELEVATED (amber) -------------------------- */
+  --amber-700: #7f4c0e;
+  --amber-600: #9a5c10;   /* AA text on white */
+  --amber-500: #c07d15;
+  --amber-400: #e0982a;
+  --amber-300: #f0b657;
+  --amber-fill-l: #fbeed4;
+  --amber-fill-d: #3d2b0f;
+
+  /* ---- PRIMITIVE · severity · CRITICAL (vermilion) ---------------------- */
+  --verm-700: #97290c;
+  --verm-600: #b3300f;   /* AA text on white */
+  --verm-500: #cc3d1e;
+  --verm-400: #e6543a;
+  --verm-300: #ff7d60;
+  --verm-fill-l: #fbe2db;
+  --verm-fill-d: #46160e;
+
+  /* ---- PRIMITIVE · status · RUNNING (green, NOT teal) ------------------- */
+  --green-600: #2b8757;
+  --green-500: #329a63;
+  --green-400: #46b57e;
+  --green-300: #6fce9c;
+  --green-fill-l: #e2f2ea;
+  --green-fill-d: #123526;
+
+  /* ---- PRIMITIVE · focus ring (violet-neutral, off the semantic hues) --- */
+  --focus-l: #2f6bd6;
+  --focus-d: #6fa8ff;
+}
+
+/* ============================================================================
+   Layer 2+3 · SEMANTIC aliases, defined per theme.
+   Light theme is the default on :root; dark overrides under [data-theme="dark"].
+   ========================================================================== */
+:root, :root[data-theme="light"] {
+  color-scheme: light;
+
+  /* surfaces (per-register roles) */
+  --bg-canvas:      var(--n-100);   /* app background */
+  --bg-sunken:      var(--n-150);   /* wells, tracks */
+  --surface:        var(--n-25);    /* cards */
+  --surface-raised: var(--c-white); /* popovers, key panels */
+  --surface-2:      var(--n-50);    /* nested / secondary panels */
+  --surface-inset:  var(--n-100);
+
+  /* text */
+  --text-strong: var(--n-900);
+  --text:        var(--n-800);
+  --text-muted:  var(--n-600);
+  --text-faint:  var(--n-500);
+  --text-on-accent: var(--c-white);
+
+  /* borders / hairlines */
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --hairline:      var(--n-150);
+
+  /* action (teal — interactive ONLY) */
+  --action:        var(--teal-500);
+  --action-hover:  var(--teal-600);
+  --action-press:  var(--teal-700);
+  --action-fill:   var(--teal-100);
+  --action-quiet:  var(--teal-700);   /* teal text on light surface */
+  --on-action:     var(--c-white);
+
+  /* focus */
+  --focus-ring: var(--focus-l);
+
+  /* SEVERITY — normal is intentionally NEUTRAL (quiet) */
+  --sev-normal-fg:   var(--n-600);
+  --sev-normal-fill: var(--n-100);
+  --sev-normal-edge: var(--n-300);
+
+  --sev-watch-fg:    var(--blue-600);
+  --sev-watch-fill:  var(--blue-fill-l);
+  --sev-watch-edge:  var(--blue-500);
+
+  --sev-elevated-fg:   var(--amber-600);
+  --sev-elevated-fill: var(--amber-fill-l);
+  --sev-elevated-edge: var(--amber-500);
+
+  --sev-critical-fg:   var(--verm-600);
+  --sev-critical-fill: var(--verm-fill-l);
+  --sev-critical-edge: var(--verm-500);
+
+  /* STATUS — session + connection channels (independent of severity) */
+  --status-running-fg:   var(--green-600);
+  --status-running-fill: var(--green-fill-l);
+  --status-running-dot:  var(--green-500);
+
+  --status-paused-fg:    var(--n-700);
+  --status-paused-fill:  var(--n-150);
+  --status-paused-dot:   var(--n-500);
+
+  --status-offline-fg:   var(--n-700);
+  --status-offline-fill: var(--n-150);
+  --status-offline-dot:  var(--n-500);
+
+  /* reconnecting = data may be stale. Amber caution, but the STRIPED hatch
+     pattern (defined in components) is the true signal, never hue alone. */
+  --status-reconnecting-fg:   var(--amber-700);
+  --status-reconnecting-fill: var(--amber-fill-l);
+  --status-reconnecting-dot:  var(--amber-500);
+  --stale-hatch: repeating-linear-gradient(-45deg, transparent 0 9px, color-mix(in srgb, var(--amber-500) 20%, transparent) 9px 18px);
+  --stale-veil:  color-mix(in srgb, var(--surface) 55%, transparent);
+
+  /* tenant accent — neutral placeholder; a pilot hospital can set ONE color
+     here later WITHOUT touching action/severity/status semantics. */
+  --tenant-accent: var(--teal-600);
+
+  --shadow-color: 210 24% 24%;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-canvas:      var(--n-975);
+  --bg-sunken:      #070d10;
+  --surface:        var(--n-900);
+  --surface-raised: var(--n-850);
+  --surface-2:      var(--n-850);
+  --surface-inset:  var(--n-950);
+
+  --text-strong: #eef3f5;
+  --text:        #dbe6ea;
+  --text-muted:  #93a5ad;
+  --text-faint:  #6f8790;
+  --text-on-accent: #05171a;
+
+  --border:        var(--n-800);
+  --border-strong: var(--n-700);
+  --hairline:      #1b2930;
+
+  --action:        var(--teal-400);
+  --action-hover:  var(--teal-300);
+  --action-press:  var(--teal-200);
+  --action-fill:   color-mix(in srgb, var(--teal-500) 22%, transparent);
+  --action-quiet:  var(--teal-300);
+  --on-action:     #05171a;
+
+  --focus-ring: var(--focus-d);
+
+  --sev-normal-fg:   var(--n-400);
+  --sev-normal-fill: color-mix(in srgb, var(--n-500) 14%, transparent);
+  --sev-normal-edge: var(--n-600);
+
+  --sev-watch-fg:    var(--blue-300);
+  --sev-watch-fill:  var(--blue-fill-d);
+  --sev-watch-edge:  var(--blue-500);
+
+  --sev-elevated-fg:   var(--amber-300);
+  --sev-elevated-fill: var(--amber-fill-d);
+  --sev-elevated-edge: var(--amber-400);
+
+  --sev-critical-fg:   var(--verm-300);
+  --sev-critical-fill: var(--verm-fill-d);
+  --sev-critical-edge: var(--verm-400);
+
+  --status-running-fg:   var(--green-300);
+  --status-running-fill: var(--green-fill-d);
+  --status-running-dot:  var(--green-400);
+
+  --status-paused-fg:    var(--n-300);
+  --status-paused-fill:  color-mix(in srgb, var(--n-500) 16%, transparent);
+  --status-paused-dot:   var(--n-400);
+
+  --status-offline-fg:   var(--n-300);
+  --status-offline-fill: color-mix(in srgb, var(--n-500) 16%, transparent);
+  --status-offline-dot:  var(--n-400);
+
+  --status-reconnecting-fg:   var(--amber-300);
+  --status-reconnecting-fill: var(--amber-fill-d);
+  --status-reconnecting-dot:  var(--amber-400);
+  --stale-hatch: repeating-linear-gradient(-45deg, transparent 0 9px, color-mix(in srgb, var(--amber-400) 26%, transparent) 9px 18px);
+  --stale-veil:  color-mix(in srgb, var(--surface) 55%, transparent);
+
+  --tenant-accent: var(--teal-300);
+
+  --shadow-color: 200 60% 3%;
+}

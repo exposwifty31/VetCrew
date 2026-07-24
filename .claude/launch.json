@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--dir", "spikes/webxr", "dev"],
       "port": 5173
+    },
+    {
+      "name": "deck",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8800", "--directory", "deck"],
+      "port": 8800
     }
   ]
 }

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>VetCrew · הר הכשירות</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  html,body{margin:0;background:#070b12;font-family:var(--font-ui);}
+  .slide{position:relative;width:1280px;height:720px;background:
+      radial-gradient(1100px 620px at 22% 78%, #0d1622 0%, #070b12 62%);
+    overflow:hidden;color:var(--inst-text);}
+  .hd{position:absolute;top:52px;inset-inline-start:64px;inset-inline-end:64px;}
+  .hd h1{margin:0;font-size:44px;font-weight:700;letter-spacing:-0.015em;color:#eaf2f7;}
+  .hd p{margin:10px 0 0;font-size:19px;color:#8fa3b2;font-weight:400;}
+
+  svg{position:absolute;inset:0;width:1280px;height:720px;}
+
+  /* tier rows (right side — RTL reads here first).
+     NOTE: in RTL, inset-inline-START maps to the RIGHT edge. */
+  .rows{position:absolute;inset-inline-start:64px;top:172px;width:516px;display:flex;flex-direction:column;gap:0;}
+  .row{height:116px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .row .k{display:flex;align-items:center;gap:10px;}
+  .row .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;}
+  .row h2{margin:0;font-size:22px;font-weight:700;color:#e6eef4;letter-spacing:-0.01em;}
+  .row .sub{font-size:15px;color:#8ea2b1;line-height:1.45;padding-inline-start:21px;}
+  .row .eng{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;color:#5f7382;padding-inline-start:21px;}
+  .badge{display:inline-flex;align-items:center;gap:6px;margin-inline-start:10px;padding:3px 10px;border-radius:999px;
+    background:rgba(0,128,128,.18);border:1px solid #12808f;color:#4fd0d8;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;}
+
+  .foot{position:absolute;bottom:40px;inset-inline-start:64px;inset-inline-end:64px;display:flex;justify-content:space-between;
+    align-items:flex-end;font-size:13.5px;color:#65798a;}
+  .foot .eng2{font-family:var(--font-mono);font-size:12px;letter-spacing:.05em;color:#55697a;}
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="hd">
+    <h1>הר הכשירות</h1>
+    <p>מהמטלה היומיומית ועד החייאה מרובת-מטופלים</p>
+  </div>
+
+  <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="#1d2b3a"/>
+        <stop offset="55%" stop-color="#141d28"/>
+        <stop offset="100%" stop-color="#0b111a"/>
+      </linearGradient>
+      <linearGradient id="rockFar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="#151f2b"/>
+        <stop offset="100%" stop-color="#0a0f17"/>
+      </linearGradient>
+      <linearGradient id="climb" x1="1" y1="1" x2="0" y2="0">
+        <stop offset="0%"   stop-color="#0e7c86"/>
+        <stop offset="55%"  stop-color="#35a7b2"/>
+        <stop offset="100%" stop-color="#e0982a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- distant ridge -->
+    <path d="M20 648 L210 372 L318 470 L452 246 L604 648 Z" fill="url(#rockFar)" opacity=".75"/>
+    <!-- main massif -->
+    <path d="M40 652 L200 402 L268 470 L360 150 L470 350 L536 300 L668 652 Z" fill="url(#rock)"/>
+    <!-- snow cap -->
+    <path d="M360 150 L404 230 L378 222 L356 252 L336 214 L316 226 Z" fill="#dfeaf2" opacity=".9"/>
+    <!-- ground line -->
+    <path d="M0 652 H700" stroke="#16202c" stroke-width="2" fill="none"/>
+
+    <!-- the climb: base → summit, following the right slope.
+         Station y-values are aligned to the tier-row centres (230/346/462/578). -->
+    <path d="M623 578 L551 462 L480 346 L362 156"
+          fill="none" stroke="url(#climb)" stroke-width="3.5" stroke-linecap="round"
+          stroke-dasharray="1 12" stroke-linejoin="round" opacity=".95"/>
+
+    <!-- leader lines out to the tier rows (summit's is angled up to its row) -->
+    <g stroke="#2a3947" stroke-width="1.4" stroke-dasharray="3 6" fill="none">
+      <path d="M623 578 H700"/>
+      <path d="M551 462 H700"/>
+      <path d="M480 346 H700"/>
+      <path d="M372 162 L700 228"/>
+    </g>
+
+    <!-- station markers (bottom → top) -->
+    <circle cx="623" cy="578" r="11" fill="#0b1620" stroke="#12808f" stroke-width="3.5"/>
+    <circle cx="623" cy="578" r="4.5" fill="#4fd0d8"/>
+    <circle cx="551" cy="462" r="8"  fill="#0b1620" stroke="#33505f" stroke-width="2.5"/>
+    <circle cx="480" cy="346" r="8"  fill="#0b1620" stroke="#3c5260" stroke-width="2.5"/>
+    <circle cx="362" cy="156" r="10" fill="#0b1620" stroke="#e0982a" stroke-width="3"/>
+    <circle cx="362" cy="156" r="3.6" fill="#f0b657"/>
+  </svg>
+
+  <div class="rows">
+    <div class="row">
+      <div class="k"><span class="dot" style="background:#e0982a"></span><h2>הפסגה — החייאה מרובת-מטופלים</h2></div>
+      <div class="sub">צוות מלא בהובלת אחראי המשמרת · עומס מרבי</div>
+      <div class="eng">ENGINE BETA · זמן אמת</div>
+    </div>
+    <div class="row">
+      <div class="k"><span class="dot" style="background:#5b7382"></span><h2>צוות</h2></div>
+      <div class="sub">תקשורת, סנכרון וחלוקת תפקידים בין מטפלים</div>
+    </div>
+    <div class="row">
+      <div class="k"><span class="dot" style="background:#5b7382"></span><h2>עצמאות</h2></div>
+      <div class="sub">תקלות ציוד, חישובים ידניים וזיהוי מגמות תחת עומס</div>
+    </div>
+    <div class="row">
+      <div class="k"><span class="dot" style="background:#4fd0d8"></span><h2>רגל הבסיס — טכנאי יחיד</h2>
+        <span class="badge">מתחילים כאן</span></div>
+      <div class="sub">מטלות משמרת אמיתיות: מנה · נתיב מתן · חישוב עירוי · זיהוי החמרה והסלמה</div>
+      <div class="eng">ENGINE ALPHA · השעון קפוא בין פעולות</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="eng2">VETCREW</span>
+    <span>גובה = כשירות ביחס לוותק בהכשרה · v1 בונה את רגל הבסיס והתיעוד שהיא מייצרת</span>
+  </div>
+
+</div>
+</body>
+</html>

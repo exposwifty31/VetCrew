@@ -1,0 +1,77 @@
+/* ============================================================================
+   VetCrew — INSTRUMENT layer ("Dark Instrument" direction)
+   The three live simulation surfaces (monitor, trainee station, instructor
+   console) are DARK-ONLY equipment. This layer is additive: the earlier
+   semantic tokens still power the AAR/debrief review surface (light-capable).
+
+   TWO INDEPENDENT COLOR LAYERS — never merged:
+     Layer A · parameter CHANNEL color (Mindray convention) — identity, not
+       severity. A channel keeps its hue at 80 and at 190.
+     Layer B · ALARM state — rides on top, signals severity, and is ALWAYS
+       redundantly coded (flash/motion + frame + LED strip + icon/text +
+       position + audio) so hue is never the only signal (WCAG/CVD safe).
+   ========================================================================== */
+:root {
+  /* ---- Layer A · channel identity (uMEC12 Vet convention, neon on black) - */
+  --ch-hr:    #00ff66;   /* ECG / heart rate — glowing green */
+  --ch-spo2:  #00ccff;   /* SpO₂ / pleth — cyan */
+  --ch-rr:    #ffcc00;   /* respiration — yellow */
+  --ch-etco2: #ffcc00;   /* capnography — yellow (same as resp on the real unit) */
+  --ch-art:   #ff3b30;   /* arterial (invasive) pressure — red */
+  --ch-nibp:  #ffffff;   /* NIBP (SunTech) — crystal white */
+  --ch-temp:  #ffffff;   /* temperature — white */
+
+  /* faint per-channel wash for labels/recesses */
+  --ch-hr-dim:    #0b3d24;
+  --ch-spo2-dim:  #08323d;
+  --ch-rr-dim:    #3d3208;
+  --ch-etco2-dim: #3d3208;
+  --ch-art-dim:   #3d1210;
+
+  /* ---- Layer B · alarm state ------------------------------------------- */
+  --alarm-critical: #ff2a2a;
+  --alarm-critical-glow: #ff5a4a;
+  --alarm-caution:  #ffd000;
+  --alarm-caution-glow: #ffe15a;
+
+  /* ---- instrument chrome / surfaces (dark only) ------------------------ */
+  --inst-room:    #05080e;   /* the dark room behind the device */
+  --inst-bg:      #0a0f18;   /* device base */
+  --inst-bezel-1: #161c26;   /* bezel highlight */
+  --inst-bezel-2: #0c111a;   /* bezel shadow */
+  --inst-bezel-edge: #05070c;
+  --inst-screen:  #060a12;   /* recessed screen glass */
+  --inst-screen-2:#080d16;
+  --inst-grid:    rgba(120,140,160,0.08); /* faint monitor gridlines */
+  --inst-rail:    #0e141e;   /* recessed control rail */
+  --inst-hair:    rgba(150,170,190,0.10); /* barely-there separation */
+  --inst-hair-2:  rgba(150,170,190,0.05);
+
+  --inst-text:    #cfe0ea;   /* device label text */
+  --inst-text-dim:#6b7c89;   /* quiet labels */
+  --inst-text-faint:#465562;
+
+  /* one restrained ACTION accent — desaturated petrol, deliberately matte so
+     it never reads as a (neon) vital channel or an alarm colour. */
+  --inst-action:  #008080;
+  --inst-action-hover: #22a3a3;
+  --inst-action-fill: rgba(0,128,128,0.16);
+  --inst-on-action: #04141a;
+  --inst-focus: #7fd6df;
+
+  /* recessed screen inner shadow + bezel elevation */
+  --inst-recess: inset 0 2px 6px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(0,0,0,0.6); /* @kind shadow */
+  --inst-raise:  0 1px 0 var(--inst-bezel-1), 0 -1px 0 var(--inst-bezel-edge), 0 10px 30px rgba(0,0,0,0.55);
+}
+
+/* alarm chrome animations — flash IS part of the signal, not decoration */
+@keyframes vc-alarm-crit { 0%,100%{ opacity:1 } 50%{ opacity:0.28 } }
+@keyframes vc-alarm-caut { 0%,100%{ opacity:0.95 } 50%{ opacity:0.45 } }
+@keyframes vc-led-crit  { 0%,100%{ background:var(--alarm-critical); box-shadow:0 0 18px 2px var(--alarm-critical-glow) } 50%{ background:#3a0a0a; box-shadow:none } }
+@keyframes vc-led-caut  { 0%,100%{ background:var(--alarm-caution); box-shadow:0 0 16px 2px var(--alarm-caution-glow) } 50%{ background:#3a3105; box-shadow:none } }
+@keyframes vc-num-crit  { 0%,100%{ opacity:1 } 50%{ opacity:0.35 } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* keep the SIGNAL, drop the strobe: alarms hold steady-on instead of flashing */
+  [data-alarm] .vc-mon__led, [data-alarm] .vc-mon__frame { animation: none !important; }
+}
