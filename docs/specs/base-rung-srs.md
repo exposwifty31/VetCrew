@@ -9,7 +9,7 @@
 
 ## 1. What Scenario #1 is
 
-A single veterinary technician runs a slice of a shift on **one stable, hospitalised patient** (a routine case — e.g. a dog admitted for observation), completing a sequence of everyday technical tasks presented through a SmartFlow-style task panel, beside a live patient monitor. The engine is **deliberate/stepped (Engine Alpha)** — the clock does not punish; the trainee works task by task. The session produces a **replayable, role-attributed, scored record** an instructor rates and a department manager can review as onboarding evidence.
+A single veterinary technician runs a slice of a shift on **one stable, hospitalised patient**, completing a sequence of everyday technical tasks presented through a SmartFlow-style task panel, beside a live patient monitor. **Species is a scenario parameter (dog or cat), and both are authored as interchangeable instances** with species-specific reference ranges (OD-2) — the technician must know both equally, so the scenario varies species across runs and the monitor's ranges follow the patient. The task *structure* is identical for either species. The engine is **deliberate/stepped (Engine Alpha)** — the clock does not punish; the trainee works task by task. The session produces a **replayable, role-attributed, scored record** an instructor rates and a department manager can review as onboarding evidence.
 
 It exercises the new-technician competencies A–F from the floor test (§3). It does **not** exercise G (CPR/resuscitation) — that is summit content.
 
@@ -20,7 +20,7 @@ It exercises the new-technician competencies A–F from the floor test (§3). It
 | Actor | Role in Scenario #1 |
 |---|---|
 | **Technician (trainee)** | The single role station. Reads the monitor, performs tasks, enters values, selects routes/tubes, escalates. Sees a genuinely partial view (only what a technician on shift would know). |
-| **Instructor** | Runs the session; can pause; injects the one abnormality (§4 task 7); rates the applicable ANTS domains after; reviews the AAR. Formative only — no hiring verdict (`CLAUDE.md §2.2`). |
+| **Instructor** | Runs the session; can pause; injects the one abnormality (§4 task 7). Rates the applicable ANTS domains **post-hoc from the AAR replay** (OD-4), not live — which also makes the recorded session re-scorable by additional raters later (`CLAUDE.md §6.3`). Formative only — no hiring verdict (`CLAUDE.md §2.2`). |
 | **Engine (authoritative)** | Deterministic reducer over the event log. Presents tasks, records every action, computes technical pass/fail from events, never computes the trainee's answers for them. |
 
 ## 3. Competency coverage (floor test A–F → tasks)
@@ -51,7 +51,7 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 
 ### T2 — NIBP measurement · code `timed` · competency B
 - **Interaction:** trainee triggers NIBP (SunTech surface); reads SYS/DIA/**MAP**.
-- **Window:** presented with a scenario-phase window. In the deliberate engine the window is **scenario-time, not wall-clock** (see Open Decision OD-1). Scored on being taken in the correct phase and MAP read/entered correctly.
+- **Window:** the window is **scenario-phase, turn-based — not wall-clock** (OD-1, decided). The task must be done in the correct scenario phase; the trainee is never under real-clock pressure in the base rung. Scored on being taken in the correct phase and MAP read/entered correctly.
 - **Scored:** in-window (pass/fail) + value correctness.
 
 ### T3 — Medication administration · code `report` · competency F′ + route
@@ -78,7 +78,7 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 - **Scored:** correct device choice + correct drops/min.
 
 ### T7 — Recognise & escalate · code `approval` · decision/critical-eye
-- **Setup:** the instructor injects one abnormality (e.g. a borderline-low value on the monitor) during the sequence.
+- **Setup:** the instructor injects one abnormality during the sequence: **low HR + high BP** (bradycardia with hypertension) — a "catchy," recognisable pattern a technician should notice and escalate rather than treat (OD-3, decided). *Clinical-review-gated (§2.5): the specific HR/BP values, the admitting context that makes this pattern appear, and confirmation that it is escalate-appropriate (not a technician-treatable event) must be reviewed and stamped before it scores anyone. The pattern is clinically coherent — e.g. it is associated with raised intracranial pressure, and with alpha-2 agonist sedation (dexmedetomidine/medetomidine), both common — but the reviewer confirms the authored specifics, not this note.*
 - **Interaction:** the correct action is to **notice it and escalate** — the task is `approval`-locked; the only permitted action is **call doctor / senior**. Proceeding as if normal, or missing it, is the failure.
 - **Scored:** noticed (yes/no, and time-to-notice as a directional metric), escalated correctly (yes/no). This is the seed of the QA-trap / critical-eye competency; the full "refuse a wrong order someone else logged" variant is **Tier-4, deferred (§9)**.
 
@@ -95,7 +95,7 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 Two axes stored separately (`CLAUDE.md §4`):
 
 - **Technical (checklist):** per-task pass/fail from the event log, deterministic, computed by the engine. Aggregated to an overall technical result. Fully auto-scored and traceable.
-- **Non-technical (ANTS), formative only:** at the base rung, only the **solo-observable** domains apply — **Situation Awareness** (did they notice T7's abnormality, catch a format slip) and **Decision-Making** (escalate vs. proceed; route/tube choices). **Team-working and Communication are N/A in a solo scenario** and are not scored here — they belong at the summit (`CLAUDE.md §2.4`). The instructor rates the two applicable domains 1–5, each tied to specific events. **Per-domain scores are directional; no consequential verdict** — a single live rater is formative feedback only (`CLAUDE.md §2.2`, needs 3 raters for anything consequential).
+- **Non-technical (ANTS), formative only:** at the base rung, only the **solo-observable** domains apply — **Situation Awareness** (did they notice T7's abnormality, catch a format slip) and **Decision-Making** (escalate vs. proceed; route/tube choices). **Team-working and Communication are N/A in a solo scenario** and are not scored here — they belong at the summit (`CLAUDE.md §2.4`). The instructor rates the two applicable domains 1–5 **post-hoc from the AAR replay** (OD-4), each tied to specific events. **Per-domain scores are directional; no consequential verdict** — a single rater is formative feedback only (`CLAUDE.md §2.2`, needs 3 raters for anything consequential); scoring from the recording keeps the door open to that later multi-rater pass.
 
 **Withhold-the-verdict:** Scenario #1 produces evidence + formative feedback, never a "ready / not ready" output (`CLAUDE.md §6.2`).
 
@@ -126,12 +126,14 @@ Two axes stored separately (`CLAUDE.md §4`):
 - **Hiring / readiness verdict, readiness bands, drift detection** → gated on N + 3 raters (`CLAUDE.md §6.2–6.3`).
 - **Voice, LLM dialogue, 3D/VR** → out of v1 (`CLAUDE.md §7`).
 
-## 10. Open decisions (need a call before/at build)
+## 10. Open decisions — RESOLVED (2026-07-24)
 
-- **OD-1 — Does the base rung run on a clock the trainee feels, or is it fully turn-based?** The split-engine model says Tiers 1–2 are deliberate/clock-frozen (Engine Alpha). But T2 is a `timed` task. Resolve: is the "window" pure scenario-phase (turn-based, recommended for the MVP) or a gentle real clock? Recommendation: **scenario-phase, turn-based** for Scenario #1 — keeps it Engine-Alpha-pure and defers real-time to the summit.
-- **OD-2 — First patient: dog or cat, and what admitting reason?** Affects every reference range and the T7 abnormality. Needs the clinical reviewer.
-- **OD-3 — Which single abnormality does T7 inject?** Must be one a technician is expected to catch and escalate, not treat. Clinical-reviewer call.
-- **OD-4 — Instructor rating timing:** live during the run, or post-hoc from the AAR replay? (Recording enables later multi-rater review per §6.3.)
+- **OD-1 — Clock model → DECIDED: scenario-phase, turn-based.** The base rung is Engine-Alpha-pure; the trainee is never under real-clock pressure. T2's `timed` window is a scenario phase, not wall-clock. Real-time is deferred to the summit.
+- **OD-2 — Species → DECIDED: parameter, both authored.** Dog and cat are interchangeable instances with species-specific ranges; the scenario varies species across runs so the technician must know both equally. Task structure is species-independent. *(Reference ranges per species remain clinical-review-gated, §2.5.)*
+- **OD-3 — T7 abnormality → DECIDED: low HR + high BP** (bradycardia + hypertension) — a recognisable pattern to catch and escalate. **Clinical-review-gated:** exact values, admitting context, and escalate-appropriateness confirmed by the reviewer before it scores anyone (see T7).
+- **OD-4 — Rating timing → DECIDED: post-hoc from the AAR replay** (not live). Keeps the recorded session re-scorable by additional raters later (`CLAUDE.md §6.3`).
+
+*No open decisions remain for Scenario #1. Two decided items (OD-2 ranges, OD-3 values) still require clinical sign-off before scoring — that is a §2.5 content gate, not an open design decision.*
 
 ## 11. Acceptance criteria (definition of done for Scenario #1)
 
