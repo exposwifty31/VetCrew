@@ -113,9 +113,18 @@ Two axes stored separately (`CLAUDE.md §4`):
 - **Determinism (non-negotiable):** pure reducer `(state, event) => state`; no `Date.now`/`Math.random`/I/O inside it; time via tick events; randomness via seeded PRNG stored per session. A **determinism golden test** (same seed + events → byte-identical state) is a hard gate, part of build step 2 — not a later addition (`CLAUDE.md §8`).
 - **Schema requirements present from the first scored session:**
   - append-only **event log** (source of truth), tenant-scoped.
-  - **`clinically_reviewed`** (bool) + **reviewer** + **scenario_version** on the scenario — structurally impossible to score on unreviewed content (audit F2).
+  - **Clinical sign-off record** — a scenario cannot score a real person unless every clinical claim it contains is signed off (audit F2). Recorded **per clinical claim** (each reference range, drug concentration, route contraindication, and the T7 abnormality), not just per scenario:
+    - `reviewed` (bool) · `reviewed_against` (the **named published standard/source** the claim was checked against — e.g. AVMA CVTEA skills list, RECOVER guideline, the drug's label concentration) · `reviewer_role` + `reviewer_credential` (a **name** is attached at review time — not required by this spec) · `review_date`.
+    - **`review_tier`**: `formative` (base rung — single credentialed reviewer checking against a standard is sufficient) or `consequential` (any hiring/readiness output — requires a DVM/DACVECC co-signer OR the recorded multi-rater path per §6.2–6.3).
+    - scenario-level **`clinically_reviewed`** is true only when *all* its claims are signed at the tier the scenario is used at; **`scenario_version`** stamped on every score.
   - **time-in-training** captured on the session — the axis the whole progression is measured against; cannot be backfilled (`CLAUDE.md §4`).
   - per-event: role attribution, timestamp/seq, task id, action, and the values entered (for expected-vs-actual).
+
+### Clinical review & sign-off (method + risks)
+
+- **Check against a standard, not opinion.** Every clinical claim is signed off as *"confirmed against [named source]"* — CVTEA skills list, RECOVER, the drug label — recorded in `reviewed_against`, **not** "in the reviewer's judgment." Verifying against a published standard is more defensible under challenge than a lone opinion, and it holds up at technician-reviewer level (the reviewer is usually *verifying* against a citable source, not inventing clinical truth).
+- **Two tiers of sign-off (schema `review_tier`).** The base rung is **formative** — within-person, no verdict — so a single credentialed reviewer checking against a standard is sufficient, and Scenario #1 may proceed on that. Any **consequential** output (a hiring/readiness verdict) needs a higher bar: a **DVM / DACVECC co-signer**, or the recorded multi-rater path (§6.2–6.3). A formative-tier sign-off must never drive a consequential decision.
+- **Operational risk — single reviewer.** If clinical review depends on one person, the sign-off gate has no fallback if they become unavailable — a live risk in a segment running ~79% turnover (the product's own premise). Not a build blocker; recorded here, and a **second qualified reviewer is a precondition for the hiring gate**, not the base rung.
 
 ## 9. Non-goals (explicitly deferred — do NOT build into Scenario #1)
 
