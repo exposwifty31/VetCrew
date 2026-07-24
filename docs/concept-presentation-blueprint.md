@@ -24,19 +24,21 @@ Each slide: **purpose · Hebrew headline (draft) · the self-contained message �
 
 ### 1 — Title / hook
 - **Purpose:** name it and set the register in one breath.
-- **Headline (he):** «וֶטקְרוּ — הכשרת צוות למחלקות חירום וטרינריות» · sub: «איך יודעים שטכנאי מוכן לרצפה?»
-  *(VetCrew — crew training for veterinary ER. "How do we know a technician is ready for the floor?")*
+- **Headline (he) — Dan's copy (authoritative):** «VetCrew — הכשרת צוות למחלקות חירום וטרינריות» · sub: «איך נדע שטכנאי חדש מוכן להתחיל לעבוד?»
+  *(VetCrew — crew training for veterinary ER departments. "How will we know a new technician is ready to start working?")*
 - **Message:** one line stating what it is (a simulator + assessment for ER/ICU technicians) and the question it answers. The sub-question is the hook — it's the question the hospital can't currently answer.
 - **Visual:** the VetCrew wordmark on the dark-instrument background; a hint of the monitor behind it. Quiet, premium.
 - **Design note:** no bullet points ever on the title. One line, one question.
 
 ### 2 — The problem, in her world
-- **Purpose:** make her feel the pain before any solution.
-- **Headline (he):** «איך בודקים היום טכנאי חדש? מבחן שלא משקף את העבודה.»
-  *(How do we assess a new technician today? An exam that doesn't reflect the work.)*
-- **Message:** today a new tech is assessed by a **written exam that is largely irrelevant** — it covers part of the theory and none of the actual floor work. After handover, they work on real animals, and no one has truly verified they can place a catheter, calculate a dose, pick the right tube, or recognise when to call the doctor. This is a safety, quality, and fairness gap — and everyone on the floor knows it.
-- **Visual:** a stark, quiet contrast — "the exam" (a sheet of paper / abstract) vs. "the floor" (the real work). No screens yet.
-- **Design note:** this slide must ring true to *her*. It's her daily reality reflected back. Understated beats dramatic.
+- **Purpose:** make her feel the pain before any solution — honestly, in her own reality.
+- **Copy (he) — Dan's, authoritative:**
+  «מה קורה היום? איך יודעים שטכנאי חדש יכול להתחיל לעבוד? התשובה — בעיקר תחושת בטן מצד הטכנאי החופף והמבחן שלך. וגם, הכי חשוב, לחץ מצד ההנהלה להעסיק טכנאים חדשים בגלל מחסור.»
+  *(What happens today? How do we know a new technician can start working? The answer — mostly gut feeling from the handover technician, and your exam. And, most importantly, pressure from management to hire new technicians because of the shortage.)*
+- **Why this copy is strong (do not dilute it):** it is honest and it is *hers*. Three true things stacked: (1) assessment today = the handover tech's **gut feeling**, (2) **"your exam"** — she is already the assessor; the current written test is hers, (3) **management pressure to hire anyway** because of the shortage. That last one is the trap: weak assessment *and* forced hiring = risk carried onto the floor. Nobody's fault — the *tools* are inadequate.
+- **STRATEGIC NOTE — this reframes the whole deck for the better.** "המבחן שלך" means **she is already the clinical assessor** at this hospital, holding the line with a written exam and gut feel. So VetCrew is **not replacing her judgment — it is the instrument she's never had for the job she already does.** This makes slide 10's keystone land far harder: she isn't being recruited into a new role, she's being handed a better tool for the one she already owns. Carry this thread from here to slide 10.
+- **Visual:** understated. The three realities (gut feel · the exam · hiring pressure) as three quiet lines, not a dramatic graphic. No screens yet.
+- **Design note:** tone is honest, never blaming. The exam is hers and it's inadequate *because a written test cannot capture the floor* — that's a limit of the method, not of her. She should read this and feel *understood*, not judged.
 
 ### 3 — Why it matters (the cost)
 - **Purpose:** the problem isn't just annoying; it's expensive and systemic.
@@ -55,7 +57,8 @@ Each slide: **purpose · Hebrew headline (draft) · the self-contained message �
 
 ### 5 — The concept: a competency mountain, and we start at the base
 - **Purpose:** the solution, framed as something she already understands.
-- **Headline (he):** «הר של כשירות — מהמטלה היומיומית ועד החייאה מרובת-מטופלים.»
+- **Headline (he) — Dan's copy:** «הר הכשירות — מהמטלה היומיומית ועד החייאה מרובת-מטופלים.»
+  *(The competency mountain — from the everyday task to multi-patient CPR.)*
 - **Message:** VetCrew is a progression — a mountain. The **base** is everyday floor competence (one technician, real tasks); the **summit** is a full crew running multi-patient CPR. We ship **one base rung first**. And it's built on the mental model the crew already uses every shift — the **colour-coded task board** (do / report / timed / needs-approval) — so it asks almost no new behaviour. *(This is the near-zero-friction point — critical.)*
 - **Visual:** a simple **mountain / progression diagram** (base rung → … → summit), with the base rung highlighted as "what we build first." *(This is the one net-new visual — see Screen Manifest; it can be a clean diagram, not a UI screen.)*
 - **Design note:** the mountain makes the vision legible in one image while making clear you're not boiling the ocean — you ship the base.
@@ -75,13 +78,14 @@ Each slide: **purpose · Hebrew headline (draft) · the self-contained message �
 - **Visual:** **HERO — the medication task with the route selector**, showing the wrong-route-logged state (the diphenhydramine-IV example). *(Already built and verified.)*
 - **Design note:** this is the slide that earns a skeptical clinician's respect. The example must be clinically real (it is). This is where "someone finally gets it" lands.
 
-### 8 — The output: evidence, not a number
-- **Purpose:** what the assessment produces — and why it's trustworthy.
-- **Headline (he):** «התוצאה: תיעוד מלא שאפשר לפתוח, לא ציון בעלמא.»
-  *(The output: a full record you can open, not a number in a vacuum.)*
-- **Message:** every session produces a **replayable, role-attributed record**. Every score traces to exactly what happened — you can open any rating and see the moment that produced it. This is evidence a manager can review and act on, not an opaque grade. *(Evidence-not-verdict — say it plainly.)*
-- **Visual:** **HERO — the AAR / scored record screen** (timeline + expected-vs-actual + the score→event link). *(Needs finishing — see Manifest.)*
-- **Design note:** show the traceability visibly — a score connected to its event. That connection *is* the trust.
+### 8 — The result: a real test, safely, that can actually be reviewed
+- **Purpose:** what the assessment gives you — and why it's trustworthy. *(Dan's copy shifted this slide's emphasis from "a record" to the assessment itself: realistic, safe, reviewable. Honoured below.)*
+- **Copy (he) — Dan's, authoritative:**
+  «התוצאה: הטכנאי נבחן בתנאי לחץ שמדמים מציאות אמיתית, שאפשר להעביר עליה ביקורת אמיתית — וללא סכנה על בעלי חיים אמיתיים.»
+  *(The result: the technician is tested under pressure conditions that simulate real reality, that can be genuinely reviewed — and with no risk to real animals.)*
+- **Three value pillars in this line (all real):** (1) **realistic pressure** — not a written test, the actual shift simulated; (2) **reviewable** — and it's reviewable *because* every action is recorded and every score traces back to the exact moment that produced it (the mechanism behind "ביקורת אמיתית"); (3) **no risk to real animals** — today a new tech's mistakes happen *on live patients*; here they happen in simulation, where failing is safe. That safety argument lands hard with a clinician. **Elevate pillar 3 — it wasn't foregrounded before and it's one of the strongest.**
+- **Visual:** **HERO — the AAR / scored record screen** (timeline + expected-vs-actual + a score visibly linked to its event). The screen is what makes "reviewable" concrete.
+- **Design note:** show the traceability visibly — a score connected to its source moment. That connection *is* the "ביקורת אמיתית." *(Screen needs finishing — see Manifest.)*
 
 ### 9 — Why it's defensible (clinical accuracy is a hard gate)
 - **Purpose:** pre-empt the skeptic's biggest objection — "is the clinical content right?"
