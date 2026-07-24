@@ -89,8 +89,30 @@ class MonitorRenderer {
     return this;
   }
 
+  /** True when the viewer has asked for reduced motion. */
+  get reduceMotion() {
+    return typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
   start() {
     if (this._raf) return this;
+    // REDUCED MOTION: keep the SIGNAL, drop the strobe. Traces are drawn once
+    // as a static filled trace and alarms hold steady-on (this.blink is pinned
+    // so flashOn stays true) rather than flashing. Never remove the alarm — a
+    // motion preference must not suppress a clinical signal.
+    if (this.reduceMotion) {
+      const traceW = this.traces[0].buf.length;
+      for (const t of this.traces) {
+        const hz = (t.rate === 'rr' ? this.vitals.rr : this.vitals.hr) / 60;
+        const cycles = Math.max(1, Math.round(hz * (traceW / SWEEP_PX_PER_SEC)));
+        for (let x = 0; x < traceW; x++) t.buf[x] = t.gen(((x / traceW) * cycles) % 1);
+      }
+      this.cursor = traceW;   // no blanking gap: the trace reads as complete
+      this.blink = 0;         // flashOn === true → alarm chrome holds steady-on
+      this.draw();
+      return this;
+    }
     this._last = performance.now();
     const loop = (now) => {
       const dt = Math.min((now - this._last) / 1000, 0.05);
