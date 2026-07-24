@@ -8,10 +8,11 @@
       "port": 5173
     },
     {
-      "name": "ds-aar",
+      "name": "ds-mon",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8794", "--directory", "/private/tmp/claude-501/-Users-dan-Developer-active-no-name-yet-/8ebf9220-f996-44c4-89c2-f59eefe6f40f/scratchpad/ds-aar"],
-      "port": 8794
+      "runtimeArgs": ["-m", "http.server", "8796", "--directory", "/private/tmp/claude-501/-Users-dan-Developer-active-no-name-yet-/8ebf9220-f996-44c4-89c2-f59eefe6f40f/scratchpad/ds-mon"],
+      "port": 8796,
+      "comment": "temporary monitor verification harness"
     }
   ]
 }

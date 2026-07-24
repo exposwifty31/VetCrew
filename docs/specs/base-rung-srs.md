@@ -50,10 +50,32 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 - **Edge cases:** value plausible but wrong (e.g. transposed digits) → accepted, scored wrong, logged. Empty submit → blocked.
 
 ### T2 — NIBP measurement · code `timed` · competency B
-- **Interaction:** trainee triggers NIBP (SunTech surface); reads and enters the pressure.
-- **What is scored is the MUST-know, not the nice-to-know:** the competency is **SYS/DIA min/max values in dogs and cats** — that is what the technician *must* know. **MAP is should-know, not must-know**, so it is not the scored value here (even though the SunTech surface still emphasises MAP visually for the anaesthesia context — the two are not in conflict).
-- **Window:** the window is **scenario-phase, turn-based — not wall-clock** (OD-1, decided). The task must be done in the correct scenario phase; the trainee is never under real-clock pressure in the base rung.
-- **Scored:** in-window (pass/fail) + **SYS/DIA within the species range** (pass/fail). MAP is informational only. *(Species ranges are clinical-review-gated, §2.5.)*
+
+**This is NOT "press start and read a number."** Getting a valid NIBP on a conscious animal is a chain of decisions, and it fails constantly in real life. That failure surface *is* the competency. Grounded in the SunTech Vet20 operator's manual (80-0066-00-MO Rev D) — the device actually used on the floor.
+
+**The decision chain (each step independently scored):**
+
+1. **Patient positioning** — the manual's preferred setup is the patient **lying in lateral recumbency (on its right or left side)** with the cuff on a **front limb**, because that puts the cuff at **heart level**, which is what makes the reading accurate. Alternates the technician must know: if the patient is more comfortable **seated**, position as above but **hold the limb up** to keep the cuff at heart level; if the patient is **agitated (may bite/scratch) or standing**, the **base of the tail** is an acceptable alternate site. Choosing "just measure it standing on a front limb" is a real, catchable error.
+2. **Cuff site** — on the limb **just above the paw**, **not over a joint**, with the cuff's **artery marker aligned to the limb artery**.
+3. **Cuff size** — the single biggest determinant of accuracy. The cuff's **index marker must fall within the range marker** when wrapped. **If two sizes both fit, choose the LARGER** — a cuff that is too small **overestimates** blood pressure (i.e. it can manufacture a fake hypertension). Alternative sizing rule: cuff width ≈ **40% of limb circumference in dogs, 30% in cats**.
+4. **Animal mode** — Large vs Small companion animal, selected on the device. Rule of thumb from the manual: **cuff #3 or smaller → Small mode; #4 or larger → Large mode.** Wrong mode is a scored error and also a cause of "Artifact Detected."
+5. **Take the reading**, then **judge whether the reading is trustworthy** (see error modes below) — and, per real practice, **take multiple readings and average** rather than trusting a single number.
+6. **Interpret** — the must-know is **SYS/DIA min/max for dogs and cats**. **MAP is should-know, not must-know**, so MAP is not the scored value here (the device still displays it prominently for the anaesthesia context — no conflict).
+
+**Error modes — the device will refuse to give a number, and the technician must diagnose why.** These are real Vet20 error states; the scenario can inject any of them, and the scored response is *correctly identifying the cause and fixing it*, not just re-pressing start:
+
+| Device error | What it means | Correct technician response |
+|---|---|---|
+| **Artifact Detected** | Unexpected noise/movement | Check patient motion/trembling; check animal mode is right; check cuff position and size |
+| **Poor Signal Quality** | Weak signal from patient (or rapid deflation) | Check cuff position, tightness, and that the size is correct; check the patient |
+| **Measurement Too Long** | No strong, consistent signal for an extended period | Re-seat the cuff snugly and correctly positioned; check patient movement |
+| **Cuff Overpressure** | Cuff briefly exceeded 300 mmHg — from movement, air blockage, or **a cuff that is too small** | Correct cuff size; check hose not pinched; check patient isn't lying/stepping on the cuff; settle the patient |
+| **Air Blockage** | Air can't pass the hose/cuff | Check for sharp bends/pinching; check the patient isn't lying or standing on the cuff |
+| **Check Batteries / Monitor Not Ready / System Failure** | Device-side faults | Recognise as a **device** problem, not a patient problem — this is the device-vs-patient discrimination competency |
+
+- **Window:** scenario-phase, turn-based — not wall-clock (OD-1).
+- **Scored, separately:** positioning · cuff site · **cuff size** · animal mode · correct diagnosis-and-recovery on any injected error · SYS/DIA interpreted against the species range. *(All ranges, sizing rules and thresholds are clinical-review-gated, §2.5.)*
+- **Why this matters to the product:** a technician who presses START and writes down whatever appears — on a standing patient, with an undersized cuff — produces a *confidently wrong* number that can drive a clinical decision. Catching that is exactly the kind of judgment no checklist-based competency tracker measures.
 
 ### T3 — Medication administration · code `report` · competency F′ + route
 - **The three scored dimensions — drug · dose · route** (`TaskChip` route selector already built, F1):
@@ -86,6 +108,31 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 - **Setup:** the instructor injects one abnormality during the sequence: **low HR + high BP** (bradycardia with hypertension) — a "catchy," recognisable pattern a technician should notice and escalate rather than treat (OD-3, decided). *Clinical-review-gated (§2.5): the specific HR/BP values, the admitting context that makes this pattern appear, and confirmation that it is escalate-appropriate (not a technician-treatable event) must be reviewed and stamped before it scores anyone. The pattern is clinically coherent — e.g. it is associated with raised intracranial pressure, and with alpha-2 agonist sedation (dexmedetomidine/medetomidine), both common — but the reviewer confirms the authored specifics, not this note.*
 - **Interaction:** the correct action is to **notice it and escalate** — the task is `approval`-locked; the only permitted action is **call doctor / senior**. Proceeding as if normal, or missing it, is the failure.
 - **Scored:** noticed (yes/no, and time-to-notice as a directional metric), escalated correctly (yes/no). This is the seed of the QA-trap / critical-eye competency; the full "refuse a wrong order someone else logged" variant is **Tier-4, deferred (§9)**.
+
+## 4b. Task-interaction principle — the chip must mirror the actual decision
+
+**A task is not a title plus a text box.** Every task above is a *sequence of choices a technician really makes*, and the interface has to surface those choices as choices — otherwise we are testing typing, not judgment, and the record cannot say *what they decided*.
+
+Concretely, each task's UI must expose its own decision points:
+
+| Task | The decisions the UI must actually present |
+|---|---|
+| T1 TPR | the three values, in correct medical notation |
+| **T2 NIBP** | **patient position · cuff site · cuff size · animal mode · take/re-take · diagnose-and-recover on a device error** (six decisions, not one button) |
+| T3 medication | **drug context · dose (computed by them) · route** — three scored dimensions |
+| T4 blood draw | which tube(s), by cap colour, for the requested panel |
+| T5 catheter | the **order** of the five steps |
+| T6 fluids | **set choice (weight-based) · drops/min (formula depends on the chosen set)** |
+| T7 escalate | notice vs. miss · escalate vs. proceed-and-treat |
+
+**Design rules that follow:**
+- **Every scored dimension is a visible, explicit control** — a selector, an ordering, a value entry. Never inferred, never buried in prose, never pre-filled.
+- **Wrong options must be present and selectable.** An undersized cuff, a standing patient, IV on an SC-only drug, a regular set on a 6 kg cat — if the wrong choice can't be expressed, the mistake can't be measured.
+- **A dependent decision reveals the next one.** Choosing a burette vs. a regular set changes which drip formula is correct; choosing the tail base vs. a front limb changes what "correct positioning" means. The chip expands as the decision tree unfolds.
+- **Device errors are first-class task states,** not dead ends. When NIBP throws *Artifact Detected*, the task's next decision is **"what caused it?"** — with the plausible causes as options. Blindly re-pressing START is a scored failure.
+- **The record stores the choices, not just the outcome.** The AAR must be able to say *"chose cuff #2 on a 22 kg dog (undersized) → overestimated SYS,"* not merely *"NIBP wrong."*
+
+> **Component consequence:** `TaskChip`'s current shape (title · optional value field · route selector) covers T1/T3 only. T2, T5 and T6 need richer, task-specific decision bodies. That is a Phase-2 design item — the chip becomes a container for a **decision body**, which varies by task type.
 
 ## 5. Rules that must not soften (these ARE the assessment)
 
