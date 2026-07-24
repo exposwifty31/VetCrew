@@ -50,18 +50,19 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 - **Edge cases:** value plausible but wrong (e.g. transposed digits) → accepted, scored wrong, logged. Empty submit → blocked.
 
 ### T2 — NIBP measurement · code `timed` · competency B
-- **Interaction:** trainee triggers NIBP (SunTech surface); reads SYS/DIA/**MAP**.
-- **Window:** the window is **scenario-phase, turn-based — not wall-clock** (OD-1, decided). The task must be done in the correct scenario phase; the trainee is never under real-clock pressure in the base rung. Scored on being taken in the correct phase and MAP read/entered correctly.
-- **Scored:** in-window (pass/fail) + value correctness.
+- **Interaction:** trainee triggers NIBP (SunTech surface); reads and enters the pressure.
+- **What is scored is the MUST-know, not the nice-to-know:** the competency is **SYS/DIA min/max values in dogs and cats** — that is what the technician *must* know. **MAP is should-know, not must-know**, so it is not the scored value here (even though the SunTech surface still emphasises MAP visually for the anaesthesia context — the two are not in conflict).
+- **Window:** the window is **scenario-phase, turn-based — not wall-clock** (OD-1, decided). The task must be done in the correct scenario phase; the trainee is never under real-clock pressure in the base rung.
+- **Scored:** in-window (pass/fail) + **SYS/DIA within the species range** (pass/fail). MAP is informational only. *(Species ranges are clinical-review-gated, §2.5.)*
 
 ### T3 — Medication administration · code `report` · competency F′ + route
 - **The three scored dimensions — drug · dose · route** (`TaskChip` route selector already built, F1):
   - **drug** — named in the task (context).
   - **dose** — task states mg; trainee computes **ml** themselves (never computed for them). Wrong volume shown invalid, never auto-corrected.
   - **route** — trainee selects IV/IM/SC/PO; never pre-filled, never hinted. Contraindicated route is selectable, **logged as a critical error, never blocked**. Correct volume by wrong route is a **FAIL, not partial credit**.
-- **Reference concentrations (pending sign-off):** Cefazolin 100 mg/ml · Augmentin 50 mg/ml · NAC 200 mg/ml. Worked: 250 mg Cefazolin → 2.5 ml.
+- **Reference concentrations (pending sign-off):** Cefazolin 100 mg/ml (10%) · Augmentin 50 mg/ml (5%) · NAC 200 mg/ml · **Diphenhydramine 100 mg/ml (10%), route SC only**. Worked: 250 mg Cefazolin → 2.5 ml IV · 20 mg Diphenhydramine → **0.2 ml SC** (IV is potentially fatal).
 - **Scored:** ml correctness AND route correctness, **separately**.
-- **Edge cases:** right ml + wrong route → fail on route (this is the diphenhydramine-IV class of fatal error). Right route + wrong ml → fail on dose. Which routes are contraindicated is scenario data, sign-off-gated.
+- **Edge cases:** right ml + wrong route → fail on route (the diphenhydramine **0.2 ml SC-only, given IV** = fatal-class error — dose correct, route fatal). Right route + wrong ml → fail on dose. Which routes are contraindicated (and the concentrations above) is scenario data, sign-off-gated.
 
 ### T4 — Blood draw · code `report` · competency C
 - **Interaction:** task requests a panel (e.g. CBC + biochemistry); trainee selects the correct tube(s) from Serum / EDTA / Citrate / Heparin (by standard cap colour) and draws.
@@ -72,10 +73,14 @@ Seven tasks, presented in order. Each uses a `TaskChip` code (do / report / time
 - **Scored:** correct order. Out-of-order (e.g. disinfect before shave) is the failure being tested — the interaction must let the wrong order be expressed.
 
 ### T6 — Fluids setup · code `do` · competency E + F
-- **Interaction:** choose **regular line vs burette** (burette/microdrip = 60 drops/ml, for small patients / precise dosing). If the instructor set **"no pump available,"** trainee enters **drops/min** (never computed).
-- **Reference:** 45 ml/hr on a 60 drops/ml burette → 45 drops/min. The 15-vs-45 (3×) class of error must be catchable.
+- **Scenario:** a doctor orders a fluid rate (ml/hr) for the patient. The technician must (1) choose the delivery set, and (2) — when there is **no fluid pump** — calculate the manual drip rate in **drops/min**.
+- **Set choice is WEIGHT-based (the must-know key):** **≤ 15 kg → burette (ביורטה); > 15 kg → regular set.**
+- **Drip-rate calculation (no pump), by set (never computed for the trainee):**
+  - **Regular set** — 20 drops = 1 ml, so **drops/min = (ordered ml/hr) ÷ 3**. *(e.g. 150 ml/hr → 50 drops/min.)*
+  - **Burette** — 60 drops = 1 ml, so **drops/min = ordered ml/hr** directly (the easy case). *(e.g. 60 ml/hr → 60 drops/min.)*
 - **Consequence visible:** the fluid rate shown on the patient side reflects the entered number — a wrong number has a visible effect.
-- **Scored:** correct device choice + correct drops/min.
+- **Scored, separately:** (a) correct **set** for the patient's weight, and (b) correct **drops/min** for the chosen set.
+- **Catchable error classes:** wrong set for the weight; applying the wrong set's formula (e.g. entering ml/hr as drops/min on a *regular* set → 3× too fast → fluid-overload risk); or a plain arithmetic error. *(The weight thresholds and drop factors are clinical-review-gated, §2.5.)*
 
 ### T7 — Recognise & escalate · code `approval` · decision/critical-eye
 - **Setup:** the instructor injects one abnormality during the sequence: **low HR + high BP** (bradycardia with hypertension) — a "catchy," recognisable pattern a technician should notice and escalate rather than treat (OD-3, decided). *Clinical-review-gated (§2.5): the specific HR/BP values, the admitting context that makes this pattern appear, and confirmation that it is escalate-appropriate (not a technician-treatable event) must be reviewed and stamped before it scores anyone. The pattern is clinically coherent — e.g. it is associated with raised intracranial pressure, and with alpha-2 agonist sedation (dexmedetomidine/medetomidine), both common — but the reviewer confirms the authored specifics, not this note.*
