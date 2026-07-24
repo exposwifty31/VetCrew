@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "webxr-spike",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "spikes/webxr", "dev"],
+      "port": 5173
+    }
+  ]
+}

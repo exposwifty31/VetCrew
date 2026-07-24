@@ -1,0 +1,47 @@
+/* ============================================================================
+   VetCrew — TYPOGRAPHY
+   UI: IBM Plex Sans Hebrew (Hebrew-first, legible at arm's length).
+   Numbers/vitals/timestamps/code: IBM Plex Mono (tabular figures so digits
+   don't jitter as a vital ticks). Type is theme-independent.
+   ========================================================================== */
+:root {
+  --font-ui:   "IBM Plex Sans Hebrew", system-ui, "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* weights */
+  --fw-light: 300;    /* @kind font */
+  --fw-regular: 400;  /* @kind font */
+  --fw-medium: 500;   /* @kind font */
+  --fw-semibold: 600; /* @kind font */
+  --fw-bold: 700;     /* @kind font */
+
+  /* type scale — tablet-first, arm's-length. Nothing below 13px. */
+  --fs-vital-xl: 4.5rem;  /* 72 — hero vital on a calm station */
+  --fs-vital:    3.5rem;  /* 56 — primary vital number */
+  --fs-display:  2.5rem;  /* 40 */
+  --fs-h1:       2rem;    /* 32 */
+  --fs-h2:       1.5rem;  /* 24 */
+  --fs-h3:       1.25rem; /* 20 */
+  --fs-body-lg:  1.125rem;/* 18 */
+  --fs-body:     1rem;    /* 16 — base */
+  --fs-sm:       0.875rem;/* 14 */
+  --fs-xs:       0.8125rem;/* 13 — dense labels floor */
+
+  /* line-heights */
+  --lh-tight: 1.05;   /* @kind other */
+  --lh-snug: 1.2;     /* @kind other */
+  --lh-normal: 1.45;  /* @kind other */
+  --lh-relaxed: 1.6;  /* @kind other */
+
+  /* letter-spacing — mono numbers benefit from a hair of tracking; labels use
+     a small positive track for all-caps micro-labels. Hebrew body: none. */
+  --ls-caps: 0.06em;    /* @kind other */
+  --ls-num: 0.01em;     /* @kind other */
+  --ls-tight: -0.01em;  /* @kind other */
+
+  --tnum: "tnum" 1, "lnum" 1; /* @kind other */
+}
+
+/* small helpers consumers can lean on */
+.vc-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums lining-nums; font-feature-settings: var(--tnum); letter-spacing: var(--ls-num); }
+.vc-caps { text-transform: uppercase; letter-spacing: var(--ls-caps); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }

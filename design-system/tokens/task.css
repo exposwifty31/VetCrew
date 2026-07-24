@@ -1,0 +1,59 @@
+/* ============================================================================
+   VetCrew — TASK layer (base-rung "work software" surface)
+   A DELIBERATELY DIFFERENT OBJECT from the instrument layer. Where the monitor
+   glows on black glass, this is a matte graphite work-tablet. Colours here are
+   MATTE and stay CONTAINED in the task panel — they must never appear on the
+   monitor, and channel (neon) colours must never appear here. Form factor is
+   the second separator: task state = filled SQUARE badge + text label; monitor
+   value = large bare glowing numeral. Task colour is coded redundantly
+   (colour + icon shape + text), never hue alone.
+
+   Task code → meaning (SmartFlow-style mental model, our own visuals):
+     do        (amber)  routine action
+     report    (purple) perform, then enter a measured value back
+     timed     (green)  time-windowed — must show window + remaining
+     approval  (red)    locked; only action is escalate to a doctor
+   ========================================================================== */
+:root {
+  /* work-software surfaces — matte, lighter/greyer than the black instrument */
+  --task-bg:       #171d25;  /* @kind color */
+  --task-bg-2:     #1e2530;  /* @kind color */
+  --task-surface:  #232b35;  /* @kind color */
+  --task-surface-2:#2a333e;  /* @kind color */
+  --task-edge:     #333d49;  /* @kind color */
+  --task-hair:     #2a323d;  /* @kind color */
+  --task-seam:     #05070c;  /* @kind color */
+
+  --task-text:      #e7edf2; /* @kind color */
+  --task-text-dim:  #94a3af; /* @kind color */
+  --task-text-faint:#63717d; /* @kind color */
+
+  /* matte code palette (badge fill / text-on-badge / soft chip tint / edge) */
+  --task-do:      #c1941d;  /* @kind color */
+  --task-do-fg:   #171200;  /* @kind color */
+  --task-do-soft: #342c0f;  /* @kind color */
+
+  --task-report:      #8c5bd0; /* @kind color */
+  --task-report-fg:   #ffffff; /* @kind color */
+  --task-report-soft: #2c2440; /* @kind color */
+
+  --task-timed:      #2f9e5b;  /* @kind color */
+  --task-timed-fg:   #04140a;  /* @kind color */
+  --task-timed-soft: #123526;  /* @kind color */
+
+  --task-approval:      #c33a2b; /* @kind color */
+  --task-approval-fg:   #ffffff; /* @kind color */
+  --task-approval-soft: #3a1712; /* @kind color */
+
+  /* lifecycle verdict marks (contained in the panel) */
+  --task-done:  #2f9e5b;  /* @kind color */
+  --task-error: #d84a3a;  /* @kind color */
+
+  --task-action:      #008080; /* @kind color */
+  --task-action-fg:   #04141a; /* @kind color */
+  --task-focus:       #7fd6df; /* @kind color */
+}
+
+/* window-closing urgency (timed) — position/motion, never hue alone */
+@keyframes vc-task-closing { 0%,100%{ opacity:1 } 50%{ opacity:0.5 } }
+@keyframes vc-task-spin { to { transform: rotate(360deg) } }

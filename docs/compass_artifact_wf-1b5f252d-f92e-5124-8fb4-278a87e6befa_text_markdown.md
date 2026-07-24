@@ -1,0 +1,106 @@
+> ⚠️ **PARTIALLY SUPERSEDED (2026-07-24) — read for market/competitive context only.**
+> Two recommendations in this brief have been overturned by later decisions; do not act on them:
+> 1. **Scoring instrument:** this brief leans toward **T-NOTECHS**. The default is now **ANTS**
+>    (better inter-rater reliability in the canine-CPR context: ICC 0.803/0.925 vs 0.716/0.883).
+>    See `CLAUDE.md §4` and `docs/VETCREW-RESEARCH-PATCH-2026-07-23.md`.
+> 2. **MVP scope:** this brief implies a **multi-role CPR** first scenario. The MVP is now **one
+>    single-role technical "base rung"** — ship the rung, not the mountain. See
+>    `docs/decisions/mountain-decision-memo.md` and `CLAUDE.md §2.7, §5`.
+> The market/competitive analysis below (turnover figures, whitespace, positioning) remains current.
+
+# VetCrew Competitive & Market Landscape Brief
+
+*Early-stage product strategy exploration for a veterinary ER/ICU crew-simulation training platform. Research current as of July 2026; findings flagged where dated or vendor-sourced.*
+
+## TL;DR
+- **No existing product does what VetCrew proposes.** Nothing on the market combines multi-role veterinary ER/ICU crew simulation + live instructor scenario injection + after-action review (AAR) + hiring/onboarding readiness scoring in one platform. The nearest veterinary analogs (RECOVER/OpenVetSim, VetBloom, university sim labs) are single-user, CPR-only, academic, or content-focused; the nearest functional analogs (SimX, UbiSim, Oxford Medical Simulation, FISDAP) are built for human medicine or EMS.
+- **The market pain is real and quantified.** Veterinary technician turnover averaged 23.6% in 2025 (top hospitals 14.2%, per iVET360), ER/specialty hospitals report 79.3% technician/nurse turnover (Instinct Science, 2024), up to two-thirds of working "vet techs" are uncredentialed, and corporate consolidators face — in one vendor's words — an "urgent need for standardized onboarding." Simulation adoption in veterinary medicine is rising but still concentrated in universities and CPR certification.
+- **The opening is a wedge, not a war.** Position VetCrew as the first veterinary-specific "crew readiness" system with an explicit hiring/floor-readiness use case, most credibly launched first as a scenario + instructor + AAR software layer (screen-based, not VR hardware), sold into ER/ICU corporate groups and specialty hospitals where turnover cost is highest.
+
+## Key Findings
+
+1. **The direct veterinary competitive field is thin and fragmented.** It splits into (a) physical manikins/task trainers (VSI/3B Scientific, SimuVet, AnatomyStuff), (b) CE/e-learning platforms (VetBloom, VetFolio, VETgirl, ASPCApro), (c) CPR certification (RECOVER + OpenVetSim), and (d) AI onboarding (Honen). None offers instructor-driven multi-role team simulation with readiness scoring.
+2. **The strongest conceptual and functional analogs are outside veterinary medicine** — military crew trainers (FAAC, eSim/Steel Beasts, VirTra, InVeris) and human healthcare team simulation (CAE Healthcare, Laerdal, SimX, UbiSim, Oxford Medical Simulation). These validate every architectural element VetCrew proposes.
+3. **The "ready for the floor" scoring model already exists in adjacent fields** (nursing: StaffGarden, Galen Readiness-to-Practice, AACN; EMS: FISDAP), proving the readiness-assessment concept — but no one has ported it to veterinary team performance.
+4. **Market timing is favorable:** severe tech shortage, high turnover, corporate consolidation demanding standardized onboarding, rising simulation adoption, and active (if not training-specific) veterinary-tech funding.
+5. **Clear whitespace:** veterinary team/crew simulation evidence is almost entirely CPR-focused and academic; nothing addresses broader ER/ICU crew performance or uses simulation as a hiring/onboarding gate.
+
+## Details
+
+### 1. Direct & indirect veterinary competitors
+
+**Veterinary simulators / manikins (hardware).** Veterinary Simulator Industries (VSI), now part of 3B Scientific and distributed by Echo Healthcare, offers canine/bovine/equine models for "basic life support, spay surgeries, venipuncture." SimuVet (SIMUVET L.L.C.) sells "clinical simulation products for veterinary training." AnatomyStuff sells canine CPR and IV manikins. These are physical task-trainers, single-skill focused, with no software scenario engine, no multi-role orchestration, no readiness analytics. They are complements, not competitors — VetCrew's software layer could theoretically drive them.
+
+**Veterinary CE / e-learning platforms.**
+- **VetBloom** (owned by Ethos Veterinary Health) is the most sophisticated veterinary-specific competitor. It is a white-labeled SaaS "learning ecosystem" (LXP) with competency mapping, digital badges, role-based learning paths, "scenario-based role playing," analytics for managers, and "immersive 3D virtual simulation." Its "VetSim" 3D product is single-user, first-person (e.g., monitor anesthesia in a surgical suite). Subscription includes 150+ RACE-approved CE credits. Crucially: **no multi-role live crew simulation and no instructor live-injection.** This is VetCrew's most important incumbent to differentiate from.
+- **VetFolio** (NAVC), **VETgirl** (now part of Mars Veterinary Health/BluePearl), and **ASPCApro** onboarding courses are content/CE libraries — video, case-based modules, quizzes — not simulation or team tools.
+- **Honen** (by StudyFetch) is a late-2025 AI onboarding platform with an explicit "Veterinary Hospital Groups" vertical: "AI-powered training and onboarding… vet tech onboarding, anesthesia protocols… aligned to State vet boards." It turns SOPs into courses and "tracks completions, scores, and time-on-task per learner." It names the exact market driver VetCrew targets — verbatim: "Tech training is tribal, no standard curriculum. Massive consolidation wave = urgent need for standardized onboarding." But it is AI course-generation + tutoring + competency tracking — **not live team simulation.**
+
+**CPR / emergency team certification (closest veterinary team-training analog).**
+- **RECOVER Initiative** is the only official veterinary CPR certification recognized by ACVECC and VECCS, delivered as online BLS/ALS modules plus in-person hands-on "mega-code" simulations. Training explicitly builds "team & group dynamics & closed-loop communication," with "clearly defined roles." Updated guidelines published 2024 emphasize role delegation, closed-loop communication, and post-case debriefing.
+- **OpenVetSim** (open-source, created by Dr. Daniel Fletcher at Cornell; "RoboJerry" canine simulator) is the backbone of RECOVER CPR certification. It DOES support an instructor interface driving a simulated patient monitor with real-time vitals, pre-programmed scenarios, teams of students, telesimulation, and instructor/class critique (debrief). Windows installer updated May 2024. **But: it is non-commercial, academic, CPR/resuscitation-focused, and has no hiring/onboarding readiness scoring.** It is the single closest architectural precedent to VetCrew inside veterinary medicine — and a potential partner/springboard rather than a competitor.
+
+**Corporate consolidator training tools.** Investigation of Mars Veterinary Health (Banfield, BluePearl, VCA), Thrive Pet Healthcare, and NVA found competency frameworks and credentialing partnerships but **no proprietary crew/team live-simulation tool:**
+- **VCA** launched a Career Progression Program "grounded in competency-based career levels" supporting 14,000+ credentialed techs and assistants — a career ladder, not a simulator.
+- **Banfield** runs a Veterinary Assistant/Technician Development Program plus Penn Foster credentialing ("Veterinary Academy").
+- **BluePearl** operates EmERge (a paid one-year ER veterinarian training program, which nearly doubled in size in the last year, with 2025 set to be its largest graduating class) and BluePearl University (in-house L&D), plus the Vet-TROMA U.S. Army partnership. These are mentorship/immersion programs, not simulation platforms.
+- **Ethos** owns VetBloom (above).
+This absence is a strategic signal: the largest, best-capitalized buyers have the problem and the budgets but have not built the tool.
+
+### 2. Analogous models from adjacent industries
+
+**Military crew trainers (the conceptual blueprint).** These validate VetCrew's exact architecture. FAAC builds crew cabs with a dedicated Instructor Operator Station (IOS) and separate after-action review station; the IOS lets instructors "insert flags" during exercises and "re-run those portions of the scenario for trainees to try different tactics." eSim's Steel Beasts Professional provides desktop crew trainers with detailed mission recording and AAR at "under 10,000 EUR per workplace." VirTra and InVeris offer "live performance tracking, branching scenario control, and detailed after-action review" with "exportable metrics for readiness reporting." The core pattern — shared simulation core, role stations, instructor-injected events, AAR with replay — is mature and directly transferable. The Army's Synthetic Training Environment/Reconfigurable Virtual Collective Trainer shows the same loop at platoon scale (instructor manages virtual opposing forces, then runs an AAR).
+
+**Human healthcare team simulation (the functional analog).**
+- **CAE Healthcare** and **Laerdal** dominate manikin-based hospital simulation: instructor control of physiology/events, structured debriefing, performance scoring, and (Laerdal) team-based "Circle of Learning" analytics turning behavior data into feedback for individuals, teams, and administrators.
+- **SimX** is the leading multiplayer VR medical simulation — self-described as "the only patented platform designed for multiple learners to work as a team," with moderator controls, real-time patient customization, assessment capture, and debriefing. Pricing: Pro tier ~$3,000/headset/year or $100/student/year; custom case creation $8k–20k. SimX also won a US Air Force R&D contract (2022) to build a canine prehospital VR simulator — the only known effort porting a full team+instructor VR engine to a veterinary/canine patient, though it is a military R&D effort, not a commercial civilian product.
+- **UbiSim** (a Laerdal company) is a strong functional model: VR nursing simulation with instructor-led, peer-to-peer, and multiplayer (up to 3 learners) modes, a no-code scenario editor, and full prebrief→sim→debrief flow. Nursing only — no veterinary version.
+- **Oxford Medical Simulation (OMS)** delivers VR/screen scenarios with automated feedback, performance metrics on technical AND non-technical skills (communication, teamwork, prioritization), and a guided debrief "without the need for faculty." OMS Interprofessional adds multiplayer. It has been used for competency assessment in nurse residency (M Health Fairview pilot with University of Minnesota, published in AACN Advanced Critical Care, Oct 2024). A cited cost-utility analysis put virtual simulation at $1.08 vs $3.62 for physical simulation. No veterinary offering.
+
+**EMS/paramedic competency & readiness (the readiness-scoring analog).** FISDAP (Jones & Bartlett) is the dominant EMS education platform, with a Competency Tracker (including an "Observed Team Lead Report" tracking team-role performance), Comprehensive Exams that "evaluate if students are ready to… become practicing EMS professionals," and an Entrance Exam to "qualify applicants" — the closest existing analog to hiring-readiness scoring. Platinum Planner and Limmer Education offer EMS clinical tracking and test prep. None combine this with live instructor-injected crew simulation.
+
+**Nursing/EMS "ready for the floor" hiring/readiness tools.** StaffGarden automates "new-hire readiness" and onboarding competency validation, noting "only 25% of nurse leaders feel highly confident in new graduate nurses entering the clinical floor." Galen's Readiness-to-Practice Indicators, AACN's Synergy competency model, HealthStream Nurse Residency, and Relias competency assessment all operationalize competency-based (vs. time-based) advancement — directly validating VetCrew's "is this hire ready given time-in-training" thesis. All are human-nursing; none exist for veterinary teams.
+
+### 3. Market context
+
+**Workforce shortage & turnover.** Average veterinary technician turnover was 23.6% in 2025 (top hospitals 14.2%), per iVET360's utilization analysis, which frames the gap as driven by utilization, not just pay (tech wages rose to ~$26.55/hr in 2025). In ER/specialty specifically, Instinct Science's 2nd annual State of Emergency and Specialty Veterinary Care report (545 respondents, released Sept 30, 2024) found 78% of practices reporting staffing shortages (down from 86% in 2023) but 79.3% still experiencing technician/nurse turnover. Up to two-thirds of the ~134,200 people working as "veterinary technicians" are uncredentialed (Mars Veterinary Health / BLS data). NAVTA's 2024 Demographic Survey (1,404 respondents, released April 3, 2025) found job satisfaction cratering — the share identifying as "extremely satisfied" fell from 25% in 2022 to 8% in 2024 — with 88% of respondents reporting they had experienced compassion fatigue and 48% feeling no differentiation between credentialed techs and uncredentialed staff.
+
+**Training standards & the school-to-floor gap.** AVMA-CVTEA accredits 200+ programs; the VTNE (administered by AAVSB) is the credentialing exam. Per AAVSB data published by Purdue, the national three-year first-time pass rate was 64.17% for the 1/1/22–12/31/24 window (19,899 first-time candidates) and 67% for 1/1/23–12/31/25 (16,031 candidates). CVTEA requires a program three-year rolling VTNE pass rate ≥50%, and some programs (e.g., Iowa Lakes at 46.43%) sit on probationary accreditation below it — evidence of uneven school preparation. Roughly 5,000 techs graduate annually, each required to demonstrate 300+ skills, yet employers consistently report new grads need substantial on-the-job clinical seasoning. Practice owners report it takes ~2 years for a new graduate DVM to become fully practice-ready ("it's like we've had to complete their clinical training once we hired them"); in one CVMA survey, 76% of responding veterinarians called new-grad lack of confidence/competence a moderately-to-extremely serious problem. The gap between credential and floor-readiness is the exact space VetCrew targets.
+
+**Simulation adoption trend.** Rising but concentrated in academia: WSU runs the first veterinary simulation program accredited by the Society for Simulation in Healthcare; Cornell (Park Innovation Lab/RoboJerry), LSU (SaSimLab, Dr. Nancy Mitropoulou, focused on CPR and mechanical ventilation, with team-performance emphasis), and Colorado State (a new 8-station simulation treatment room situated directly above its ER/ICU, opening Summer 2026) are notable. Peer-reviewed veterinary team-simulation evidence is emerging but CPR-centric: WSU's Hoehne/Cary group published 2025–2026 studies in the *Journal of Veterinary Emergency and Critical Care* on rescuer team size effects on technical and non-technical skills in high-fidelity canine CPR, applying the validated T-NOTECHS (Trauma Non-Technical Skills) crew-resource-management scoring tool — the most on-point evidence for CRM-style team assessment in veterinary ER.
+
+**Funding & launches (2024–2026).** Veterinary/pet-tech funding is active but not training-focused: Scribenote (AI vet scribe) raised an $8.2M seed round led by a16z (Sept 2024, with Inovia Capital and the Velocity Fund); Lupa Pets raised ~$20M Series A (Oct 2025); Digitail raised $23M Series B (Nov 2025). Pet-tech equity funding reportedly hit $346M across 37 rounds in 2025 (aggregator data, directional). In training/HR-tech specifically, Honen's veterinary vertical is the notable new entrant; no dedicated veterinary simulation-readiness competitor has been funded.
+
+### 4. Gap analysis — where the opening is
+- **No veterinary product offers multi-role, instructor-injected, team-based ER/ICU simulation.** VetBloom is single-user content; OpenVetSim is academic and CPR-only; corporate groups have frameworks but no simulator.
+- **No veterinary product uses simulation performance as a hiring/onboarding gate.** The "ready for the floor" scoring model exists only in nursing (StaffGarden, Galen) and EMS (FISDAP) — never ported to veterinary teams.
+- **Veterinary team-simulation evidence stops at CPR.** Nothing addresses broader ER/ICU crew scenarios (sepsis, trauma, toxicology, transfusion, GDV, mechanical ventilation workflows) as coordinated team performances.
+- **The best-capitalized buyers (Mars, Thrive, NVA, Ethos) have the problem, the turnover cost, and the budgets — but not the tool.**
+
+## Recommendations
+
+**Stage 1 (0–6 months) — Validate the wedge, build the software-first MVP.**
+- Build VetCrew first as a **screen-based scenario + instructor-console + AAR software layer**, not VR/hardware. This mirrors the cheapest, most-adopted analogs (OMS screen mode, FISDAP) and avoids the cost/throughput problems that limit manikin and VR programs. Leverage the founder's existing developer skills and VetTrack ICU-equipment domain knowledge.
+- Anchor on **one high-value scenario spine** where team evidence and demand already exist: CPR/resuscitation (RECOVER-aligned) plus 2–3 adjacent ER/ICU crises (GDV, shock/transfusion, respiratory distress). Use RECOVER's role structure and the T-NOTECHS non-technical-skills framework as the scoring backbone — this gives immediate scientific credibility.
+- **Explore partnering with OpenVetSim/RECOVER rather than competing.** They own the CPR simulation standard and an instructor architecture; VetCrew's differentiator is the multi-role orchestration, readiness scoring, and hiring/onboarding use case layered on top.
+
+**Stage 2 (6–18 months) — Prove the readiness-scoring use case with a design partner.**
+- Land 1–2 **ER/specialty design partners** (independent specialty hospitals or a single corporate region) where turnover cost is highest and the ROI story is cleanest. Sell the explicit promise: "quantify whether a new hire is floor-ready given their time-in-training, and target refreshers for veterans."
+- Instrument the AAR to output **exportable readiness metrics** (technical checklist completion + non-technical T-NOTECHS-style scores + time-in-training curves), mirroring FISDAP's readiness/entrance-exam model and military "readiness reporting."
+
+**Stage 3 (18+ months) — Expand scenario library and pursue corporate/enterprise or academic channels.**
+- Pursue enterprise deals with consolidators (Mars/Ethos/Thrive/NVA) and CVTEA-accredited programs. The corporate "standardized onboarding" pain (named explicitly by Honen and echoed by VCA's competency program) is the scale path.
+- Consider RACE CE accreditation for scenarios to unlock the CE budget alongside the HR/onboarding budget — a dual-budget wedge VetBloom already exploits.
+
+**Benchmarks that would change the strategy:**
+- If a design partner cannot show reduced onboarding time or measurable turnover/error improvement within ~2 quarters, pivot from "readiness gate" toward pure refresher/CE positioning (lower friction, larger TAM).
+- If SimX's canine VALOR engine or VetBloom ships multi-role live team simulation, accelerate differentiation on the **hiring-readiness scoring + veterinary-specific ER/ICU scenario depth**, where they are weakest.
+- If VR headset adoption in veterinary hospitals crosses into mainstream, revisit a VR tier; until then, screen-first is the right bet.
+
+## Caveats
+- **Vendor claims are marketing.** SimX's "only patented platform," UbiSim's outcome statistics, and Honen's capabilities are self-described; verify independently before relying on them competitively.
+- **Funding aggregates are directional.** The "$346M/37 rounds" pet-tech figure and various startup-directory numbers come from lead-generation sites, not primary filings; the named rounds (Scribenote $8.2M/a16z, Lupa ~$20M, Digitail $23M) are more reliably reported.
+- **SimX canine is developmental,** originating from a 2022 military R&D contract — not a shipping commercial veterinary product. Monitor but do not overweight.
+- **Some workforce statistics come from commentary/aggregator sites** (turnover percentages, wage figures) that cite NAVTA/AVMA/VHMA; the NAVTA satisfaction/compassion-fatigue figures and Instinct turnover figure trace to primary reports, but confirm exact numbers against primary NAVTA/AVMA/iVET360 publications for any external use.
+- **Recency:** Most findings are 2023–2026. The Cornell "teams of students" description dates to 2016 though the OpenVetSim platform remains maintained (installer updated May 2024); human-medicine CRM literature is foundational but largely pre-2023. Colorado State's simulation complex opens Summer 2026 (forward-looking).
+- This brief maps "what's out there and where's the opening" for early-stage exploration; it is not a substitute for direct customer discovery with ER/ICU hospital managers, which should drive final scoping.

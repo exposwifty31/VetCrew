@@ -1,0 +1,29 @@
+/* ============================================================================
+   VetCrew — SPACE & SIZE
+   Tablet-first: tuned for arm's-length reach, not mouse precision.
+   Touch targets never below 44px.
+   ========================================================================== */
+:root {
+  --sp-0: 0; /* @kind spacing */
+  --sp-1: 0.25rem;  /* 4  */
+  --sp-2: 0.5rem;   /* 8  */
+  --sp-3: 0.75rem;  /* 12 */
+  --sp-4: 1rem;     /* 16 */
+  --sp-5: 1.25rem;  /* 20 */
+  --sp-6: 1.5rem;   /* 24 */
+  --sp-8: 2rem;     /* 32 */
+  --sp-10: 2.5rem;  /* 40 */
+  --sp-12: 3rem;    /* 48 */
+  --sp-16: 4rem;    /* 64 */
+  --sp-20: 5rem;    /* 80 */
+
+  /* touch / control sizing */
+  --touch-min: 44px;      /* WCAG / tablet floor */
+  --control-h: 48px;      /* default control height (arm's length) */
+  --control-h-lg: 56px;   /* instructor injection triggers, hero actions */
+  --control-h-sm: 40px;   /* dense AAR toolbars (desktop review) */
+
+  /* content widths */
+  --measure: 68ch;        /* @kind spacing */
+  --gutter: var(--sp-6);  /* @kind spacing */
+}

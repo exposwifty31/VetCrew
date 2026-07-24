@@ -1,0 +1,39 @@
+/* ============================================================================
+   VetCrew — MOTION
+   Motion INFORMS, never decorates. No bounce, no overshoot. A vital ticking
+   animates its value change (not its layout). "reconnecting" pulses so the
+   frozen state reads as not-live. Respect reduced-motion.
+   ========================================================================== */
+:root {
+  --dur-instant: 80ms /* @kind other */;
+  --dur-fast: 130ms /* @kind other */;
+  --dur-base: 200ms /* @kind other */;
+  --dur-slow: 320ms /* @kind other */;
+  --dur-tick: 260ms /* @kind other */;
+
+  /* easings — decisive, informational; never playful */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);   /* @kind other */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);       /* @kind other */
+  --ease-linear: linear;                       /* @kind other */
+}
+
+/* value-change highlight for a ticking vital — recolors, does NOT reflow */
+@keyframes vc-tick-up   { 0%{ background: color-mix(in srgb, var(--sev-elevated-edge) 24%, transparent);} 100%{ background: transparent; } }
+@keyframes vc-tick-down { 0%{ background: color-mix(in srgb, var(--sev-watch-edge) 24%, transparent);} 100%{ background: transparent; } }
+
+/* honest "not live" pulse for reconnecting / stale */
+@keyframes vc-stale-pulse { 0%,100%{ opacity: 0.55; } 50%{ opacity: 0.9; } }
+
+/* indeterminate reconnect spinner */
+@keyframes vc-spin { to { transform: rotate(360deg); } }
+
+/* a running session's quiet heartbeat dot */
+@keyframes vc-live-dot { 0%,100%{ opacity: 1; } 50%{ opacity: 0.35; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0ms /* @kind other */; --dur-fast: 0ms /* @kind other */; --dur-base: 0ms /* @kind other */; --dur-slow: 0ms /* @kind other */; --dur-tick: 0ms /* @kind other */;
+  }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
