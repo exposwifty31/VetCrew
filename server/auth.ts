@@ -33,7 +33,10 @@ export function parseTestBearer(header: string | undefined): AuthSnapshot | null
   if (match === null) {
     return null;
   }
-  const userId = match[1];
+  const userId = match[1] ?? null;
+  if (userId === null) {
+    return null;
+  }
   const role = match[2] as VetcrewRole;
   return {
     isAuthenticated: true,

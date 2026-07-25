@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 
-import { requireSignedIn } from "./auth.js";
+import { isAuthEnabled, readAuth, requireSignedIn } from "./auth.js";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
@@ -72,8 +72,13 @@ async function boot() {
     // API routers MUST mount before the SPA catch-all (tech-debt #1).
     // Session REST is hiring-evidence surface — signed-in when Clerk is on.
     // E2E/integration leave Clerk keys unset so requireSignedIn is a no-op.
+    const authEnabled = isAuthEnabled(clerkEnabled);
     const signedIn = requireSignedIn(clerkEnabled);
-    app.use("/api/sessions", signedIn, createSessionRouter(db, tenantId));
+    app.use(
+      "/api/sessions",
+      signedIn,
+      createSessionRouter(db, tenantId, { authEnabled, readAuth }),
+    );
     // Manager evidence is employee-performance PII — signed-in when Clerk is on.
     app.use("/api", createManagerRouter(db, tenantId, signedIn));
 
