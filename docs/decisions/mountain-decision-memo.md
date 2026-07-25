@@ -1,6 +1,6 @@
 # VetCrew "Mountain" — Decision Memo
 
-**Date:** 2026-07-23 · **Evidence base:** deep-research runs A (strategy) + B (content), each 3-vote adversarially verified. Run C (modality) is **under-verified — held for re-run**, so the one-engine-vs-two question is *not* answered here. Every load-bearing claim below carries a run tag `[A#]/[B#]`, a confidence, and a source; refuted claims are shown where they matter.
+**Date:** 2026-07-23 · **Updated:** 2026-07-25 (Run C synthesis folded in) · **Evidence base:** deep-research runs A (strategy) + B (content), each 3-vote adversarially verified. Run C (modality) is a **user-supplied synthesis** (not 3-vote adversarially verified) that corroborates the prior design decision — see Q3. Every load-bearing A/B claim below carries a run tag `[A#]/[B#]`, a confidence, and a source; C tags are synthesis-confidence only.
 
 ---
 
@@ -66,28 +66,58 @@
 
 ---
 
-## Q3 — Modality: RESOLVED by design decision (Dan, 2026-07-23), not by research
+## Q3 — Modality: RESOLVED (design decision 2026-07-23; corroborated by C synthesis 2026-07-25)
 
-**Decision: split-engine, single-backbone.** Two execution engines over one shared telemetry ledger:
+**Decision: split-engine, single-backbone.** Two execution modes over one shared telemetry ledger:
 - **Engine Alpha — procedural/base:** a deterministic finite-state machine, **clock-agnostic / stepped** (time freezes between inputs). Discrete sequential actions, localized binary validation. This is the base of the mountain.
 - **Engine Beta — team/summit:** a **real-time event-loop ticker**; time is an active parameter, clinical params decay per tick, asynchronous concurrent inputs. This is the summit.
-- **Shared backbone:** one monolithic state + progress-telemetry schema (append-only event ledger) under both engines. Alpha's per-action error telemetry (e.g. a repeating decimal-shift or line-validation habit) becomes an **initialization payload** for Beta, which raises the volatility of the matching failure mode in the live scenario. *"The base directly controls the physics of the summit"* — without merging two contradictory loops in code.
+- **Shared backbone:** one monolithic state + progress-telemetry schema (append-only event ledger) under both engines. Alpha's per-action error telemetry (e.g. a repeating decimal-shift or line-validation habit) is **recorded in that shared ledger**. A future roadmap option may use it as an initialization payload for Beta (raising the volatility of the matching failure mode in the live scenario) — *"the base directly controls the physics of the summit"* — without merging two contradictory loops in code. That coupling is **not** current shared-backbone behavior and is not required for the MVP.
 
-**Status: this is a design decision, not a verified research finding — recorded as such.** It is not cited as evidence anywhere above.
+**Status:** originally a **design decision** (Dan, 2026-07-23) because the first deep-research Run C failed adversarial verification (infrastructure/rate-limit collapse; only aviation-regulation claims reached a verdict). On 2026-07-25 a **user-supplied C synthesis** was folded in. That synthesis was **not** 3-vote adversarially verified — treat C tags as synthesis-confidence, not as A/B-grade confirmed claims. It does **not** replace the design decision; it **corroborates** it and sharpens the pedagogy around it.
 
-**Reconciliation with the frozen core — it fits cleanly, and largely *is* the frozen core, sharpened:**
-- Engine Alpha = the pure deterministic reducer already frozen in CLAUDE.md §3/§4. Engine Beta = the tick-event scenario engine already frozen. The "single backbone" = the append-only event log already frozen as the source of truth. So this refines one frozen engine into **two execution modes over one log**, rather than adding a second architecture. No frozen decision is broken.
+### What the C synthesis contributes
 
-**One honesty check you must see (do not smooth):** the *only* Run-C claims that reached a verdict were about aviation regulation, and the verifier **refuted 3-0** the specific claim that FAA device qualification uses "a single backbone spanning all device levels." So external regulation does **not** cleanly support "one unified backbone" — it splits device *classes*. This does **not** sink the decision: VetCrew's single event log is a domestic frozen choice that stands on its own and does not depend on how aviation happens to certify simulators. But the split-engine model should be justified from VetCrew's own event-sourcing, **not** claimed as "how aviation does it."
+| Tag | Syn. conf. | Load-bearing point | Implication for VetCrew |
+|---|---|---|---|
+| **C0** | high | Part-task reduces intrinsic load; transfer to whole-task is mixed; Pure Insertion Hypothesis fails. | Base rung may isolate a procedure, but must still be a *small whole technical task*, not a naked drill. |
+| **C1** | high | 4C/ID: whole-task of increasing complexity is the curricular backbone; part-task is zoom-in when load blocks performance — not a long serial "technical forever, team much later" ladder. | Compatible with ship-one-rung: base = small technical whole-task; summit = where crew/NTS load enters. |
+| **C2** | medium | Procedural work inside time-pressure before motor automation → overload / freeze / skill collapse. | Supports Alpha (clock-agnostic) before Beta (live clock). Do not shove novices into tick-driven scenarios to "build resilience." |
+| **C3** | high | Teaching team/comms as a checklist kills psychological fidelity; NTS needs dynamic, charged context. | Reinforces B0: NTS lives in the event-attributed evidence record at the summit — never as a V-check on the solo base. |
+| **C4** | medium | Mature platforms unify modalities via **shared patient/world state + middleware** (military LVC/DIS/HLA; medical MoHSES/AMM + DDS + physiology engine): part-task modules publish, scenario surfaces subscribe. | Unifies *state + record*, not "one code loop for everything." Maps to VetCrew's append-only event log / shared session state — not a mandate for DDS/hardware federation in v1. |
+| **C5** | medium | Durable progression needs a shared learning record across modalities (xAPI→LRS; SimCapture-style AV+checklist+LMS). | Same idea as the frozen event log. Do **not** adopt xAPI/SimCapture as stack for v1 — the pattern is the corroboration. |
+| **C6** | high | MSR's working answer to A4-style abandonment: **mandate** (NITE licensing) + in-situ delivery + academic embedding; pedagogically hardware + SPs in one scenario. | Confirms A4 consequence: base rung must be near-zero-friction **or** leadership-mandated. Mandate is institutional, not a product feature VetCrew ships alone. |
+| **C7** | medium | Local vet path: Koret skills lab (part-task + timed CPR + live stable patients); RECOVER TFCPR treats NTS as first-class in resuscitation. | Grounds summit content in RECOVER-aligned crew scenarios already in CLAUDE.md frozen list. |
 
-**One element to hold as ambitious, not frozen:** the Alpha-error-telemetry → Beta-volatility coupling (base performance dynamically shapes summit difficulty) is a strong idea but an *unbuilt feature*, not a foundational constraint. Flag it as a roadmap item so it doesn't get frozen prematurely — the MVP (one base rung) doesn't need it.
+**Recommendation (not a corroborating finding):**
+
+| Tag | Syn. conf. | Load-bearing point | Implication for VetCrew |
+|---|---|---|---|
+| **C8** | low | *Recommendation* (not finding): map interventions + closed-loop events into a multidimensional record without replacing CVTEA/AVECCTN skill definitions. | Already aligned with B6 + evidence-not-verdict posture. |
+
+### How to read "unified architecture" vs split-engine (do not smooth)
+
+C4's language about unifying modalities sounds like a single engine. Read carefully: what those architectures unify is the **shared patient/world state and the performance record**. Execution surfaces (part-task module vs full-scenario) remain distinct publishers/subscribers. That is exactly **two execution modes over one backbone** — not a refutation of Alpha/Beta.
+
+### Reconciliation with the frozen core
+
+Engine Alpha = the pure deterministic reducer already frozen in CLAUDE.md §3/§4. Engine Beta = the tick-event scenario engine already frozen. The "single backbone" = the append-only event log already frozen as the source of truth. This refines one frozen engine into **two execution modes over one log**, rather than adding a second architecture. No frozen decision is broken.
+
+### Honesty checks that still stand
+
+1. **First deep-research Run C (automated):** the only claims that reached a verdict were about aviation regulation, and the verifier **refuted 3-0** the claim that FAA device qualification uses "a single backbone spanning all device levels." External regulation splits device *classes*. Justify the backbone from VetCrew's own event-sourcing + C4/C5 *analogs* — **not** as "how aviation certifies simulators."
+2. **User C synthesis is not A/B-grade evidence.** It was not adversarially 3-vote verified. Useful for pedagogy and architecture pattern-matching; do not cite C tags as settled research in external pitches.
+3. **What C does not license:** freezing Alpha→Beta difficulty coupling; adopting DDS / xAPI / SimCapture / MoHSES hardware federation as the v1 stack; claiming one code path for part-task and scenario loops.
+
+**One element to hold as ambitious, not frozen:** the Alpha-error-telemetry → Beta-volatility coupling (base performance dynamically shapes summit difficulty) is a strong idea but an *unbuilt feature*, not a foundational constraint. Flag it as a roadmap item — the MVP (one base rung) doesn't need it.
 
 ## Explicitly NOT decided (honest gaps)
 
-- **The acute pain itself** (attrition/burnout causes) [B9], **daily working-task inventories** from live ER/ICU hospitals [B9], and **nursing/EMS onboarding comparison** [B9] — all unanswered by the research. If the base rung's content needs grounding, these are the next search. (Run C's re-run remains available after 20:30 if you later want the modality decision backed by verified evidence rather than design judgment.)
+- **The acute pain itself** (attrition/burnout causes) [B9], **daily working-task inventories** from live ER/ICU hospitals [B9], and **nursing/EMS onboarding comparison** [B9] — all unanswered by A/B. If the base rung's content needs grounding, these are the next search.
+- **Adversarial re-verification of C** — optional. It does **not** block the current modality decision; a 3-vote pass on C0–C5 would raise synthesis tags to confirmed claims, not change Alpha/Beta/backbone. Future verified C evidence may still revise the decision (see Reversal conditions).
 
 ## Reversal conditions
 
 - If the pilot manager's §6 answer says a raw role-attributed record is *not* what they'd trust, the Trust/compliance moat (now scored 3) is weaker than the evidence suggests.
 - If attrition research (unanswered [B9]) shows the acute pain is scheduling/staffing rather than skill, the wedge persona may move.
 - If building Engine Alpha reveals the base rung's procedural content genuinely needs a live clock (i.e. the "freeze time between inputs" assumption is wrong for some base skills), the split-engine boundary moves — the Alpha/Beta line is a design hypothesis, not yet tested against a built scenario.
+- If a later adversarially verified Run C shows that shared-state architectures *require* a single real-time loop for both procedural and scenario work (contradicting C4-as-read-here), revisit whether Alpha can stay clock-agnostic.
