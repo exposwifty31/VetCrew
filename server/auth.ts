@@ -14,7 +14,7 @@ export type AuthReader = (req: Request) => AuthSnapshot;
 
 const TEST_BEARER_RE = /^test:([^:]+):(manager|instructor|trainee)$/;
 
-export function isTestAuthEnabled(): boolean {
+function isTestAuthEnabled(): boolean {
   return process.env.VETCREW_TEST_AUTH === "1";
 }
 
@@ -98,6 +98,10 @@ export function readAuth(req: Request): AuthSnapshot {
   const testAuth = parseTestBearer(req.headers.authorization);
   if (testAuth !== null) {
     return testAuth;
+  }
+  // getAuth requires clerkMiddleware — skip when Clerk keys are absent (test-auth CI).
+  if (process.env["CLERK_SECRET_KEY"] === undefined || process.env["CLERK_SECRET_KEY"].length === 0) {
+    return { isAuthenticated: false, userId: null, role: null };
   }
   return readClerkAuth(req);
 }

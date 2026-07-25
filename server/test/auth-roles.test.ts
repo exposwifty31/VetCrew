@@ -112,6 +112,7 @@ describe("readAuth", () => {
 
   test("maps Clerk session to AuthSnapshot with role from sessionClaims", async () => {
     delete process.env.VETCREW_TEST_AUTH;
+    process.env.CLERK_SECRET_KEY = "sk_test_unit";
     vi.resetModules();
     const getAuth = vi.fn(() => ({
       userId: "clerk-user",
@@ -128,12 +129,14 @@ describe("readAuth", () => {
       role: "manager",
     });
 
+    delete process.env.CLERK_SECRET_KEY;
     vi.doUnmock("@clerk/express");
     vi.resetModules();
   });
 
   test("authenticated Clerk user without role yields role=null", async () => {
     delete process.env.VETCREW_TEST_AUTH;
+    process.env.CLERK_SECRET_KEY = "sk_test_unit";
     vi.resetModules();
     const getAuth = vi.fn(() => ({
       userId: "clerk-user",
@@ -150,8 +153,20 @@ describe("readAuth", () => {
       role: null,
     });
 
+    delete process.env.CLERK_SECRET_KEY;
     vi.doUnmock("@clerk/express");
     vi.resetModules();
+  });
+
+  test("without Clerk secret key, readAuth does not call getAuth", () => {
+    delete process.env.VETCREW_TEST_AUTH;
+    delete process.env.CLERK_SECRET_KEY;
+    const req = { headers: {} } as express.Request;
+    expect(readAuth(req)).toEqual({
+      isAuthenticated: false,
+      userId: null,
+      role: null,
+    });
   });
 });
 

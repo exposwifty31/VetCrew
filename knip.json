@@ -6,8 +6,8 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", "server/test/*.test.ts", "e2e/*.spec.ts"],
-      "project": ["src/**/*.{ts,tsx}", "server/**/*.ts", "scripts/*.ts", "e2e/*.ts"]
+      "entry": ["scripts/*.ts", "server/test/*.test.ts", "e2e/*.spec.ts", "e2e/helpers/*.ts"],
+      "project": ["src/**/*.{ts,tsx}", "server/**/*.ts", "scripts/*.ts", "e2e/**/*.ts"]
     },
     "packages/engine": {
       "entry": ["test/*.test.ts"]

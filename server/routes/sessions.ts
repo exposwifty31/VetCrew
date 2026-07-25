@@ -218,7 +218,7 @@ export async function assertRoleStationBinding(
 }
 
 /** REST ownership — manager/instructor see all; trainees only assigned stations. */
-export async function assertSessionAccess(
+async function assertSessionAccess(
   db: Db,
   tenantId: string,
   sessionId: string,

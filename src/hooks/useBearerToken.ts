@@ -29,8 +29,3 @@ export function useClerkBearerToken(): () => Promise<string | null> {
 export async function e2eOrNoBearerToken(): Promise<string | null> {
   return resolveBearerToken();
 }
-
-/** @deprecated Use e2eOrNoBearerToken — kept as alias for call sites migrating. */
-export async function noBearerToken(): Promise<string | null> {
-  return e2eOrNoBearerToken();
-}

@@ -10,7 +10,7 @@ export class HttpError extends Error {
   }
 }
 
-export function fetchErrorMessageKey(status: number | null): MessageKey {
+function fetchErrorMessageKey(status: number | null): MessageKey {
   if (status === 401) return "auth.required";
   if (status === 403) return "auth.forbidden";
   return "shell.networkError";
