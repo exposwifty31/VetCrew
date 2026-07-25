@@ -54,6 +54,8 @@
 
   .check{display:inline-flex;align-items:center;gap:9px;min-height:44px;margin-top:6px;
     font-size:13.5px;color:var(--task-text-dim);cursor:pointer;}
+  /* author display beats the UA [hidden] rule — restate it or the toggle never hides */
+  .check[hidden]{display:none;}
   .check input{width:18px;height:18px;accent-color:var(--task-action);}
 
   /* cuff fit — the signature control. The information is visible; the JUDGEMENT is theirs. */

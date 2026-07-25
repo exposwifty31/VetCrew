@@ -37,7 +37,8 @@
   .zonetag--b{inset-inline-end:14px;color:var(--inst-text-faint);}
 
   /* ── TaskChip (inlined; matte + contained — never a monitor channel colour) ── */
-  .vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;min-height:var(--touch-min);padding:12px;
+  /* flex-shrink:0 — chips must never compress to fit the column; the list scrolls */
+  .vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;min-height:var(--touch-min);flex-shrink:0;padding:12px;
     background:var(--task-surface);border:1px solid var(--task-edge);border-radius:var(--radius-md);color:var(--task-text);}
   .vc-task__badge{flex:0 0 auto;width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;align-self:flex-start;}
   .vc-task__badge svg{width:22px;height:22px;}
