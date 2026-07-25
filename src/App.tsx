@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
@@ -10,10 +10,19 @@ import {
   useClerkBearerToken,
 } from "./hooks/useBearerToken.js";
 import { t } from "./i18n";
-import AarPage from "./pages/AarPage.js";
-import InstructorConsolePage from "./pages/InstructorConsolePage.js";
-import ManagerEvidencePage from "./pages/ManagerEvidencePage.js";
-import StationPage from "./pages/StationPage.js";
+
+const AarPage = lazy(() => import("./pages/AarPage.js"));
+const InstructorConsolePage = lazy(() => import("./pages/InstructorConsolePage.js"));
+const ManagerEvidencePage = lazy(() => import("./pages/ManagerEvidencePage.js"));
+const StationPage = lazy(() => import("./pages/StationPage.js"));
+
+function RouteLoadingFallback() {
+  return <main style={{ padding: 32 }}>{t("shell.loading")}</main>;
+}
+
+function LazyRoute({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<RouteLoadingFallback />}>{children}</Suspense>;
+}
 
 interface Health {
   ok: boolean;
@@ -87,23 +96,43 @@ export default function App() {
   const route = useHashRoute();
   const aarMatch = /^#\/aar\/(.+)$/.exec(route);
   if (aarMatch?.[1] !== undefined) {
-    return <AarPage sessionId={aarMatch[1]} />;
+    return (
+      <LazyRoute>
+        <AarPage sessionId={aarMatch[1]} />
+      </LazyRoute>
+    );
   }
   const stationMatch = /^#\/station\/(.+)$/.exec(route);
   if (stationMatch?.[1] !== undefined) {
-    return <StationPage sessionId={stationMatch[1]} />;
+    return (
+      <LazyRoute>
+        <StationPage sessionId={stationMatch[1]} />
+      </LazyRoute>
+    );
   }
   const instructorMatch = /^#\/instructor\/(.+)$/.exec(route);
   if (instructorMatch?.[1] !== undefined) {
-    return <InstructorConsolePage sessionId={instructorMatch[1]} />;
+    return (
+      <LazyRoute>
+        <InstructorConsolePage sessionId={instructorMatch[1]} />
+      </LazyRoute>
+    );
   }
   const managerTrendMatch = /^#\/manager\/([^/]+)\/trend$/.exec(route);
   if (managerTrendMatch?.[1] !== undefined) {
-    return <ManagerEvidencePage traineeId={decodeURIComponent(managerTrendMatch[1])} focus="trend" />;
+    return (
+      <LazyRoute>
+        <ManagerEvidencePage traineeId={decodeURIComponent(managerTrendMatch[1])} focus="trend" />
+      </LazyRoute>
+    );
   }
   const managerMatch = /^#\/manager\/(.+)$/.exec(route);
   if (managerMatch?.[1] !== undefined) {
-    return <ManagerEvidencePage traineeId={decodeURIComponent(managerMatch[1])} />;
+    return (
+      <LazyRoute>
+        <ManagerEvidencePage traineeId={decodeURIComponent(managerMatch[1])} />
+      </LazyRoute>
+    );
   }
   return hasClerkPublishableKey ? <HomePageWithClerk /> : <HomePage getToken={noBearerToken} />;
 }
