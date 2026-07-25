@@ -2,7 +2,7 @@
    window.VCAAR_DATA. Times are seconds from session start. */
 window.VCAAR_DATA = {
   session: {
-    title: "החייאת כלב — הרחבת קיבה (GDV)",
+    title: "החייאת כלב — היפוך קיבה (GDV)",
     scenario: "gdv-canine-v1",
     date: "24 ביולי 2026 · 08:14",
     duration: 420,

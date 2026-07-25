@@ -5,10 +5,12 @@
 <title>VetCrew · הר הכשירות</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-  html,body{margin:0;background:#070b12;font-family:var(--font-ui);}
-  .slide{position:relative;width:1280px;height:720px;background:
+  html,body{margin:0;height:100%;background:#070b12;font-family:var(--font-ui);overflow:hidden;}
+  /* fixed 1280x720 artboard, scaled to fill whatever hosts it (deck slide or tab) */
+  body{display:grid;place-items:center;}
+  .slide{position:relative;width:1280px;height:720px;flex:0 0 auto;background:
       radial-gradient(1100px 620px at 22% 78%, #0d1622 0%, #070b12 62%);
-    overflow:hidden;color:var(--inst-text);}
+    overflow:hidden;color:var(--inst-text);transform-origin:center center;}
   .hd{position:absolute;top:52px;inset-inline-start:64px;inset-inline-end:64px;}
   .hd h1{margin:0;font-size:44px;font-weight:700;letter-spacing:-0.015em;color:#eaf2f7;}
   .hd p{margin:10px 0 0;font-size:19px;color:#8fa3b2;font-weight:400;}
@@ -121,5 +123,16 @@
   </div>
 
 </div>
+<script>
+  (() => {
+    const slide = document.querySelector(".slide");
+    const fit = () => {
+      const k = Math.min(innerWidth / 1280, innerHeight / 720);
+      slide.style.transform = `scale(${k})`;
+    };
+    addEventListener("resize", fit);
+    fit();
+  })();
+</script>
 </body>
 </html>
