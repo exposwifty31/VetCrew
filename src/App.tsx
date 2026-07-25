@@ -4,6 +4,11 @@ import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
 import { createSession, fetchSessions, type SessionSummary } from "./api.js";
 import AuthBar from "./components/AuthBar.js";
+import {
+  hasClerkPublishableKey,
+  noBearerToken,
+  useClerkBearerToken,
+} from "./hooks/useBearerToken.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
 import InstructorConsolePage from "./pages/InstructorConsolePage.js";
@@ -100,10 +105,15 @@ export default function App() {
   if (managerMatch?.[1] !== undefined) {
     return <ManagerEvidencePage traineeId={decodeURIComponent(managerMatch[1])} />;
   }
-  return <HomePage />;
+  return hasClerkPublishableKey ? <HomePageWithClerk /> : <HomePage getToken={noBearerToken} />;
 }
 
-function HomePage() {
+function HomePageWithClerk() {
+  const getToken = useClerkBearerToken();
+  return <HomePage getToken={getToken} />;
+}
+
+function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
   const [health, setHealth] = useState<Health | null | "down">(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [startingStation, setStartingStation] = useState(false);
@@ -119,20 +129,29 @@ function HomePage() {
       })
       .then((body) => setHealth(body.ok ? body : "down"))
       .catch(() => setHealth("down"));
-    fetchSessions()
-      .then(setSessions)
-      .catch(() => setSessions([]));
+    void (async () => {
+      try {
+        const token = await getToken();
+        setSessions(await fetchSessions(token));
+      } catch {
+        setSessions([]);
+      }
+    })();
     return () => controller.abort();
-  }, []);
+  }, [getToken]);
 
   async function startStation() {
     setStartingStation(true);
     try {
-      const session = await createSession({
-        scenarioSlug: "base-rung-stepped-tasks",
-        traineeId: "pitch-trainee",
-        traineeTimeInTrainingDays: 90,
-      });
+      const token = await getToken();
+      const session = await createSession(
+        {
+          scenarioSlug: "base-rung-stepped-tasks",
+          traineeId: "pitch-trainee",
+          traineeTimeInTrainingDays: 90,
+        },
+        token,
+      );
       window.location.hash = `#/station/${session.id}`;
     } catch {
       setStartingStation(false);
@@ -142,11 +161,15 @@ function HomePage() {
   async function startInstructorDemo() {
     setStartingInstructor(true);
     try {
-      const session = await createSession({
-        scenarioSlug: "base-rung-resp-distress",
-        traineeId: "pitch-trainee",
-        traineeTimeInTrainingDays: 90,
-      });
+      const token = await getToken();
+      const session = await createSession(
+        {
+          scenarioSlug: "base-rung-resp-distress",
+          traineeId: "pitch-trainee",
+          traineeTimeInTrainingDays: 90,
+        },
+        token,
+      );
       window.location.hash = `#/instructor/${session.id}`;
     } catch {
       setStartingInstructor(false);

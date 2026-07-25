@@ -88,13 +88,17 @@ export function createManagerRouter(
         .from(antsRatings)
         .where(and(eq(antsRatings.tenantId, tenantId), eq(antsRatings.sessionId, row.sessionId)));
       const scores = ratings.map((r) => r.score);
+      if (row.traineeTimeInTrainingDays === null) {
+        throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
+      }
       sessions.push({
         sessionId: row.sessionId,
         phase: row.phase as "scored" | "archived",
         scenarioSlug: row.scenarioSlug,
         scenarioVersion: row.scenarioVersion,
         clinicallyReviewed: row.clinicallyReviewed,
-        traineeTimeInTrainingDays: row.traineeTimeInTrainingDays ?? 0,
+        // Scored sessions are DB-gated to have TiT — never invent day-0.
+        traineeTimeInTrainingDays: row.traineeTimeInTrainingDays,
         technicalPercent: technicalPercent(checklist, tasks),
         overallAnts: overallAnts(scores),
         ratedDomainCount: scores.length,
@@ -159,10 +163,13 @@ export function createManagerRouter(
         if (domain.success) domainScores[domain.data] = rating.score;
       }
       const scores = ratings.map((r) => r.score);
+      if (row.traineeTimeInTrainingDays === null) {
+        throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
+      }
       points.push({
         sessionId: row.sessionId,
         createdAtMs: row.createdAt.getTime(),
-        timeInTrainingDays: row.traineeTimeInTrainingDays ?? 0,
+        timeInTrainingDays: row.traineeTimeInTrainingDays,
         technicalPercent: technicalPercent(checklist, tasks),
         overallAnts: overallAnts(scores),
         domainScores,

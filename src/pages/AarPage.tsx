@@ -3,6 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { AntsDomain } from "@vetcrew/shared";
 
 import { fetchAar, submitRatings, type AarResponse } from "../api.js";
+import {
+  hasClerkPublishableKey,
+  noBearerToken,
+  useClerkBearerToken,
+} from "../hooks/useBearerToken.js";
 import { t, type MessageKey } from "../i18n/index.js";
 
 /**
@@ -117,6 +122,24 @@ function SeqLink({ seq, onJump }: { seq: number; onJump: (seq: number) => void }
 }
 
 export default function AarPage({ sessionId }: { sessionId: string }) {
+  if (hasClerkPublishableKey) {
+    return <AarPageWithClerk sessionId={sessionId} />;
+  }
+  return <AarPageBody sessionId={sessionId} getToken={noBearerToken} />;
+}
+
+function AarPageWithClerk({ sessionId }: { sessionId: string }) {
+  const getToken = useClerkBearerToken();
+  return <AarPageBody sessionId={sessionId} getToken={getToken} />;
+}
+
+function AarPageBody({
+  sessionId,
+  getToken,
+}: {
+  sessionId: string;
+  getToken: () => Promise<string | null>;
+}) {
   const [data, setData] = useState<AarResponse | null>(null);
   const [error, setError] = useState(false);
   const [scrubMs, setScrubMs] = useState(0);
@@ -155,20 +178,22 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     setScores({});
     setSubmitState("idle");
     setHighlightSeq(null);
-    fetchAar(sessionId)
-      .then((d) => {
+    void (async () => {
+      try {
+        const token = await getToken();
+        const d = await fetchAar(sessionId, token);
         if (cancelled) return;
         setData(d);
         setScrubMs(d.aar.durationMs);
         setActiveDomain(d.scenario.scoringDimensions[0] ?? null);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setError(true);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, getToken]);
 
   useEffect(() => {
     if (highlightSeq === null) return;
@@ -242,6 +267,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     }
     setSubmitState("saving");
     try {
+      const token = await getToken();
       await submitRatings(
         targetSessionId,
         raterId.trim(),
@@ -250,6 +276,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
           score: scores[domain] ?? 0,
           evidenceEventSeqs: [...(evidenceByDomain[domain] ?? [])],
         })),
+        token,
       );
     } catch {
       // Ignore if the user navigated away mid-submit.
@@ -260,7 +287,8 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     if (targetSessionId !== sessionId) return;
     setSubmitState("saved");
     try {
-      const refreshed = await fetchAar(targetSessionId);
+      const token = await getToken();
+      const refreshed = await fetchAar(targetSessionId, token);
       if (targetSessionId === sessionId) setData(refreshed);
     } catch {
       // stale view is acceptable — the stored ratings render on next load

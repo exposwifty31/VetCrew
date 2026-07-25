@@ -9,10 +9,13 @@
   "packageManager": "pnpm@11.5.1",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch --env-file-if-exists=.env server/index.ts",
-    "seed:demo": "tsx --env-file-if-exists=.env server/scripts/seed-demo.ts",
-    "build": "vite build",
-    "start": "tsx server/index.ts",
+    "dev:server": "NODE_OPTIONS='--conditions=development' tsx watch --env-file-if-exists=.env server/index.ts",
+    "seed:demo": "NODE_OPTIONS='--conditions=development' tsx --env-file-if-exists=.env server/scripts/seed-demo.ts",
+
+    "build:server": "tsc -b server/tsconfig.build.json && node scripts/copy-server-assets.mjs",
+    "build": "pnpm build:server && vite build",
+    "start": "node dist-server/index.js",
+
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p server/tsconfig.json && pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",

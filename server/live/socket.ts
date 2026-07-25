@@ -48,6 +48,8 @@ export type LiveSocketOptions = {
    * Security veto: not for pitch/pilot until role_stations binding ships.
    */
   readonly allowDevBypass: boolean;
+  /** Socket.IO CORS origin — `true` reflects any (dev); prod should be explicit. */
+  readonly corsOrigin?: string | boolean | string[];
 };
 
 function socketRoom(sessionId: string): string {
@@ -170,7 +172,7 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
   }
 
   const io = new Server(httpServer, {
-    cors: { origin: true, credentials: true },
+    cors: { origin: options.corsOrigin ?? true, credentials: true },
     path: "/socket.io",
   });
 

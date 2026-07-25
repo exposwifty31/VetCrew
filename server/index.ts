@@ -21,6 +21,16 @@ const env = loadEnv();
 const app = express();
 app.use(express.json());
 
+/** Prod CORS: explicit `CORS_ORIGIN`, else Railway public HTTPS origin, else deny reflect-any. */
+function resolveCorsOrigin(nodeEnv: string): string | boolean {
+  if (nodeEnv !== "production") return true;
+  const explicit = process.env["CORS_ORIGIN"];
+  if (explicit !== undefined && explicit.length > 0) return explicit;
+  const domain = process.env["RAILWAY_PUBLIC_DOMAIN"];
+  if (domain !== undefined && domain.length > 0) return `https://${domain}`;
+  return false;
+}
+
 const secretKey = env.CLERK_SECRET_KEY;
 const publishableKey = env.CLERK_PUBLISHABLE_KEY;
 const clerkEnabled = secretKey !== undefined && publishableKey !== undefined;
@@ -33,24 +43,20 @@ if (secretKey !== undefined && publishableKey !== undefined) {
 let dbReady = false;
 
 app.get("/api/health", (_req, res) => {
-  res.json({
-    ok: true,
-    auth: clerkEnabled ? "clerk" : "dev-bypass",
-    db: dbReady ? "ready" : env.DATABASE_URL === undefined ? "not-configured" : "starting",
-  });
-});
-
-// Production: single Railway service serves the built SPA too.
-const distDir = join(dirname(fileURLToPath(import.meta.url)), "..", "dist");
-if (env.NODE_ENV === "production") {
-  if (!existsSync(distDir)) {
-    throw new Error("production boot without dist/ — client build missing");
+  const dbStatus =
+    dbReady ? "ready" : env.DATABASE_URL === undefined ? "not-configured" : "starting";
+  const payload = {
+    ok: dbReady || env.DATABASE_URL === undefined,
+    auth: clerkEnabled ? ("clerk" as const) : ("dev-bypass" as const),
+    db: dbStatus as "ready" | "starting" | "not-configured",
+  };
+  // Fail the probe while Postgres is configured but not yet migrated/ready.
+  if (env.DATABASE_URL !== undefined && !dbReady) {
+    res.status(503).json(payload);
+    return;
   }
-  app.use(express.static(distDir));
-  app.get("{*splat}", (_req, res) => {
-    res.sendFile(join(distDir, "index.html"));
-  });
-}
+  res.json(payload);
+});
 
 async function boot() {
   const httpServer = createServer(app);
@@ -63,9 +69,13 @@ async function boot() {
     }
     const tenantId = await ensurePilotTenant(db);
     await syncScenarios(db, tenantId, loadScenarioFiles());
-    app.use("/api/sessions", createSessionRouter(db, tenantId));
+    // API routers MUST mount before the SPA catch-all (tech-debt #1).
+    // Session REST is hiring-evidence surface — signed-in when Clerk is on.
+    // E2E/integration leave Clerk keys unset so requireSignedIn is a no-op.
+    const signedIn = requireSignedIn(clerkEnabled);
+    app.use("/api/sessions", signedIn, createSessionRouter(db, tenantId));
     // Manager evidence is employee-performance PII — signed-in when Clerk is on.
-    app.use("/api", createManagerRouter(db, tenantId, requireSignedIn(clerkEnabled)));
+    app.use("/api", createManagerRouter(db, tenantId, signedIn));
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {
@@ -74,10 +84,23 @@ async function boot() {
       // Clerk keys may be present for SPA/manager auth while role_stations
       // binding is still open — keep the loud join bypass in development only.
       allowDevBypass: env.NODE_ENV === "development",
+      corsOrigin: resolveCorsOrigin(env.NODE_ENV),
     });
     dbReady = true;
   } else {
     console.warn("DATABASE_URL not set — booting without a database (dev only, no session API)");
+  }
+
+  // Production: SPA after APIs so GET /api/* is never swallowed by index.html.
+  const distDir = join(dirname(fileURLToPath(import.meta.url)), "..", "dist");
+  if (env.NODE_ENV === "production") {
+    if (!existsSync(distDir)) {
+      throw new Error("production boot without dist/ — client build missing");
+    }
+    app.use(express.static(distDir));
+    app.get("{*splat}", (_req, res) => {
+      res.sendFile(join(distDir, "index.html"));
+    });
   }
 
   httpServer.listen(env.PORT, () => {
