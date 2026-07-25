@@ -1,15 +1,16 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
-import { evaluateChecklist, type EngineEvent } from "@vetcrew/engine";
+import { evaluateChecklist, evaluateTasks, type EngineEvent } from "@vetcrew/engine";
 import type { EngineEventBody } from "@vetcrew/shared";
 import express from "express";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createDb } from "../db/client.js";
 import { runMigrations } from "../db/migrate.js";
+import { createManagerRouter } from "../routes/manager.js";
 import { createSessionRouter } from "../routes/sessions.js";
-import { loadScenarioFiles, syncScenarios } from "../scenarios.js";
+import { compileScenario, loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
 import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
@@ -87,6 +88,7 @@ beforeAll(async () => {
   const app = express();
   app.use(express.json());
   app.use("/api/sessions", createSessionRouter(db, tenantId));
+  app.use("/api", createManagerRouter(db, tenantId));
   await new Promise<void>((resolve, reject) => {
     server = app.listen(0, (err?: Error) => (err ? reject(err) : resolve()));
   });
@@ -123,6 +125,7 @@ describe("event-log persistence + replay round-trip", () => {
     const body = JSON.parse(firstText) as {
       session: { phase: string; seed: number };
       checklist: ReturnType<typeof evaluateChecklist>;
+      tasks: ReturnType<typeof evaluateTasks>;
       aar: { durationMs: number; timeline: { seq: number }[] };
     };
     expect(body.session.seed).toBe(424242);
@@ -134,6 +137,11 @@ describe("event-log persistence + replay round-trip", () => {
     if (authored === undefined) throw new Error("scenario file missing");
     const local = evaluateChecklist(events, authored.checklist);
     expect(body.checklist).toEqual(local);
+
+    // Task expected-vs-actual is on the AAR wire (Sprint 5a / SRS §7).
+    const localTasks = evaluateTasks(424242, events, compileScenario(authored));
+    expect(body.tasks).toEqual(localTasks);
+    expect(body.tasks.results.length).toBeGreaterThanOrEqual(0);
 
     // The deliberate priority inversion fails with evidence attached.
     const inversion = body.checklist.items.find((i) => i.id === "airway-before-iv");

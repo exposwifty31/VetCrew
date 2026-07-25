@@ -6,6 +6,7 @@ import { createSession, fetchSessions, type SessionSummary } from "./api.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
 import InstructorConsolePage from "./pages/InstructorConsolePage.js";
+import ManagerEvidencePage from "./pages/ManagerEvidencePage.js";
 import StationPage from "./pages/StationPage.js";
 
 interface Health {
@@ -89,6 +90,14 @@ export default function App() {
   const instructorMatch = /^#\/instructor\/(.+)$/.exec(route);
   if (instructorMatch?.[1] !== undefined) {
     return <InstructorConsolePage sessionId={instructorMatch[1]} />;
+  }
+  const managerTrendMatch = /^#\/manager\/([^/]+)\/trend$/.exec(route);
+  if (managerTrendMatch?.[1] !== undefined) {
+    return <ManagerEvidencePage traineeId={decodeURIComponent(managerTrendMatch[1])} focus="trend" />;
+  }
+  const managerMatch = /^#\/manager\/(.+)$/.exec(route);
+  if (managerMatch?.[1] !== undefined) {
+    return <ManagerEvidencePage traineeId={decodeURIComponent(managerMatch[1])} />;
   }
   return <HomePage />;
 }
@@ -227,6 +236,23 @@ function HomePage() {
           >
             {startingInstructor ? t("home.instructor.starting") : t("home.instructor.start")}
           </button>
+          <a
+            href="#/manager/pitch-trainee"
+            style={{
+              minHeight: 48,
+              paddingInline: 16,
+              display: "inline-flex",
+              alignItems: "center",
+              background: "transparent",
+              color: "var(--text-primary, #e8eef4)",
+              border: "1px solid var(--border-default, #2a3a42)",
+              borderRadius: 8,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            {t("home.manager.open")}
+          </a>
         </div>
       </section>
 

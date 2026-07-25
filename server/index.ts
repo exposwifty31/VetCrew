@@ -11,6 +11,7 @@ import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
 import { RoomRegistry } from "./live/room-registry.js";
 import { attachLiveSocket } from "./live/socket.js";
+import { createManagerRouter } from "./routes/manager.js";
 import { createSessionRouter } from "./routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "./scenarios.js";
 import { ensurePilotTenant } from "./tenancy.js";
@@ -62,6 +63,7 @@ async function boot() {
     const tenantId = await ensurePilotTenant(db);
     await syncScenarios(db, tenantId, loadScenarioFiles());
     app.use("/api/sessions", createSessionRouter(db, tenantId));
+    app.use("/api", createManagerRouter(db, tenantId));
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {

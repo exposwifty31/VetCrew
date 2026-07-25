@@ -192,13 +192,16 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     for (const item of data?.checklist.items ?? []) {
       if (!item.passed) for (const seq of item.evidenceSeqs) seqs.add(seq);
     }
+    for (const item of data?.tasks.results ?? []) {
+      if (!item.passed) for (const seq of item.evidenceSeqs) seqs.add(seq);
+    }
     return seqs;
   }, [data]);
 
   if (error) return <main style={{ padding: 32 }}>{t("aar.error")}</main>;
   if (data === null) return <main style={{ padding: 32 }}>{t("aar.loading")}</main>;
 
-  const { session, scenario, aar, checklist, ratings } = data;
+  const { session, scenario, aar, checklist, tasks, ratings } = data;
 
   const visible = aar.timeline.filter((entry) => {
     if (entry.type === "tick") return false;
@@ -349,6 +352,63 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
           ))}
         </ul>
       </section>
+
+      {tasks.totalCount > 0 && (
+        <section style={card}>
+          <h2>{t("aar.tasks.heading")}</h2>
+          <p style={{ fontWeight: 700 }}>
+            {t("aar.tasks.score", {
+              passed: tasks.passedCount,
+              total: tasks.totalCount,
+            })}
+          </p>
+          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+            {tasks.results.map((item) => (
+              <li
+                key={`${item.taskId}:${item.dimension}`}
+                style={{
+                  display: "grid",
+                  gap: 4,
+                  padding: "8px 12px",
+                  borderRadius: "var(--r-sm, 4px)",
+                  background: item.passed ? "var(--bg-running-subtle)" : "var(--bg-critical-subtle)",
+                  border: `1px solid ${item.passed ? "var(--border-running-subtle)" : "var(--border-critical-subtle)"}`,
+                }}
+              >
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <strong style={{ color: item.passed ? "var(--text-running)" : "var(--text-critical)" }}>
+                    {item.passed ? t("aar.checklist.pass") : t("aar.checklist.fail")}
+                    {item.critical ? ` · ${t("aar.tasks.critical")}` : ""}
+                  </strong>
+                  <span style={{ flex: 1 }}>{item.labelHe}</span>
+                  {item.evidenceSeqs.length > 0 && (
+                    <span
+                      style={{
+                        color: "var(--text-muted)",
+                        fontVariantNumeric: "tabular-nums",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <span>{t("aar.checklist.evidenceLabel")}</span>
+                      {item.evidenceSeqs.map((seq) => (
+                        <SeqLink key={seq} seq={seq} onJump={jumpToSeq} />
+                      ))}
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "var(--fs-sm, 14px)" }}>
+                  {t("aar.tasks.expectedVsActual", {
+                    expected: item.expectedHe,
+                    actual: item.actualHe ?? t("aar.tasks.notAttempted"),
+                  })}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section style={card}>
         <h2>{t("aar.vitals.heading")}</h2>
