@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 import type { ScenarioDef } from "@vetcrew/engine";
 import { authoredScenarioSchema, type AuthoredScenario } from "@vetcrew/shared";
-import { eq, and } from "drizzle-orm";
 
 import type { Db } from "./db/client.js";
 import { scenarios } from "./db/schema/index.js";
@@ -40,32 +39,30 @@ export function compileScenario(authored: AuthoredScenario): ScenarioDef {
   };
 }
 
-/** Upsert scenario rows on boot; (tenant, slug, version) is immutable once written. */
+/** Upsert scenario rows on boot; (tenant, slug, version) is the natural key. */
 export async function syncScenarios(
   db: Db,
   tenantId: string,
   authoredList: AuthoredScenario[],
 ): Promise<void> {
   for (const authored of authoredList) {
-    const existing = await db
-      .select({ id: scenarios.id })
-      .from(scenarios)
-      .where(
-        and(
-          eq(scenarios.tenantId, tenantId),
-          eq(scenarios.slug, authored.slug),
-          eq(scenarios.version, authored.version),
-        ),
-      );
-    if (existing.length === 0) {
-      await db.insert(scenarios).values({
+    await db
+      .insert(scenarios)
+      .values({
         tenantId,
         slug: authored.slug,
         version: authored.version,
         clinicallyReviewed: authored.clinicallyReviewed,
         clinicalReviewer: authored.clinicalReviewer,
         definition: authored,
+      })
+      .onConflictDoUpdate({
+        target: [scenarios.tenantId, scenarios.slug, scenarios.version],
+        set: {
+          clinicallyReviewed: authored.clinicallyReviewed,
+          clinicalReviewer: authored.clinicalReviewer,
+          definition: authored,
+        },
       });
-    }
   }
 }

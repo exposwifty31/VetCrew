@@ -20,6 +20,7 @@ const TEST_DATABASE_URL =
 
 const SCENARIO_SLUG = "base-rung-resp-distress";
 const ORIGINAL_TEST_AUTH = process.env.VETCREW_TEST_AUTH;
+const ORIGINAL_ALLOW_UNREVIEWED = process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
 
 let pool: ReturnType<typeof createDb>["pool"];
 let db: ReturnType<typeof createDb>["db"];
@@ -38,11 +39,20 @@ async function api(path: string, init?: RequestInit): Promise<Response> {
   return fetch(`${baseUrl}${path}`, init);
 }
 
-afterAll(() => {
+afterAll(async () => {
+  await new Promise<void>((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+  await pool.end();
   if (ORIGINAL_TEST_AUTH === undefined) {
     delete process.env.VETCREW_TEST_AUTH;
   } else {
     process.env.VETCREW_TEST_AUTH = ORIGINAL_TEST_AUTH;
+  }
+  if (ORIGINAL_ALLOW_UNREVIEWED === undefined) {
+    delete process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
+  } else {
+    process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = ORIGINAL_ALLOW_UNREVIEWED;
   }
 });
 
@@ -52,6 +62,7 @@ beforeEach(() => {
 
 beforeAll(async () => {
   process.env.VETCREW_TEST_AUTH = "1";
+  process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = "1";
   const dbName = new URL(TEST_DATABASE_URL).pathname.replace(/^\//, "");
   if (!/test/i.test(dbName)) {
     throw new Error(
@@ -78,13 +89,6 @@ beforeAll(async () => {
     server = app.listen(0, (err?: Error) => (err ? reject(err) : resolve()));
   });
   baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-});
-
-afterAll(async () => {
-  await new Promise<void>((resolve, reject) => {
-    server.close((err) => (err ? reject(err) : resolve()));
-  });
-  await pool.end();
 });
 
 describe("session create binds role_stations", () => {

@@ -442,6 +442,27 @@ export function createSessionRouter(
       res.status(400).json({ error: "raterId required" });
       return;
     }
+    const sessionForGate = await loadSession(db, tenantId, id);
+    if (sessionForGate === undefined) {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const scenarioForGate = await db
+      .select({ clinicallyReviewed: scenarios.clinicallyReviewed })
+      .from(scenarios)
+      .where(eq(scenarios.id, sessionForGate.scenarioId));
+    const scenarioRow = scenarioForGate[0];
+    if (scenarioRow === undefined) {
+      res.status(500).json({ error: "session references missing scenario" });
+      return;
+    }
+    if (
+      !scenarioRow.clinicallyReviewed &&
+      process.env.VETCREW_ALLOW_UNREVIEWED_SCORES !== "1"
+    ) {
+      res.status(403).json({ error: "scenario_not_clinically_reviewed" });
+      return;
+    }
     // Phase guard, evidence check, and seq derivation all read session state,
     // so they run INSIDE the transaction under a row lock — a concurrent
     // append cannot make the debrief check stale or collide the scored seq.

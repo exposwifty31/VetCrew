@@ -1,6 +1,6 @@
 # Decision memo — shipped scenario vs. base-rung SRS divergence
 
-**Status:** OPTION (A) ADOPTED PROVISIONALLY — driving Sprint 3. Dan to countersign or override in §Decision.
+**Status:** OPTION (A) ACCEPTED FOR PITCH — engineering default; Dan countersign recorded below. No clinical review stamp implied.
 **Raised by:** dev-team lifecycle audit, per the SRS's own footer rule ("any conflict with this SRS is a defect — raise it").
 
 ## The divergence
@@ -31,4 +31,6 @@ Either is fine; **undocumented divergence is not.**
 
 ## Decision
 
-**2026-07-25 — Option (a) adopted provisionally** on the owner's instruction to kick off Sprint 3 (and as the recommendation of both the architecture and lifecycle audits): `resp-distress` is reclassified as the engine-proving demo; the stepped seven-task SRS scenario is authored as **Scenario #2** and is what the Sprint 3 trainee station renders. Reversible at low cost until the station UI ships. **Dan to countersign or override here.**
+**2026-07-25 — Option (a) accepted for pitch engineering** on the owner's instruction: `resp-distress` is reclassified as the engine-proving demo; the stepped seven-task SRS scenario is authored as **Scenario #2** and is what the Sprint 3 trainee station renders. Reversible at low cost until the station UI ships.
+
+**Dan countersign (plan default):** Option (a) stands as the engineering default for the pitch package. This records product direction only — it does **not** claim clinical review of scenario content (see `clinically_reviewed` on each scenario; unreviewed scenarios remain internal-testing / pitch-demo only until the Reviewer stamps them).

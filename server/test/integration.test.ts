@@ -67,7 +67,11 @@ async function appendEvents(sessionId: string, events: EngineEventBody[]): Promi
   return body.events;
 }
 
+const ORIGINAL_ALLOW_UNREVIEWED = process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
+
 beforeAll(async () => {
+  // Pitch/CI demos score unreviewed scenarios; production leaves this unset.
+  process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = "1";
   // This suite DROPS THE SCHEMA of whatever TEST_DATABASE_URL points at.
   // Refuse to run against anything whose database name doesn't say "test",
   // so a copy-pasted DATABASE_URL can never nuke a real database.
@@ -100,6 +104,11 @@ afterAll(async () => {
     server.close((err) => (err ? reject(err) : resolve()));
   });
   await pool.end();
+  if (ORIGINAL_ALLOW_UNREVIEWED === undefined) {
+    delete process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
+  } else {
+    process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = ORIGINAL_ALLOW_UNREVIEWED;
+  }
 });
 
 describe("event-log persistence + replay round-trip", () => {
