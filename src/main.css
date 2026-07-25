@@ -1,0 +1,22 @@
+/* Token files listed directly (same order as design-system/styles.css) —
+   postcss-import cannot inline that file's `@import url(...)` syntax. */
+@import "../design-system/tokens/fonts.css";
+@import "../design-system/tokens/color.css";
+@import "../design-system/tokens/semantic.css";
+@import "../design-system/tokens/instrument.css";
+@import "../design-system/tokens/task.css";
+@import "../design-system/tokens/typography.css";
+@import "../design-system/tokens/space.css";
+@import "../design-system/tokens/shape.css";
+@import "../design-system/tokens/motion.css";
+@import "tailwindcss";
+
+/* Sprint 0 shell only — real surfaces are built from the design refs (Sprint 2+). */
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--surface-base, #0a1216);
+  color: var(--text-primary, #fbfcfc);
+  font-family: "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

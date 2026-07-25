@@ -1,0 +1,15 @@
+{
+  "app.title": "VetCrew",
+  "shell.subtitle": "Sprint 0 shell — engine, contracts, server, tokens",
+  "shell.server.heading": "Server",
+  "shell.server.checking": "Checking connection…",
+  "shell.server.ok": "Connected",
+  "shell.server.down": "Unavailable",
+  "shell.server.auth.clerk": "Auth: Clerk",
+  "shell.server.auth.dev-bypass": "Auth: dev bypass",
+  "shell.server.db.configured": "Database: configured",
+  "shell.server.db.not-configured": "Database: not configured",
+  "shell.tokens.heading": "Channel tokens (Layer A)",
+  "shell.engine.heading": "Engine",
+  "shell.engine.summary": "Deterministic reducer · {events} events · HR {hr}"
+}

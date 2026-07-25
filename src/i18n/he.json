@@ -1,0 +1,15 @@
+{
+  "app.title": "VetCrew",
+  "shell.subtitle": "שלד ספרינט 0 — מנוע, חוזים, שרת, טוקנים",
+  "shell.server.heading": "שרת",
+  "shell.server.checking": "בודק חיבור…",
+  "shell.server.ok": "מחובר",
+  "shell.server.down": "לא זמין",
+  "shell.server.auth.clerk": "אימות: Clerk",
+  "shell.server.auth.dev-bypass": "אימות: מעקף פיתוח",
+  "shell.server.db.configured": "בסיס נתונים: מוגדר",
+  "shell.server.db.not-configured": "בסיס נתונים: לא מוגדר",
+  "shell.tokens.heading": "טוקני ערוצים (שכבה A)",
+  "shell.engine.heading": "מנוע",
+  "shell.engine.summary": "רדיוסר דטרמיניסטי · {events} אירועים · דופק {hr}"
+}

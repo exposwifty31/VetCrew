@@ -1,0 +1,19 @@
+{
+  "ignoreDependencies": ["@clerk/react", "@vetcrew/shared", "vitest", "tailwindcss"],
+  "rules": {
+    "exports": "warn",
+    "types": "warn"
+  },
+  "workspaces": {
+    ".": {
+      "entry": ["server/index.ts", "scripts/*.ts"],
+      "project": ["src/**/*.{ts,tsx}", "server/**/*.ts", "scripts/*.ts"]
+    },
+    "packages/engine": {
+      "entry": ["test/*.test.ts"]
+    },
+    "packages/shared": {
+      "entry": ["test/*.test.ts"]
+    }
+  }
+}
