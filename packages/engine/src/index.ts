@@ -6,8 +6,38 @@ export {
   type InjectionEvent,
   type PhaseChangeEvent,
   type SessionPhase,
+  type TaskStartEvent,
+  type TaskSubmitEvent,
   type TickEvent,
 } from "./events.js";
+export {
+  TASK_LIFECYCLES,
+  createTaskRuntime,
+  type ChoiceStepDef,
+  type FluidSetDef,
+  type TaskBodyDef,
+  type TaskChipCode,
+  type TaskDef,
+  type TaskLifecycle,
+  type TaskOptionDef,
+  type TaskRuntimeState,
+  type TaskSubmission,
+  type ValueFieldDef,
+} from "./tasks.js";
+export {
+  roleView,
+  type RoleView,
+  type ViewChoiceStep,
+  type ViewTask,
+  type ViewTaskBody,
+  type ViewValueField,
+} from "./views.js";
+export {
+  evaluateTasks,
+  type EscalationResult,
+  type TaskDimensionResult,
+  type TaskEvaluation,
+} from "./evaluate-tasks.js";
 export { PHASE_TRANSITIONS, canTransition } from "./fsm.js";
 export {
   createInitialState,

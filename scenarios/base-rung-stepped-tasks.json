@@ -1,0 +1,225 @@
+{
+  "slug": "base-rung-stepped-tasks",
+  "version": "0.1.0",
+  "title": "Stable hospitalised patient — base rung (seven tasks)",
+  "titleHe": "מטופל מאושפז יציב — שלב בסיס (שבע משימות)",
+  "species": "dog",
+  "presentingComplaint": "Medium-breed dog hospitalised overnight, stable, awaiting morning treatments and monitoring.",
+  "presentingComplaintHe": "כלב בינוני מאושפז לילה, יציב, ממתינים לטיפולים וניטור בוקר.",
+  "clinicallyReviewed": false,
+  "clinicalReviewer": null,
+  "roles": ["technician"],
+  "engine": {
+    "vitals": {
+      "hr": { "initial": 92, "target": 92, "ratePerSec": 0.5, "jitter": 0.4 },
+      "rr": { "initial": 24, "target": 24, "ratePerSec": 0.2, "jitter": 0.3 },
+      "temp": { "initial": 38.4, "target": 38.4, "ratePerSec": 0.05, "jitter": 0.05 },
+      "sys_bp": { "initial": 128, "target": 128, "ratePerSec": 0.5, "jitter": 0.6 },
+      "dia_bp": { "initial": 78, "target": 78, "ratePerSec": 0.4, "jitter": 0.5 }
+    },
+    "triggers": [
+      {
+        "id": "t7-abnormality",
+        "on": { "kind": "task_done", "taskId": "t6" },
+        "effects": [
+          { "vital": "hr", "target": 44, "ratePerSec": 2 },
+          { "vital": "sys_bp", "target": 195, "ratePerSec": 3 }
+        ]
+      }
+    ]
+  },
+  "actions": [],
+  "checklist": [],
+  "injections": [],
+  "scoringDimensions": ["situation_awareness", "decision_making"],
+  "tasks": [
+    {
+      "id": "t1",
+      "code": "do",
+      "competency": "A",
+      "title": "Initial TPR",
+      "titleHe": "מדדים ראשוניים",
+      "instruction": "Read HR and RR from the monitor; measure temp. Enter all three values.",
+      "instructionHe": "קראו דופק ונשימות מהמוניטור; מדדו חום. הזינו את שלושת הערכים.",
+      "body": {
+        "kind": "value_entry",
+        "fields": [
+          {
+            "id": "temp",
+            "label": "Temp",
+            "labelHe": "חום",
+            "unit": "°C",
+            "format": "^\\d{2}(\\.\\d)?$",
+            "expectedMin": 37.5,
+            "expectedMax": 39.2
+          },
+          {
+            "id": "hr",
+            "label": "HR",
+            "labelHe": "דופק",
+            "unit": "bpm",
+            "format": "^\\d{2,3}$",
+            "expectedMin": 70,
+            "expectedMax": 120
+          },
+          {
+            "id": "rr",
+            "label": "RR",
+            "labelHe": "נשימות",
+            "unit": "/min",
+            "format": "^\\d{1,2}$",
+            "expectedMin": 10,
+            "expectedMax": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "t2",
+      "code": "timed",
+      "competency": "B",
+      "title": "NIBP measurement",
+      "titleHe": "מדידת לחץ דם",
+      "instruction": "Set up and take a valid NIBP — positioning, cuff, then diagnose any device error.",
+      "instructionHe": "הכינו ובצעו מדידת לחץ דם תקינה — תנוחה, שרוול, ואז אבחנו שגיאת מכשיר אם מופיעה.",
+      "body": {
+        "kind": "choice_chain",
+        "steps": [
+          {
+            "id": "position",
+            "label": "Positioning",
+            "labelHe": "תנוחה",
+            "options": [
+              { "id": "lateral", "label": "Lateral recumbency, front limb", "labelHe": "שכיבה צידית, רגל קדמית" },
+              { "id": "standing_front", "label": "Standing, front limb (no lift)", "labelHe": "עמידה, רגל קדמית (בלי הרמה)" },
+              { "id": "tail", "label": "Base of tail (agitated/standing alternate)", "labelHe": "בסיס הזנב (חלופה לעצבני/עומד)" }
+            ],
+            "expectedOptionId": "lateral"
+          },
+          {
+            "id": "cuff_size",
+            "label": "Cuff size",
+            "labelHe": "גודל שרוול",
+            "options": [
+              { "id": "cuff3", "label": "Cuff #3 (smaller of two that fit)", "labelHe": "שרוול 3 (הקטן מבין שניים שמתאימים)" },
+              { "id": "cuff4", "label": "Cuff #4 (larger of two that fit)", "labelHe": "שרוול 4 (הגדול מבין שניים שמתאימים)" }
+            ],
+            "expectedOptionId": "cuff4"
+          },
+          {
+            "id": "error_diagnosis",
+            "label": "Artifact Detected — cause?",
+            "labelHe": "Artifact Detected — מה הסיבה?",
+            "prompt": "Device: Artifact Detected",
+            "promptHe": "מכשיר: Artifact Detected",
+            "options": [
+              { "id": "motion", "label": "Patient motion / trembling", "labelHe": "תזוזת המטופל / רעד" },
+              { "id": "battery", "label": "Batteries / device fault", "labelHe": "סוללות / תקלת מכשיר" },
+              { "id": "ignore", "label": "Ignore and re-press START", "labelHe": "להתעלם וללחוץ START שוב" }
+            ],
+            "expectedOptionId": "motion"
+          }
+        ]
+      }
+    },
+    {
+      "id": "t3",
+      "code": "report",
+      "competency": "F'",
+      "title": "Medication administration",
+      "titleHe": "מתן תרופה",
+      "instruction": "Give diphenhydramine 20 mg. Compute ml yourself; select the route.",
+      "instructionHe": "מתן דיפנהידרמין 20 מ״ג. חשבו מ״ל בעצמכם; בחרו דרך מתן.",
+      "body": {
+        "kind": "med_admin",
+        "drugLabel": "Diphenhydramine",
+        "drugLabelHe": "דיפנהידרמין",
+        "doseMg": 20,
+        "concentrationMgPerMl": 100,
+        "routes": [
+          { "id": "iv", "label": "IV", "labelHe": "IV" },
+          { "id": "sc", "label": "SC", "labelHe": "SC" },
+          { "id": "im", "label": "IM", "labelHe": "IM" },
+          { "id": "po", "label": "PO", "labelHe": "PO" }
+        ],
+        "expectedMl": 0.2,
+        "expectedRouteId": "sc",
+        "criticalRouteIds": ["iv"]
+      }
+    },
+    {
+      "id": "t4",
+      "code": "report",
+      "competency": "C",
+      "title": "Blood draw",
+      "titleHe": "לקיחת דם",
+      "instruction": "Panel: CBC + biochemistry. Select the correct tubes.",
+      "instructionHe": "פאנל: ספירה + ביוכימיה. בחרו את המבחנות הנכונות.",
+      "body": {
+        "kind": "tube_choice",
+        "panelLabel": "CBC + biochemistry",
+        "panelLabelHe": "ספירה + ביוכימיה",
+        "options": [
+          { "id": "edta", "label": "EDTA (purple)", "labelHe": "EDTA (סגול)" },
+          { "id": "serum", "label": "Serum (red)", "labelHe": "סרום (אדום)" },
+          { "id": "citrate", "label": "Citrate (blue)", "labelHe": "ציטרט (כחול)" },
+          { "id": "heparin", "label": "Heparin (green)", "labelHe": "הפרין (ירוק)" }
+        ],
+        "expectedOptionIds": ["edta", "serum"]
+      }
+    },
+    {
+      "id": "t5",
+      "code": "do",
+      "competency": "D",
+      "title": "IV catheter + bandaging",
+      "titleHe": "צנתר וריד + חבישה",
+      "instruction": "Assemble the placement steps in the correct order.",
+      "instructionHe": "סדרו את שלבי ההחדרה בסדר הנכון.",
+      "body": {
+        "kind": "step_order",
+        "steps": [
+          { "id": "shave", "label": "Shave", "labelHe": "גילוח" },
+          { "id": "disinfect", "label": "Disinfect", "labelHe": "חיטוי" },
+          { "id": "insert", "label": "Insert catheter", "labelHe": "החדרת צנתר" },
+          { "id": "secure", "label": "Secure", "labelHe": "קיבוע" },
+          { "id": "bandage", "label": "Bandage", "labelHe": "חבישה" }
+        ],
+        "expectedOrder": ["shave", "disinfect", "insert", "secure", "bandage"]
+      }
+    },
+    {
+      "id": "t6",
+      "code": "do",
+      "competency": "E",
+      "title": "Fluids setup",
+      "titleHe": "חיבור נוזלים",
+      "instruction": "Order: 150 ml/hr. No pump available — choose the set and enter drops/min.",
+      "instructionHe": "הוראה: 150 מ״ל לשעה. אין משאבה — בחרו סט והזינו טיפות לדקה.",
+      "body": {
+        "kind": "fluids_setup",
+        "weightKg": 22,
+        "orderedMlPerHr": 150,
+        "sets": [
+          { "id": "regular", "label": "Regular set (20 drops/ml)", "labelHe": "סט רגיל (20 טיפות/מ״ל)", "dropsPerMl": 20 },
+          { "id": "burette", "label": "Burette (60 drops/ml)", "labelHe": "ביורטה (60 טיפות/מ״ל)", "dropsPerMl": 60 }
+        ],
+        "expectedSetId": "regular"
+      }
+    },
+    {
+      "id": "t7",
+      "code": "approval",
+      "competency": "decision",
+      "title": "Recognise & escalate",
+      "titleHe": "זיהוי והסלמה",
+      "instruction": "If something is wrong, call the doctor / senior — do not treat it yourself.",
+      "instructionHe": "אם משהו חריג — קראו לרופא/בכיר; אל תטפלו בעצמכם.",
+      "hidden": true,
+      "body": {
+        "kind": "escalate",
+        "abnormalityTriggerId": "t7-abnormality"
+      }
+    }
+  ]
+}

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
-import { fetchSessions, type SessionSummary } from "./api.js";
+import { createSession, fetchSessions, type SessionSummary } from "./api.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
+import StationPage from "./pages/StationPage.js";
 
 interface Health {
   ok: boolean;
@@ -80,12 +81,17 @@ export default function App() {
   if (aarMatch?.[1] !== undefined) {
     return <AarPage sessionId={aarMatch[1]} />;
   }
+  const stationMatch = /^#\/station\/(.+)$/.exec(route);
+  if (stationMatch?.[1] !== undefined) {
+    return <StationPage sessionId={stationMatch[1]} />;
+  }
   return <HomePage />;
 }
 
 function HomePage() {
   const [health, setHealth] = useState<Health | null | "down">(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [startingStation, setStartingStation] = useState(false);
   const engine = useMemo(engineSmoke, []);
 
   useEffect(() => {
@@ -102,6 +108,20 @@ function HomePage() {
       .catch(() => setSessions([]));
     return () => controller.abort();
   }, []);
+
+  async function startStation() {
+    setStartingStation(true);
+    try {
+      const session = await createSession({
+        scenarioSlug: "base-rung-stepped-tasks",
+        traineeId: "pitch-trainee",
+        traineeTimeInTrainingDays: 90,
+      });
+      window.location.hash = `#/station/${session.id}`;
+    } catch {
+      setStartingStation(false);
+    }
+  }
 
   return (
     <main style={{ maxWidth: 640, marginInline: "auto", padding: "var(--sp-8, 32px)" }}>
@@ -149,6 +169,28 @@ function HomePage() {
       </section>
 
       <section style={{ marginBlockStart: 32 }}>
+        <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("home.station.heading")}</h2>
+        <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.station.blurb")}</p>
+        <button
+          type="button"
+          disabled={startingStation || health === "down" || health === null}
+          onClick={() => void startStation()}
+          style={{
+            minHeight: 48,
+            paddingInline: 16,
+            background: "var(--action-accent, #008080)",
+            color: "#fff",
+            border: 0,
+            borderRadius: 8,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          {startingStation ? t("home.station.starting") : t("home.station.start")}
+        </button>
+      </section>
+
+      <section style={{ marginBlockStart: 32 }}>
         <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("home.sessions.heading")}</h2>
         {sessions.length === 0 ? (
           <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.sessions.empty")}</p>
@@ -170,6 +212,12 @@ function HomePage() {
                   {session.traineeId ?? "—"} · v{session.scenarioVersion} ·{" "}
                   {t(`phase.${session.phase}`)}
                 </span>
+                <a
+                  href={`#/station/${session.id}`}
+                  style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}
+                >
+                  {t("home.sessions.openStation")}
+                </a>
                 <a href={`#/aar/${session.id}`} style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                   {t("home.sessions.open")}
                 </a>

@@ -1,10 +1,11 @@
 import { randomInt } from "node:crypto";
 
-import { buildAar, canTransition, evaluateChecklist, type EngineEvent, type SessionPhase } from "@vetcrew/engine";
+import { buildAar, evaluateChecklist, type EngineEvent, type SessionPhase } from "@vetcrew/engine";
 import {
   antsDomainSchema,
-  engineEventSchema,
   authoredScenarioSchema,
+  engineEventBodySchema,
+  engineEventSchema,
 } from "@vetcrew/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { Router, type Request, type Response } from "express";
@@ -12,6 +13,7 @@ import { z } from "zod";
 
 import type { Db } from "../db/client.js";
 import { antsRatings, scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
+import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { compileScenario } from "../scenarios.js";
 
 const createSessionSchema = z.object({
@@ -24,8 +26,9 @@ const createSessionSchema = z.object({
   traineeTimeInTrainingDays: z.number().int().nonnegative().optional(),
 });
 
+/** Bodies only — the server stamps contiguous seqs (Sprint 3 seq authority). */
 const appendEventsSchema = z.object({
-  events: z.array(engineEventSchema).min(1),
+  events: z.array(engineEventBodySchema).min(1),
 });
 
 const submitRatingsSchema = z.object({
@@ -53,17 +56,6 @@ async function loadSession(db: Db, tenantId: string, id: string) {
     .from(simSessions)
     .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)));
   return rows[0];
-}
-
-/** Walk phase_change events through the FSM from a starting phase. */
-function projectPhase(from: SessionPhase, events: readonly EngineEvent[]): SessionPhase {
-  let phase = from;
-  for (const event of events) {
-    if (event.type === "phase_change" && canTransition(phase, event.phase)) {
-      phase = event.phase;
-    }
-  }
-  return phase;
 }
 
 async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
@@ -141,62 +133,22 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(404).json({ error: "session not found" });
       return;
     }
-    const events = parsed.data.events;
-    // Every session-dependent read happens INSIDE the transaction under a row
-    // lock, so concurrent appends serialize instead of racing the seq check
-    // (audit R1/R4 + PR review). The DB trigger (migration 0004) backstops.
-    type AppendResult =
-      | { kind: "not_found" }
-      | { kind: "gap"; expected: number }
-      | { kind: "ok" };
-    const result: AppendResult = await db.transaction(async (tx) => {
-      const rows = await tx
-        .select()
-        .from(simSessions)
-        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
-        .for("update");
-      const session = rows[0];
-      if (session === undefined) return { kind: "not_found" };
-      const maxRows = await tx
-        .select({ seq: sessionEvents.seq })
-        .from(sessionEvents)
-        .where(eq(sessionEvents.sessionId, session.id))
-        .orderBy(desc(sessionEvents.seq))
-        .limit(1);
-      const currentMax = maxRows[0]?.seq ?? 0;
-      // Seq authority: a batch must continue the log contiguously; retroactive
-      // or gapped seqs would rewrite the replay of the evidence record.
-      const contiguous = events.every((event, i) => event.seq === currentMax + 1 + i);
-      if (!contiguous) return { kind: "gap", expected: currentMax + 1 };
-      const nextPhase = projectPhase(session.phase as SessionPhase, events);
-      await tx.insert(sessionEvents).values(
-        events.map((event) => ({
-          tenantId,
-          sessionId: session.id,
-          seq: event.seq,
-          type: event.type,
-          role: event.type === "action" ? event.role : null,
-          actorId: event.type === "action" ? event.actorId : null,
-          payload: event,
-        })),
-      );
-      if (nextPhase !== session.phase) {
-        // Denormalized phase for listings; the log stays authoritative.
-        await tx.update(simSessions).set({ phase: nextPhase }).where(eq(simSessions.id, session.id));
-      }
-      return { kind: "ok" };
+    // Sole seq authority — REST and the live room share appendSessionEvents.
+    const result = await appendSessionEvents(db, {
+      tenantId,
+      sessionId: id,
+      bodies: parsed.data.events,
     });
     switch (result.kind) {
       case "not_found":
         res.status(404).json({ error: "session not found" });
         return;
-      case "gap":
-        res.status(409).json({
-          error: `events must continue the log contiguously from seq ${result.expected}`,
-        });
-        return;
       case "ok":
-        res.status(201).json({ appended: events.length });
+        res.status(201).json({
+          appended: result.events.length,
+          phase: result.phase,
+          events: result.events,
+        });
         return;
       default: {
         const exhaustive: never = result;
@@ -305,17 +257,6 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       if (unknownSeqs.length > 0) {
         return { kind: "unknown_evidence", seqs: [...new Set(unknownSeqs)] };
       }
-      let currentMax = 0;
-      for (const seq of existingSeqs) {
-        if (seq > currentMax) currentMax = seq;
-      }
-      // The scored transition goes THROUGH the log (audit F-b): replaying the
-      // events must yield the same phase the projection column reports.
-      const scoredEvent: EngineEvent = {
-        seq: currentMax + 1,
-        type: "phase_change",
-        phase: "scored",
-      };
       await tx.insert(antsRatings).values(
         parsed.data.ratings.map((rating) => ({
           tenantId,
@@ -326,16 +267,14 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
           evidenceEventSeqs: rating.evidenceEventSeqs,
         })),
       );
-      await tx.insert(sessionEvents).values({
+      // Scored transition goes THROUGH the log via the sole seq authority
+      // (audit F-b / Sprint 3) — no second INSERT path into vc_session_events.
+      const scored = await appendSessionEventsTx(tx, {
         tenantId,
         sessionId: session.id,
-        seq: scoredEvent.seq,
-        type: scoredEvent.type,
-        role: null,
-        actorId: null,
-        payload: scoredEvent,
+        bodies: [{ type: "phase_change", phase: "scored" }],
       });
-      await tx.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
+      if (scored.kind === "not_found") return { kind: "not_found" };
       return { kind: "ok" };
     });
     switch (result.kind) {

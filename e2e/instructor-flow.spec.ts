@@ -72,7 +72,8 @@ test("instructor reviews the AAR and submits an evidence-linked rating", async (
   // Evidence-linked rating: name the rater, then for EACH ANTS domain select
   // it, mark its own evidence event, and score it (per-domain traceability).
   await page.getByLabel("שם המדרג").fill("מדריכת-בדיקה");
-  const domainButtons = page.locator("button[aria-pressed]");
+  // Domain selectors (not the 1–5 score buttons, which also use aria-pressed).
+  const domainButtons = page.locator("button[aria-pressed]").filter({ hasNotText: /^[1-5]$/ });
   const fours = page.getByRole("button", { name: "4", exact: true });
   const domainCount = await domainButtons.count();
   expect(domainCount).toBe(3);

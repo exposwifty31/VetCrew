@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { taskSubmissionSchema } from "./tasks.js";
+
 /**
  * Wire contracts shared by server and clients. These mirror the engine's
  * event types (packages/engine/src/events.ts) — the engine stays zero-dep,
@@ -45,11 +47,28 @@ export const phaseChangeEventSchema = baseEvent.extend({
   phase: sessionPhaseSchema,
 });
 
+export const taskStartEventSchema = baseEvent.extend({
+  type: z.literal("task_start"),
+  role: z.string().min(1),
+  actorId: z.string().min(1),
+  taskId: z.string().min(1),
+});
+
+export const taskSubmitEventSchema = baseEvent.extend({
+  type: z.literal("task_submit"),
+  role: z.string().min(1),
+  actorId: z.string().min(1),
+  taskId: z.string().min(1),
+  submission: taskSubmissionSchema,
+});
+
 export const engineEventSchema = z.discriminatedUnion("type", [
   tickEventSchema,
   actionEventSchema,
   injectionEventSchema,
   phaseChangeEventSchema,
+  taskStartEventSchema,
+  taskSubmitEventSchema,
 ]);
 
 export type EngineEventWire = z.infer<typeof engineEventSchema>;

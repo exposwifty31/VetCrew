@@ -1,9 +1,11 @@
+import type { TaskDef } from "./tasks.js";
+
 /**
  * Scenario definition — reducer-evaluable deterioration params, NOT a
  * per-second script. Each vital drifts toward a target at a rate; triggers
- * (timed / action / injection) swap targets, rates, or jitter. Scenarios are
- * data, authored as YAML/JSON and versioned independently of the engine
- * (CLAUDE.md §4); this is the compiled shape the engine consumes.
+ * (timed / action / injection / task_done) swap targets, rates, or jitter.
+ * Scenarios are data, authored as YAML/JSON and versioned independently of
+ * the engine (CLAUDE.md §4); this is the compiled shape the engine consumes.
  */
 
 export interface VitalParams {
@@ -25,7 +27,13 @@ export interface VitalEffect {
 export type TriggerCondition =
   | { readonly kind: "time"; readonly atMs: number }
   | { readonly kind: "action"; readonly action: string }
-  | { readonly kind: "injection"; readonly injection: string };
+  | { readonly kind: "injection"; readonly injection: string }
+  /**
+   * Fires when a task completes. The rare-and-legible conditional auto-trigger
+   * doctrine (CLAUDE.md §4) — Sprint 3 bridge for the T7 abnormality until the
+   * live instructor console (Sprint 4) turns it into a menu item.
+   */
+  | { readonly kind: "task_done"; readonly taskId: string };
 
 export interface TriggerDef {
   readonly id: string;
@@ -38,4 +46,8 @@ export interface ScenarioDef {
   readonly version: string;
   readonly vitals: Readonly<Record<string, VitalParams>>;
   readonly triggers: readonly TriggerDef[];
+  /** Stepped task sequence (base-rung SRS). Absent/empty for pure-deterioration scenarios. */
+  readonly tasks?: readonly TaskDef[] | undefined;
+  /** Display parameter (SRS OD-2); ranges inside task defs follow it at compile time. */
+  readonly species?: string | undefined;
 }

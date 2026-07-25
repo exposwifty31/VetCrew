@@ -2,6 +2,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import { evaluateChecklist, type EngineEvent } from "@vetcrew/engine";
+import type { EngineEventBody } from "@vetcrew/shared";
 import express from "express";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
@@ -13,12 +14,12 @@ import { ensurePilotTenant } from "../tenancy.js";
 import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
 /**
- * Phase 4 integration suite (DB-backed, serial):
+ * Phase 4 + Sprint 3 integration suite (DB-backed, serial):
  *  - event-log persistence + replay round-trip (AAR is byte-stable)
- *  - append-only enforcement on the event log
+ *  - append-only + server-seq authority
  *  - tenant isolation
  *  - score -> source-event traceability (evidence validation, scoring gates)
- *  - migration 0002/0003 constraints hold at the database level
+ *  - migration 0002/0003/0004 constraints hold at the database level
  */
 
 const TEST_DATABASE_URL =
@@ -33,7 +34,7 @@ let server: Server;
 let baseUrl: string;
 
 /** Same shape as the seed-demo run: deliberate priority inversion included. */
-function demoEvents(): EngineEvent[] {
+function demoEvents(): EngineEventBody[] {
   return buildDemoEvents("it-trainee");
 }
 
@@ -55,12 +56,14 @@ async function createSession(body: Record<string, unknown>): Promise<CreatedSess
   return json.session;
 }
 
-async function appendEvents(sessionId: string, events: EngineEvent[]): Promise<void> {
+async function appendEvents(sessionId: string, events: EngineEventBody[]): Promise<EngineEvent[]> {
   const res = await api(`/api/sessions/${sessionId}/events`, {
     method: "POST",
     body: JSON.stringify({ events }),
   });
   expect(res.status).toBe(201);
+  const body = (await res.json()) as { events: EngineEvent[] };
+  return body.events;
 }
 
 beforeAll(async () => {
@@ -105,8 +108,9 @@ describe("event-log persistence + replay round-trip", () => {
       traineeId: "it-trainee",
       traineeTimeInTrainingDays: 90,
     });
-    const events = demoEvents();
-    await appendEvents(session.id, events);
+    const events = await appendEvents(session.id, demoEvents());
+    expect(events[0]?.seq).toBe(1);
+    expect(events.every((e, i) => e.seq === i + 1)).toBe(true);
 
     const first = await api(`/api/sessions/${session.id}/aar`);
     expect(first.status).toBe(200);
@@ -125,7 +129,7 @@ describe("event-log persistence + replay round-trip", () => {
     expect(body.aar.durationMs).toBe(120_000);
 
     // Traceability: the server's checklist equals a local evaluation of the
-    // same event log against the same authored checklist.
+    // same (server-stamped) event log against the same authored checklist.
     const authored = loadScenarioFiles().find((s) => s.slug === SCENARIO_SLUG);
     if (authored === undefined) throw new Error("scenario file missing");
     const local = evaluateChecklist(events, authored.checklist);
@@ -142,18 +146,12 @@ describe("event-log persistence + replay round-trip", () => {
     await expect(pool.query("delete from vc_session_events where id = (select id from vc_session_events limit 1)")).rejects.toThrow(/append-only/);
   });
 
-  test("a retroactive or gapped seq cannot rewrite the log (route and DB)", async () => {
+  test("a gapped seq cannot rewrite the log (DB trigger backstop)", async () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG, traineeTimeInTrainingDays: 10 });
     await appendEvents(session.id, demoEvents());
 
-    // Route: a batch that does not continue the log contiguously is 409.
-    const retro = await api(`/api/sessions/${session.id}/events`, {
-      method: "POST",
-      body: JSON.stringify({ events: [{ seq: 3, type: "tick", dtMs: 1000 }] }),
-    });
-    expect(retro.status).toBe(409);
-
-    // DB backstop (migration 0004): a direct insert at a low seq is rejected.
+    // Clients no longer supply seq; the DB trigger still rejects a direct
+    // low/gapped insert that would rewrite replay history (migration 0004).
     await expect(
       pool.query(
         `insert into vc_session_events (tenant_id, session_id, seq, type, payload)
@@ -174,7 +172,7 @@ describe("event-log persistence + replay round-trip", () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
     // draft -> scored is not a legal transition; the event is recorded, the
     // session's projected phase must remain draft (FSM, CLAUDE.md §4).
-    await appendEvents(session.id, [{ seq: 1, type: "phase_change", phase: "scored" }]);
+    await appendEvents(session.id, [{ type: "phase_change", phase: "scored" }]);
     const list = await api("/api/sessions");
     const listing = (await list.json()) as { sessions: { id: string; phase: string }[] };
     expect(listing.sessions.find((s) => s.id === session.id)?.phase).toBe("draft");
@@ -273,12 +271,12 @@ describe("score -> source-event traceability", () => {
       traineeTimeInTrainingDays: 60,
     });
     // Only briefing+running appended — the session never reached debrief.
-    await appendEvents(session.id, demoEvents().slice(0, 2));
+    const stamped = await appendEvents(session.id, demoEvents().slice(0, 2));
     const res = await api(`/api/sessions/${session.id}/ratings`, {
       method: "POST",
       body: JSON.stringify({
         raterId: "it-rater",
-        ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [1] }],
+        ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [stamped[0]!.seq] }],
       }),
     });
     expect(res.status).toBe(409);

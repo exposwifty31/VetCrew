@@ -2,6 +2,7 @@ import type { EngineEvent, SessionPhase } from "./events.js";
 import { canTransition } from "./fsm.js";
 import { prngInit, prngNext } from "./prng.js";
 import type { ScenarioDef, TriggerDef, VitalEffect } from "./scenario.js";
+import { createTaskRuntime, type TaskRuntimeState } from "./tasks.js";
 
 /**
  * Pure reducer: (state, event) => state.
@@ -28,6 +29,8 @@ export interface EngineState {
   readonly firedTriggerIds: readonly string[];
   readonly actionCount: number;
   readonly activeInjections: readonly string[];
+  /** Lifecycle + verbatim submissions per task — never correctness (SRS §5). */
+  readonly tasks: Readonly<Record<string, TaskRuntimeState>>;
 }
 
 export function createInitialState(seed: number, scenario: ScenarioDef): EngineState {
@@ -51,6 +54,7 @@ export function createInitialState(seed: number, scenario: ScenarioDef): EngineS
     firedTriggerIds: [],
     actionCount: 0,
     activeInjections: [],
+    tasks: createTaskRuntime(scenario.tasks ?? []),
   };
 }
 
@@ -166,6 +170,64 @@ export function reduce(state: EngineState, event: EngineEvent): EngineState {
         return { ...state, appliedSeq: event.seq };
       }
       return { ...state, phase: event.phase, appliedSeq: event.seq };
+    case "task_start": {
+      const task = state.tasks[event.taskId];
+      // Illegal lifecycle moves stay in the log as the record of the attempt
+      // (same posture as the FSM guard) but move nothing.
+      if (state.phase !== "running" || task === undefined || task.lifecycle !== "available") {
+        return { ...state, appliedSeq: event.seq };
+      }
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [event.taskId]: {
+            ...task,
+            lifecycle: "in_progress",
+            startedAtMs: state.timeMs,
+            startSeq: event.seq,
+          },
+        },
+        appliedSeq: event.seq,
+      };
+    }
+    case "task_submit": {
+      const task = state.tasks[event.taskId];
+      const def = (state.scenario.tasks ?? []).find((t) => t.id === event.taskId);
+      // Submit is accepted from available too (the standing escalate control
+      // is a single press, not start-then-submit). Wrong ANSWERS are never
+      // rejected here (SRS §5.2) — only structurally impossible submissions
+      // (unknown task, kind mismatch, already-done task, not running).
+      const legal =
+        state.phase === "running" &&
+        task !== undefined &&
+        def !== undefined &&
+        def.body.kind === event.submission.kind &&
+        (task.lifecycle === "available" || task.lifecycle === "in_progress");
+      if (!legal) {
+        return { ...state, appliedSeq: event.seq };
+      }
+      const result = fireTriggers(
+        state,
+        (trigger) => trigger.on.kind === "task_done" && trigger.on.taskId === event.taskId,
+      );
+      return {
+        ...state,
+        vitals: result.vitals,
+        firedTriggerIds: result.firedTriggerIds,
+        tasks: {
+          ...state.tasks,
+          [event.taskId]: {
+            ...task,
+            lifecycle: "done",
+            submittedAtMs: state.timeMs,
+            submitSeq: event.seq,
+            submission: event.submission,
+          },
+        },
+        appliedSeq: event.seq,
+      };
+    }
     default: {
       const exhaustive: never = event;
       throw new Error(`Unhandled event: ${JSON.stringify(exhaustive)}`);

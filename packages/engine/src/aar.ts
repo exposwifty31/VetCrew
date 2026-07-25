@@ -17,6 +17,7 @@ export interface AarTimelineEntry {
   readonly action?: string;
   readonly injection?: string;
   readonly phase?: string;
+  readonly taskId?: string;
 }
 
 export interface AarVitalsSample {
@@ -79,6 +80,17 @@ export function buildAar(
           timeMs: state.timeMs,
           type: event.type,
           phase: event.phase,
+        });
+        break;
+      case "task_start":
+      case "task_submit":
+        timeline.push({
+          seq: event.seq,
+          timeMs: state.timeMs,
+          type: event.type,
+          role: event.role,
+          actorId: event.actorId,
+          taskId: event.taskId,
         });
         break;
       default: {

@@ -1,3 +1,5 @@
+import type { TaskSubmission } from "./tasks.js";
+
 /**
  * Engine event types. Time enters ONLY as tick events; randomness ONLY via
  * the seeded PRNG threaded through state. Events are the authoritative record —
@@ -46,8 +48,26 @@ export interface PhaseChangeEvent extends BaseEvent {
   readonly phase: SessionPhase;
 }
 
+export interface TaskStartEvent extends BaseEvent {
+  readonly type: "task_start";
+  readonly role: string;
+  readonly actorId: string;
+  readonly taskId: string;
+}
+
+export interface TaskSubmitEvent extends BaseEvent {
+  readonly type: "task_submit";
+  readonly role: string;
+  readonly actorId: string;
+  readonly taskId: string;
+  /** Recorded verbatim; correctness is computed only post-hoc (SRS §5). */
+  readonly submission: TaskSubmission;
+}
+
 export type EngineEvent =
   | TickEvent
   | ActionEvent
   | InjectionEvent
-  | PhaseChangeEvent;
+  | PhaseChangeEvent
+  | TaskStartEvent
+  | TaskSubmitEvent;

@@ -30,6 +30,7 @@ export const triggerConditionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("time"), atMs: z.number().int().nonnegative() }),
   z.object({ kind: z.literal("action"), action: z.string().min(1) }),
   z.object({ kind: z.literal("injection"), injection: z.string().min(1) }),
+  z.object({ kind: z.literal("task_done"), taskId: z.string().min(1) }),
 ]);
 
 export const triggerDefSchema = z.object({
@@ -42,6 +43,7 @@ export const scenarioDefSchema = z
   .object({
     slug: z.string().min(1),
     version: z.string().min(1),
+    species: z.string().min(1).optional(),
     vitals: z.record(z.string().min(1), vitalParamsSchema),
     triggers: z.array(triggerDefSchema),
   })

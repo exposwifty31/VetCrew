@@ -56,6 +56,22 @@ export async function fetchSessions(): Promise<SessionSummary[]> {
   return body.sessions;
 }
 
+export async function createSession(input: {
+  scenarioSlug: string;
+  traineeId?: string;
+  traineeTimeInTrainingDays?: number;
+  seed?: number;
+}): Promise<{ id: string }> {
+  const res = await fetch("/api/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new Error(`create session: ${res.status}`);
+  const body = (await res.json()) as { session: { id: string } };
+  return body.session;
+}
+
 export async function fetchAar(sessionId: string): Promise<AarResponse> {
   const res = await fetch(`/api/sessions/${sessionId}/aar`);
   if (!res.ok) throw new Error(`aar: ${res.status}`);

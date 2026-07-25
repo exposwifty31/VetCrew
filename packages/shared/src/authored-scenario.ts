@@ -2,13 +2,14 @@ import { z } from "zod";
 
 import { antsDomainSchema } from "./entities.js";
 import { triggerDefSchema, vitalParamsSchema } from "./scenario.js";
+import { taskDefSchema } from "./tasks.js";
 
 /**
  * Authored scenario contract (vetcrew-scenario-authoring skill):
  * a scenario is content, not code — data a clinician can edit without
  * touching the engine. Structure: patient profile, parametrized vitals
- * model, role objectives (checklist), instructor injection menu, scoring
- * hooks, clinical-review flag, independent versioning.
+ * model, role objectives (checklist and/or stepped tasks), instructor
+ * injection menu, scoring hooks, clinical-review flag, independent versioning.
  */
 
 export const checklistRuleSchema = z.discriminatedUnion("kind", [
@@ -34,7 +35,7 @@ export const checklistItemSchema = z.object({
   rule: checklistRuleSchema,
 });
 
-/** Actions the trainee station can take — the sim's verb menu. */
+/** Actions the trainee station can take — the sim's verb menu (deterioration scenarios). */
 export const scenarioActionSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(1),
@@ -65,9 +66,12 @@ export const authoredScenarioSchema = z
       vitals: z.record(z.string().min(1), vitalParamsSchema),
       triggers: z.array(triggerDefSchema),
     }),
-    actions: z.array(scenarioActionSchema).min(1),
-    checklist: z.array(checklistItemSchema).min(1),
-    injections: z.array(injectionMenuItemSchema),
+    /** Optional for stepped-task scenarios (Scenario #2) that use the task rail. */
+    actions: z.array(scenarioActionSchema).default([]),
+    checklist: z.array(checklistItemSchema).default([]),
+    /** Stepped task sequence (base-rung SRS). Absent/empty for pure-deterioration demos. */
+    tasks: z.array(taskDefSchema).default([]),
+    injections: z.array(injectionMenuItemSchema).default([]),
     scoringDimensions: z.array(antsDomainSchema).min(1),
   })
   .superRefine((scenario, ctx) => {
@@ -77,14 +81,22 @@ export const authoredScenarioSchema = z
         message: "clinically reviewed scenarios must name their reviewer (CLAUDE.md §2.5)",
       });
     }
+    if (scenario.actions.length === 0 && scenario.tasks.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "a scenario must define at least one action or one task",
+      });
+    }
     const vitalNames = new Set(Object.keys(scenario.engine.vitals));
     const actionIds = new Set(scenario.actions.map((a) => a.id));
     const injectionIds = new Set(scenario.injections.map((i) => i.id));
+    const taskIds = new Set(scenario.tasks.map((t) => t.id));
     const roleNames = new Set(scenario.roles);
     for (const [collection, ids] of [
       ["action", scenario.actions.map((a) => a.id)],
       ["injection", scenario.injections.map((i) => i.id)],
       ["checklist item", scenario.checklist.map((c) => c.id)],
+      ["task", scenario.tasks.map((t) => t.id)],
     ] as const) {
       const seen = new Set<string>();
       for (const id of ids) {
@@ -120,6 +132,12 @@ export const authoredScenarioSchema = z
           message: `trigger "${trigger.id}" keys off unknown injection "${trigger.on.injection}"`,
         });
       }
+      if (trigger.on.kind === "task_done" && !taskIds.has(trigger.on.taskId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `trigger "${trigger.id}" keys off unknown task "${trigger.on.taskId}"`,
+        });
+      }
     }
     for (const item of scenario.checklist) {
       if (item.role !== undefined && !roleNames.has(item.role)) {
@@ -139,6 +157,14 @@ export const authoredScenarioSchema = z
             message: `checklist item "${item.id}" references unknown action "${action}"`,
           });
         }
+      }
+    }
+    for (const task of scenario.tasks) {
+      if (task.body.kind === "escalate" && !triggerIds.has(task.body.abnormalityTriggerId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `task "${task.id}" escalate body references unknown trigger "${task.body.abnormalityTriggerId}"`,
+        });
       }
     }
   });
