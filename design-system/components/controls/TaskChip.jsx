@@ -88,7 +88,7 @@ inject("vc-task", `
 }
 .vc-task__code {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -117,7 +117,7 @@ inject("vc-task", `
   gap: 6px;
   margin-top: 2px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--text-muted);
 }
 .vc-task__win b {
@@ -175,7 +175,7 @@ inject("vc-task", `
 }
 .vc-task__route-lbl {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -224,7 +224,7 @@ inject("vc-task", `
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   color: var(--text-critical);
 }
@@ -247,7 +247,7 @@ inject("vc-task", `
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   font-family: var(--font-ui);
 }

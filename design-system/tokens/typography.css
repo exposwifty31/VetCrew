@@ -32,6 +32,16 @@
   --fs-sm:       0.875rem;/* 14 */
   --fs-xs:       0.8125rem;/* 13 — dense labels floor */
 
+  /* micro-type exception (decision 2026-07-25, shipped with the double-bezel
+     TaskChip). BELOW the 13px floor, permitted ONLY for: (a) mono UPPERCASE
+     code labels whose letterforms are widened by casing + tracking, and
+     (b) state marks/countdowns that sit beside an icon carrying the same
+     meaning (redundant coding). Never body copy, never the sole carrier of
+     information. AA contrast still applies (the --task-*-text variants exist
+     for exactly this). */
+  --fs-micro:    0.6875rem;/* 11 — mono caps code labels only */
+  --fs-caption:  0.75rem;  /* 12 — state marks, countdowns, inline hints */
+
   /* line-heights */
   --lh-tight: 1.05;   /* @kind other */
   --lh-snug: 1.2;     /* @kind other */

@@ -1,5 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"DesignSystem_ad98cb","components":[{"name":"AntsRating","sourcePath":"components/controls/AntsRating.jsx"},{"name":"Button","sourcePath":"components/controls/Button.jsx"},{"name":"IconButton","sourcePath":"components/controls/IconButton.jsx"},{"name":"InjectionTrigger","sourcePath":"components/controls/InjectionTrigger.jsx"},{"name":"TaskChip","sourcePath":"components/controls/TaskChip.jsx"},{"name":"PatientMonitor","sourcePath":"components/monitor/PatientMonitor.jsx"},{"name":"ConnectionPill","sourcePath":"components/status/ConnectionPill.jsx"},{"name":"SESSION_STATES","sourcePath":"components/status/SessionState.jsx"},{"name":"SessionState","sourcePath":"components/status/SessionState.jsx"},{"name":"SeverityChip","sourcePath":"components/status/SeverityChip.jsx"},{"name":"SEVERITY","sourcePath":"components/status/severity.js"},{"name":"SeverityGlyph","sourcePath":"components/status/SeverityGlyph.jsx"},{"name":"SEVERITY_ORDER","sourcePath":"components/status/severity.js"},{"name":"TimelineScrubber","sourcePath":"components/timeline/TimelineScrubber.jsx"},{"name":"VitalCard","sourcePath":"components/vitals/VitalCard.jsx"}],"sourceHashes":{"assets/icons.js":"467468046f29","components/controls/AntsRating.jsx":"daecd0adb0db","components/controls/Button.jsx":"bad1a7e82c05","components/controls/IconButton.jsx":"859f08f06b9f","components/controls/InjectionTrigger.jsx":"1867a9bfa8b3","components/controls/TaskChip.jsx":"df2bdaf0fc7d","components/monitor/PatientMonitor.jsx":"2137f3a47805","components/status/ConnectionPill.jsx":"6ae66f9e9fc6","components/status/SessionState.jsx":"d95fb9fef139","components/status/SeverityChip.jsx":"98961821fcb9","components/status/SeverityGlyph.jsx":"169dceddbfb7","components/status/severity.js":"2c6b44831273","components/timeline/TimelineScrubber.jsx":"c5491d2ca1df","components/vitals/VitalCard.jsx":"7a15593be513","ui_kits/aar/AarViewer.jsx":"d8baa80150cb","ui_kits/aar/data.js":"da0241931dcb","ui_kits/instructor/Console.jsx":"cd432af4dfe9","ui_kits/instructor/data.js":"1b7701b61704","ui_kits/trainee/Station.jsx":"e6af1c1c7a13","ui_kits/trainee/data.js":"4d21258753c1"},"inlinedExternals":[],"unexposedExports":[{"name":"severityMeta","sourcePath":"components/status/severity.js"}]} */
-
+/* @ds-bundle: {"format":4,"namespace":"DesignSystem_ad98cb","components":[{"name":"AntsRating","sourcePath":"components/controls/AntsRating.jsx"},{"name":"Button","sourcePath":"components/controls/Button.jsx"},{"name":"IconButton","sourcePath":"components/controls/IconButton.jsx"},{"name":"InjectionTrigger","sourcePath":"components/controls/InjectionTrigger.jsx"},{"name":"TaskChip","sourcePath":"components/controls/TaskChip.jsx"},{"name":"PatientMonitor","sourcePath":"components/monitor/PatientMonitor.jsx"},{"name":"ConnectionPill","sourcePath":"components/status/ConnectionPill.jsx"},{"name":"SESSION_STATES","sourcePath":"components/status/SessionState.jsx"},{"name":"SessionState","sourcePath":"components/status/SessionState.jsx"},{"name":"SeverityChip","sourcePath":"components/status/SeverityChip.jsx"},{"name":"SEVERITY","sourcePath":"components/status/severity.js"},{"name":"SeverityGlyph","sourcePath":"components/status/SeverityGlyph.jsx"},{"name":"SEVERITY_ORDER","sourcePath":"components/status/severity.js"},{"name":"TimelineScrubber","sourcePath":"components/timeline/TimelineScrubber.jsx"},{"name":"VitalCard","sourcePath":"components/vitals/VitalCard.jsx"}],"sourceHashes":{"assets/icons.js":"467468046f29","components/controls/AntsRating.jsx":"daecd0adb0db","components/controls/Button.jsx":"6f5302c9ab89","components/controls/IconButton.jsx":"6f4c14dbdd63","components/controls/InjectionTrigger.jsx":"7c95b1c77d3e","components/controls/TaskChip.jsx":"2f0baa15dfeb","components/monitor/PatientMonitor.jsx":"e360ed98c154","components/status/ConnectionPill.jsx":"42e4411e5573","components/status/SessionState.jsx":"d95fb9fef139","components/status/severity.js":"03e80404a103","components/status/SeverityGlyph.jsx":"b2762c9b168b","components/status/SeverityChip.jsx":"dbddb1b7206d","components/timeline/TimelineScrubber.jsx":"e1f5f575873b","components/vitals/VitalCard.jsx":"328c3459bfad","ui_kits/aar/data.js":"da0241931dcb","ui_kits/aar/AarViewer.jsx":"a851da8d52ce","ui_kits/instructor/data.js":"1b7701b61704","ui_kits/instructor/Console.jsx":"ae5741b97bf0","ui_kits/trainee/data.js":"4d21258753c1","ui_kits/trainee/Station.jsx":"336c260bc34e"},"inlinedExternals":[],"unexposedExports":[{"name":"severityMeta","sourcePath":"components/status/severity.js"}]} */
 (() => {
 
 const __ds_ns = (window.DesignSystem_ad98cb = window.DesignSystem_ad98cb || {});
@@ -63,7 +62,6 @@ try { (() => {
 
 // components/controls/AntsRating.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -132,9 +130,10 @@ function AntsRating({
     const next = Math.min(5, Math.max(1, cur + (up ? 1 : -1)));
     onChange && onChange(next);
   }
-  return /*#__PURE__*/React.createElement("div", _extends({
-    className: `vc-ants ${className}`
-  }, rest), /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
+    className: `vc-ants ${className}`,
+    ...rest
+  }, /*#__PURE__*/React.createElement("div", {
     className: "vc-ants__head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-ants__cat"
@@ -185,7 +184,6 @@ Object.assign(__ds_scope, { AntsRating });
 
 // components/controls/Button.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* Injects a component's CSS once. Design-system components are self-contained;
    we use real CSS classes (not inline styles) so :hover/:focus/:active work. */
 function inject(id, css) {
@@ -197,29 +195,122 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-button", `
-.vc-btn{--_h:var(--control-h);display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
-  min-height:var(--_h);min-width:var(--touch-min);padding-inline:var(--sp-5);box-sizing:border-box;
-  font-family:var(--font-ui);font-size:var(--fs-body);font-weight:var(--fw-semibold);line-height:1;
-  border:var(--border-w) solid transparent;border-radius:var(--radius-md);cursor:pointer;
-  text-decoration:none;white-space:nowrap;user-select:none;
-  transition:background var(--dur-fast) var(--ease-standard),border-color var(--dur-fast) var(--ease-standard),color var(--dur-fast) var(--ease-standard),transform var(--dur-fast) var(--ease-standard);}
-.vc-btn:focus-visible{outline:var(--focus-w) solid var(--focus-ring);outline-offset:var(--focus-offset);}
-.vc-btn:active{transform:translateY(1px);}
-.vc-btn[disabled]{cursor:not-allowed;opacity:.5;transform:none;}
-.vc-btn--lg{--_h:var(--control-h-lg);font-size:var(--fs-body-lg);padding-inline:var(--sp-6);}
-.vc-btn--sm{--_h:var(--control-h-sm);font-size:var(--fs-sm);padding-inline:var(--sp-4);}
-.vc-btn--block{width:100%;}
-.vc-btn--primary{background:var(--action);color:var(--on-action);}
-.vc-btn--primary:hover:not([disabled]){background:var(--action-hover);}
-.vc-btn--primary:active:not([disabled]){background:var(--action-press);}
-.vc-btn--secondary{background:var(--surface);color:var(--action-quiet);border-color:var(--border-strong);}
-.vc-btn--secondary:hover:not([disabled]){background:var(--action-fill);border-color:var(--action);}
-.vc-btn--ghost{background:transparent;color:var(--action-quiet);}
-.vc-btn--ghost:hover:not([disabled]){background:var(--action-fill);}
-.vc-btn--danger{background:var(--sev-critical-fg);color:var(--c-white);}
-.vc-btn--danger:hover:not([disabled]){background:var(--verm-700);}
-.vc-btn__ico{display:inline-flex;width:1.15em;height:1.15em;flex:0 0 auto;}
-.vc-btn__ico svg{width:100%;height:100%;}
+.vc-btn {
+  --_h: var(--control-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--_h);
+  min-width: var(--touch-min);
+  padding-inline: var(--sp-6);
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  border: var(--border-w) solid transparent;
+  border-radius: var(--radius-pill); /* premium pill rounding */
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: var(--shadow-card);
+  transition: background var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.vc-btn:focus-visible {
+  outline: var(--focus-w) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.vc-btn:active {
+  transform: scale(0.98);
+}
+.vc-btn[disabled] {
+  cursor: not-allowed;
+  opacity: .45;
+  transform: none;
+  box-shadow: none;
+}
+.vc-btn--lg {
+  --_h: var(--control-h-lg);
+  font-size: var(--fs-body-lg);
+  padding-inline: var(--sp-8);
+}
+.vc-btn--sm {
+  --_h: var(--control-h-sm);
+  font-size: var(--fs-sm);
+  padding-inline: var(--sp-4);
+  border-radius: var(--radius-md); /* moderate curves for compact buttons */
+}
+.vc-btn--block {
+  width: 100%;
+}
+.vc-btn--primary {
+  background: var(--action);
+  color: var(--on-action);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.vc-btn--primary:hover:not([disabled]) {
+  background: var(--action-hover);
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-btn--primary:active:not([disabled]) {
+  background: var(--action-press);
+}
+.vc-btn--secondary {
+  background: var(--surface-card);
+  color: var(--action-quiet);
+  border-color: var(--border-default);
+}
+.vc-btn--secondary:hover:not([disabled]) {
+  background: var(--surface-card-hover);
+  border-color: var(--action);
+  color: var(--action-hover);
+}
+.vc-btn--ghost {
+  background: transparent;
+  color: var(--action-quiet);
+  box-shadow: none;
+}
+.vc-btn--ghost:hover:not([disabled]) {
+  background: var(--surface-card-hover);
+  color: var(--action-hover);
+}
+.vc-btn--danger {
+  background: var(--text-critical);
+  color: var(--c-white);
+}
+.vc-btn--danger:hover:not([disabled]) {
+  background: var(--verm-700);
+  box-shadow: var(--shadow-glow-critical);
+}
+
+/* Button-in-Button premium nested icon container */
+.vc-btn__ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12); /* nested highlight circle */
+  flex: 0 0 auto;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.vc-btn--secondary .vc-btn__ico {
+  background: var(--border-subtle);
+}
+.vc-btn:hover:not([disabled]) .vc-btn__ico {
+  transform: scale(1.05);
+}
+.vc-btn__ico svg {
+  width: 14px;
+  height: 14px;
+}
 `);
 
 /**
@@ -244,9 +335,11 @@ function Button({
   const extra = Tag === "button" ? {
     type
   } : {};
-  return /*#__PURE__*/React.createElement(Tag, _extends({
-    className: cls
-  }, extra, rest), iconStart ? /*#__PURE__*/React.createElement("span", {
+  return /*#__PURE__*/React.createElement(Tag, {
+    className: cls,
+    ...extra,
+    ...rest
+  }, iconStart ? /*#__PURE__*/React.createElement("span", {
     className: "vc-btn__ico",
     "aria-hidden": "true"
   }, iconStart) : null, children ? /*#__PURE__*/React.createElement("span", null, children) : null, iconEnd ? /*#__PURE__*/React.createElement("span", {
@@ -259,7 +352,6 @@ Object.assign(__ds_scope, { Button });
 
 // components/controls/IconButton.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -268,20 +360,73 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-iconbtn", `
-.vc-iconbtn{display:inline-flex;align-items:center;justify-content:center;
-  width:var(--touch-min);height:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);
-  padding:0;box-sizing:border-box;border:var(--border-w) solid transparent;border-radius:var(--radius-md);
-  background:transparent;color:var(--text-muted);cursor:pointer;
-  transition:background var(--dur-fast) var(--ease-standard),color var(--dur-fast) var(--ease-standard);}
-.vc-iconbtn:hover:not([disabled]){background:var(--action-fill);color:var(--action-quiet);}
-.vc-iconbtn:focus-visible{outline:var(--focus-w) solid var(--focus-ring);outline-offset:var(--focus-offset);}
-.vc-iconbtn:active:not([disabled]){transform:translateY(1px);}
-.vc-iconbtn[disabled]{opacity:.5;cursor:not-allowed;}
-.vc-iconbtn--solid{background:var(--action);color:var(--on-action);}
-.vc-iconbtn--solid:hover:not([disabled]){background:var(--action-hover);color:var(--on-action);}
-.vc-iconbtn--lg{width:var(--control-h-lg);height:var(--control-h-lg);}
-.vc-iconbtn__g{display:inline-flex;width:22px;height:22px;}
-.vc-iconbtn__g svg{width:100%;height:100%;}
+.vc-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 0;
+  box-sizing: border-box;
+  border: var(--border-w) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.vc-iconbtn:hover:not([disabled]) {
+  background: var(--surface-card-hover);
+  color: var(--action-quiet);
+  border-color: var(--action);
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-iconbtn:focus-visible {
+  outline: var(--focus-w) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.vc-iconbtn:active:not([disabled]) {
+  transform: scale(0.95);
+}
+.vc-iconbtn[disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.vc-iconbtn--solid {
+  background: var(--action);
+  color: var(--on-action);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.vc-iconbtn--solid:hover:not([disabled]) {
+  background: var(--action-hover);
+  color: var(--on-action);
+}
+.vc-iconbtn--lg {
+  width: var(--control-h-lg);
+  height: var(--control-h-lg);
+  border-radius: var(--radius-lg);
+}
+.vc-iconbtn__g {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.vc-iconbtn:hover:not([disabled]) .vc-iconbtn__g {
+  transform: scale(1.05);
+}
+.vc-iconbtn__g svg {
+  width: 100%;
+  height: 100%;
+}
 `);
 
 /**
@@ -298,12 +443,13 @@ function IconButton({
   ...rest
 }) {
   const cls = ["vc-iconbtn", variant === "solid" ? "vc-iconbtn--solid" : "", size === "lg" ? "vc-iconbtn--lg" : "", className].filter(Boolean).join(" ");
-  return /*#__PURE__*/React.createElement("button", _extends({
+  return /*#__PURE__*/React.createElement("button", {
     type: type,
     className: cls,
     "aria-label": label,
-    title: label
-  }, rest), /*#__PURE__*/React.createElement("span", {
+    title: label,
+    ...rest
+  }, /*#__PURE__*/React.createElement("span", {
     className: "vc-iconbtn__g",
     "aria-hidden": "true"
   }, icon));
@@ -313,7 +459,6 @@ Object.assign(__ds_scope, { IconButton });
 
 // components/controls/InjectionTrigger.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -322,29 +467,129 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-inject", `
-.vc-inject{position:relative;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--sp-2);
-  width:100%;min-height:var(--control-h-lg);padding:var(--sp-3) var(--sp-4);text-align:start;
-  background:var(--surface);border:var(--border-w-strong) solid var(--border-strong);border-radius:var(--radius-md);
-  cursor:pointer;font-family:var(--font-ui);color:var(--text);
-  transition:border-color var(--dur-fast) var(--ease-standard),background var(--dur-fast) var(--ease-standard),transform var(--dur-fast) var(--ease-standard),box-shadow var(--dur-fast) var(--ease-standard);}
-.vc-inject:hover:not([disabled]){border-color:var(--action);background:var(--action-fill);}
-.vc-inject:focus-visible{outline:var(--focus-w) solid var(--focus-ring);outline-offset:var(--focus-offset);}
-.vc-inject:active:not([disabled]){transform:translateY(1px);}
-.vc-inject__top{display:flex;align-items:center;gap:var(--sp-2);}
-.vc-inject__ico{display:inline-flex;width:22px;height:22px;flex:0 0 auto;color:var(--text-muted);}
-.vc-inject__ico svg{width:100%;height:100%;}
-.vc-inject__title{font-size:var(--fs-body);font-weight:var(--fw-semibold);line-height:1.15;}
-.vc-inject__kind{margin-inline-start:auto;font-size:var(--fs-xs);font-weight:var(--fw-semibold);
-  letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--text-faint);
-  padding-inline:var(--sp-2);min-height:20px;display:inline-flex;align-items:center;
-  border-radius:var(--radius-pill);background:var(--surface-2);border:var(--border-w) solid var(--hairline);}
-.vc-inject__desc{font-size:var(--fs-sm);color:var(--text-muted);line-height:var(--lh-normal);}
+.vc-inject {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 6px; /* concentric padding for double bezel */
+  background: var(--surface-base);
+  border: var(--border-w) solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.vc-inject__inner {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: calc(var(--control-h-lg) - 12px);
+  padding: var(--sp-3) var(--sp-4);
+  text-align: start;
+  background: var(--surface-card);
+  border: var(--border-w) solid var(--border-default);
+  border-radius: calc(var(--radius-xl) - 6px);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              background var(--dur-fast) var(--ease-standard);
+}
+.vc-inject:hover:not([disabled]) .vc-inject__inner {
+  border-color: var(--action);
+  background: var(--surface-card-hover);
+}
+.vc-inject:hover:not([disabled]) {
+  border-color: var(--action);
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-inject:focus-visible {
+  outline: var(--focus-w) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.vc-inject:active:not([disabled]) {
+  transform: scale(0.98);
+}
+.vc-inject__top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.vc-inject__ico {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  transition: transform var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.vc-inject:hover:not([disabled]) .vc-inject__ico {
+  transform: scale(1.05);
+}
+.vc-inject__ico svg {
+  width: 100%;
+  height: 100%;
+}
+.vc-inject__title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+.vc-inject__kind {
+  margin-inline-start: auto;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-inline: var(--sp-2);
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface-base);
+  border: var(--border-w) solid var(--border-subtle);
+}
+.vc-inject__desc {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  line-height: var(--lh-normal);
+}
 /* FIRED — legible, clearly spent, not just greyed away */
-.vc-inject--fired{cursor:default;border-style:solid;border-color:var(--status-running-dot);background:var(--status-running-fill);}
-.vc-inject--fired .vc-inject__ico{color:var(--status-running-fg);}
-.vc-inject__fired{display:inline-flex;align-items:center;gap:var(--sp-1);margin-inline-start:auto;
-  font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--status-running-fg);letter-spacing:var(--ls-num);}
-.vc-inject[disabled]{opacity:.45;cursor:not-allowed;}
+.vc-inject--fired {
+  cursor: default;
+  border-color: var(--border-running-subtle);
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-inject--fired .vc-inject__inner {
+  background: var(--bg-running-subtle);
+  border-color: var(--border-running-subtle);
+}
+.vc-inject--fired .vc-inject__ico {
+  color: var(--text-running);
+}
+.vc-inject__fired {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-running);
+  letter-spacing: var(--ls-num);
+}
+.vc-inject[disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 `);
 const HE_FIRED = "הוזרק";
 
@@ -367,13 +612,16 @@ function InjectionTrigger({
   className = "",
   ...rest
 }) {
-  return /*#__PURE__*/React.createElement("button", _extends({
+  return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: `vc-inject ${fired ? "vc-inject--fired" : ""} ${className}`,
     disabled: disabled || fired,
     "aria-pressed": fired,
-    onClick: fired ? undefined : onFire
-  }, rest), /*#__PURE__*/React.createElement("span", {
+    onClick: fired ? undefined : onFire,
+    ...rest
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "vc-inject__inner"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "vc-inject__top"
   }, icon ? /*#__PURE__*/React.createElement("span", {
     className: "vc-inject__ico",
@@ -386,7 +634,7 @@ function InjectionTrigger({
     className: "vc-inject__kind"
   }, kind) : null), description ? /*#__PURE__*/React.createElement("span", {
     className: "vc-inject__desc"
-  }, description) : null);
+  }, description) : null));
 }
 function CheckGlyph() {
   return /*#__PURE__*/React.createElement("svg", {
@@ -497,7 +745,7 @@ inject("vc-task", `
 }
 .vc-task__code {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -526,7 +774,7 @@ inject("vc-task", `
   gap: 6px;
   margin-top: 2px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--text-muted);
 }
 .vc-task__win b {
@@ -584,7 +832,7 @@ inject("vc-task", `
 }
 .vc-task__route-lbl {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -633,7 +881,7 @@ inject("vc-task", `
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   color: var(--text-critical);
 }
@@ -656,7 +904,7 @@ inject("vc-task", `
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 600;
   font-family: var(--font-ui);
 }
@@ -1028,7 +1276,6 @@ Object.assign(__ds_scope, { TaskChip });
 
 // components/monitor/PatientMonitor.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -1037,86 +1284,434 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-monitor", `
-.vc-mon{position:relative;box-sizing:border-box;display:flex;gap:10px;
-  background:linear-gradient(180deg,#2c313a,#1d2129 8%,#171b22 92%,#0d1015);
-  border-radius:18px;padding:14px;border:1px solid #000;color:#e9eef2;font-family:var(--font-ui);
-  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 18px 50px rgba(0,0,0,.6);}
+.vc-mon {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  gap: 12px;
+  background: linear-gradient(180deg, var(--n-800), var(--n-900) 8%, var(--n-950) 92%, var(--inst-room));
+  border-radius: 20px;
+  padding: 16px;
+  border: 1.5px solid var(--inst-bezel-edge);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  box-shadow: 0 1px 1px rgba(255,255,255,0.08) inset, var(--shadow-card);
+  transition: box-shadow var(--dur-base) var(--ease-standard);
+}
 /* device number font: bold neutral tabular sans (NOT a sci-fi mono) */
-.vc-mon,.vc-mon *{--_dnum:var(--font-metric);}
-.vc-mon__dev{flex:1;min-width:0;display:flex;flex-direction:column;}
-.vc-mon__brand{display:flex;align-items:center;gap:8px;padding:4px 6px 8px;flex:0 0 auto;flex-wrap:nowrap;white-space:nowrap;}
-.vc-mon__brand b{font-size:15px;font-weight:800;letter-spacing:.03em;color:#cfd8de;white-space:nowrap;}
-.vc-mon__brand span{margin-inline-start:auto;font-size:13px;font-weight:700;letter-spacing:.06em;color:#8492c9;white-space:nowrap;}
+.vc-mon, .vc-mon * {
+  --_dnum: var(--font-metric);
+}
+.vc-mon__dev {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vc-mon__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 8px;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.vc-mon__brand b {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.vc-mon__brand span {
+  margin-inline-start: auto;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
 /* LED alarm strip */
-.vc-mon__led{height:7px;border-radius:4px;background:#0b111a;margin:0 2px 8px;flex:0 0 auto;}
-.vc-mon[data-alarm="critical"] .vc-mon__led{animation:vc-led-crit .5s steps(1,end) infinite;}
-.vc-mon[data-alarm="caution"] .vc-mon__led{animation:vc-led-caut 1s steps(1,end) infinite;}
+.vc-mon__led {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--inst-room);
+  margin: 0 2px 8px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+.vc-mon[data-alarm="critical"] .vc-mon__led {
+  animation: vc-led-crit .5s steps(1,end) infinite;
+}
+.vc-mon[data-alarm="caution"] .vc-mon__led {
+  animation: vc-led-caut 1s steps(1,end) infinite;
+}
 /* recessed screen */
-.vc-mon__screen{position:relative;flex:1;min-height:0;border-radius:5px;overflow:hidden;background:#000;direction:ltr;
-  box-shadow:var(--inst-recess);display:flex;flex-direction:column;}
-.vc-mon__frame{position:absolute;inset:0;border-radius:5px;pointer-events:none;z-index:8;border:3px solid transparent;}
-.vc-mon[data-alarm="critical"] .vc-mon__frame{border-color:var(--alarm-critical);animation:vc-alarm-crit .5s steps(1,end) infinite;box-shadow:inset 0 0 26px rgba(255,42,42,.4);}
-.vc-mon[data-alarm="caution"] .vc-mon__frame{border-color:var(--alarm-caution);animation:vc-alarm-caut 1s steps(1,end) infinite;box-shadow:inset 0 0 20px rgba(255,208,0,.22);}
+.vc-mon__screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--inst-screen);
+  direction: ltr;
+  box-shadow: var(--inst-recess);
+  display: flex;
+  flex-direction: column;
+}
+.vc-mon__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 8;
+  border: 3px solid transparent;
+}
+.vc-mon[data-alarm="critical"] .vc-mon__frame {
+  border-color: var(--alarm-critical);
+  animation: vc-alarm-crit .5s steps(1,end) infinite;
+  box-shadow: inset 0 0 32px rgba(255,42,42,0.45);
+}
+.vc-mon[data-alarm="caution"] .vc-mon__frame {
+  border-color: var(--alarm-caution);
+  animation: vc-alarm-caut 1s steps(1,end) infinite;
+  box-shadow: inset 0 0 24px rgba(255,208,0,0.25);
+}
 /* header strip */
-.vc-mon__hdr{display:flex;align-items:center;gap:18px;padding:5px 12px;font-size:13px;color:#c7d0d6;flex:0 0 auto;
-  border-bottom:1px solid rgba(120,140,160,.12);}
-.vc-mon__hdr .k{color:#8a97a1;}
-.vc-mon__heart{margin-inline-start:auto;color:#ff3b40;display:inline-flex;}
-.vc-mon__heart svg{width:20px;height:20px;animation:vc-heart 1s ease-in-out infinite;}
-@keyframes vc-heart{0%,100%{transform:scale(1)}18%{transform:scale(1.28)}36%{transform:scale(1)}}
+.vc-mon__hdr {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(120,140,160,.12);
+  background: rgba(15, 24, 30, 0.4);
+}
+.vc-mon__hdr .k {
+  color: var(--text-muted);
+}
+.vc-mon__heart {
+  margin-inline-start: auto;
+  color: var(--alarm-critical);
+  display: inline-flex;
+}
+.vc-mon__heart svg {
+  width: 20px;
+  height: 20px;
+  animation: vc-heart 1s ease-in-out infinite;
+}
+@keyframes vc-heart {
+  0%, 100% { transform: scale(1) }
+  18% { transform: scale(1.28) }
+  36% { transform: scale(1) }
+}
 /* main = waveforms | values */
-.vc-mon__main{flex:1;min-height:0;overflow:hidden;display:grid;grid-template-columns:1.55fr 1fr;grid-template-rows:minmax(0,1fr);}
-.vc-mon__cwrap{position:relative;min-width:0;min-height:0;border-inline-end:1px solid rgba(120,140,160,.12);}
-.vc-mon__canvas{display:block;width:100%;height:100%;}
-.vc-mon__values{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;container-type:size;}
-.vc-mon__val{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:1px;padding:2px 14px;
-  border-bottom:1px solid rgba(120,140,160,.08);position:relative;}
-.vc-mon__val:last-child{border-bottom:none;}
-.vc-mon__vtop{display:flex;align-items:baseline;gap:8px;flex:0 0 auto;}
-.vc-mon__vlabel{font-size:14px;font-weight:800;letter-spacing:.04em;}
-.vc-mon__vunit{font-size:11px;color:#8a97a1;font-weight:600;}
-.vc-mon__vscale{margin-inline-start:auto;font-family:var(--_dnum);font-size:11px;color:#71808b;text-align:end;line-height:1.15;font-variant-numeric:tabular-nums;}
-.vc-mon__num{font-family:var(--_dnum);font-variant-numeric:tabular-nums lining-nums;font-weight:800;line-height:.9;
-  display:flex;align-items:flex-end;gap:6px;max-width:100%;overflow:hidden;flex:0 1 auto;min-height:0;}
-.vc-mon__num small{font-size:.5em;font-weight:700;padding-bottom:.15em;}
-.vc-mon__vsub{display:flex;gap:14px;font-size:11.5px;color:#93a0aa;margin-top:2px;flex-wrap:wrap;flex:0 0 auto;}
-.vc-mon__vsub b{font-family:var(--_dnum);color:#c3ccd3;font-variant-numeric:tabular-nums;font-weight:700;}
-.vc-mon[data-alarm] .vc-mon__val[data-alarming="1"] .vc-mon__num{animation:vc-num-crit .5s steps(1,end) infinite;}
+.vc-mon__main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  grid-template-rows: minmax(0, 1fr);
+}
+.vc-mon__cwrap {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-inline-end: 1px solid rgba(120,140,160,.12);
+}
+.vc-mon__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.vc-mon__values {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.vc-mon__val {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  padding: 1px 14px;
+  border-bottom: 1px solid rgba(120,140,160,.08);
+  position: relative;
+  container-type: size;
+}
+.vc-mon__val:last-child {
+  border-bottom: none;
+}
+.vc-mon__vtop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 0 0 auto;
+  line-height: 1.05;
+}
+.vc-mon__vlabel {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.vc-mon__vunit {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.vc-mon__vscale {
+  margin-inline-start: auto;
+  font-family: var(--_dnum);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: end;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.vc-mon__num {
+  font-family: var(--_dnum);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 100%;
+  overflow: visible;
+  flex: 0 0 auto;
+}
+.vc-mon__num small {
+  font-size: .5em;
+  font-weight: 700;
+  padding-bottom: .15em;
+}
+.vc-mon__vsub {
+  display: flex;
+  gap: 14px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+.vc-mon__vsub b {
+  font-family: var(--_dnum);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+/* progressive disclosure — a short block keeps its LABEL + NUMBER and drops
+   secondary detail, instead of overlapping. Thresholds are per-block (each
+   .vc-mon__val is its own size container). */
+@container (max-height:58px) {
+  .vc-mon__vsub { display: none; }
+}
+@container (max-height:40px) {
+  .vc-mon__vscale { display: none; }
+}
+.vc-mon[data-alarm] .vc-mon__val[data-alarming="1"] .vc-mon__num {
+  animation: vc-num-crit .5s steps(1,end) infinite;
+}
 /* bottom band: temp | co | nibp */
-.vc-mon__band{display:grid;grid-template-columns:1.55fr 1fr;border-top:1px solid rgba(120,140,160,.14);flex:0 0 auto;}
-.vc-mon__bandL{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:6px 12px;border-inline-end:1px solid rgba(120,140,160,.12);}
-.vc-mon__bcell{display:flex;flex-direction:column;gap:1px;}
-.vc-mon__bcell .lab{font-size:12px;font-weight:800;color:#dfe6eb;letter-spacing:.03em;}
-.vc-mon__bigwhite{font-family:var(--_dnum);font-variant-numeric:tabular-nums;font-weight:800;color:#fff;line-height:.95;font-size:26px;}
-.vc-mon__bsub{font-family:var(--_dnum);font-size:11px;color:#8a97a1;font-variant-numeric:tabular-nums;}
-.vc-mon__nibp{padding:6px 14px;display:flex;flex-direction:column;justify-content:center;}
-.vc-mon__nibp .lab{font-size:12px;font-weight:800;color:#fff;letter-spacing:.03em;}
-.vc-mon__nibp .big{font-family:var(--_dnum);font-variant-numeric:tabular-nums;font-weight:800;color:#fff;font-size:30px;line-height:.95;}
-.vc-mon__nibp .row{display:flex;gap:10px;font-family:var(--_dnum);font-size:11px;color:#8a97a1;font-variant-numeric:tabular-nums;}
+.vc-mon__band {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  border-top: 1px solid rgba(120,140,160,.14);
+  flex: 0 0 auto;
+  background: rgba(15, 24, 30, 0.2);
+}
+.vc-mon__bandL {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 6px 12px;
+  border-inline-end: 1px solid rgba(120,140,160,.12);
+}
+.vc-mon__bcell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.vc-mon__bcell .lab {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: .03em;
+}
+.vc-mon__bigwhite {
+  font-family: var(--_dnum);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: .95;
+  font-size: 26px;
+}
+.vc-mon__bsub {
+  font-family: var(--_dnum);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.vc-mon__nibp {
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.vc-mon__nibp .lab {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: .03em;
+}
+.vc-mon__nibp .big {
+  font-family: var(--_dnum);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 30px;
+  line-height: .95;
+}
+.vc-mon__nibp .row {
+  display: flex;
+  gap: 10px;
+  font-family: var(--_dnum);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
 /* bottom control bar */
-.vc-mon__bar{display:flex;align-items:center;gap:10px;padding:6px 12px;flex:0 0 auto;border-top:1px solid rgba(120,140,160,.1);}
-.vc-mon__stat{display:flex;gap:6px;color:#7f8c96;}
-.vc-mon__cfg{margin-inline:auto;font-size:12px;color:#8a97a1;}
-.vc-mon__btn{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 12px;border-radius:6px;cursor:pointer;
-  background:linear-gradient(180deg,#2f3946,#222a34);border:1px solid #0a0d12;color:#dfe6eb;font-family:var(--font-ui);font-size:12.5px;font-weight:700;}
-.vc-mon__btn svg{width:15px;height:15px;}
-.vc-mon__btn:hover{filter:brightness(1.12);}
-.vc-mon__btn:focus-visible{outline:2px solid var(--inst-focus);outline-offset:2px;}
-.vc-mon__btn--accent{background:linear-gradient(180deg,#245a86,#1b4260);}
+.vc-mon__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(120,140,160,.1);
+  background: rgba(7, 13, 16, 0.8);
+}
+.vc-mon__stat {
+  display: flex;
+  gap: 6px;
+  color: var(--text-muted);
+}
+.vc-mon__cfg {
+  margin-inline: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.vc-mon__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--n-700), var(--n-850));
+  border: 1px solid var(--n-950);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  transition: transform var(--dur-fast) var(--ease-standard), filter var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+.vc-mon__btn svg {
+  width: 15px;
+  height: 15px;
+}
+.vc-mon__btn:hover {
+  filter: brightness(1.15);
+}
+.vc-mon__btn:active {
+  transform: translateY(1px);
+}
+.vc-mon__btn:focus-visible {
+  outline: 2px solid var(--inst-focus);
+  outline-offset: 2px;
+}
+.vc-mon__btn--accent {
+  background: linear-gradient(180deg, var(--teal-500), var(--teal-700));
+  border: 1px solid var(--teal-900);
+}
 /* right physical button column */
-.vc-mon__rail{flex:0 0 66px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 4px;}
-.vc-mon__spk{width:46px;height:20px;border-radius:5px;background:#0c0f14;box-shadow:inset 0 1px 2px #000;flex:0 0 auto;}
-.vc-mon__hw{width:48px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(180deg,#2b333e,#1b2129);border:1px solid #05070b;color:#c3ccd3;cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.05) inset;}
-.vc-mon__hw svg{width:22px;height:22px;}
-.vc-mon__hw:hover{filter:brightness(1.15);}
-.vc-mon__hw:focus-visible{outline:2px solid var(--inst-focus);outline-offset:2px;}
-.vc-mon__hw--amber{background:linear-gradient(180deg,#e0a83a,#c08a20);color:#2a1e02;border-color:#7a5a10;}
-.vc-mon__hw--amber[data-muted="1"]{box-shadow:0 0 12px var(--alarm-caution-glow);}
-.vc-mon__knob{margin-top:auto;width:54px;height:54px;border-radius:50%;flex:0 0 auto;
-  background:radial-gradient(circle at 38% 32%,#3a4652,#232a33 60%,#12161c);
-  border:1px solid #05070b;box-shadow:0 2px 6px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.06) inset;}
-.vc-mon__knob::after{content:"";position:absolute;}
+.vc-mon__rail {
+  flex: 0 0 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+}
+.vc-mon__spk {
+  width: 46px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--inst-room);
+  box-shadow: inset 0 2px 4px var(--inst-bezel-edge);
+  flex: 0 0 auto;
+}
+.vc-mon__hw {
+  width: 48px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--n-700), var(--n-850));
+  border: 1.5px solid var(--n-950);
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  transition: transform var(--dur-fast) var(--ease-standard), filter var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+.vc-mon__hw svg {
+  width: 22px;
+  height: 22px;
+}
+.vc-mon__hw:hover {
+  filter: brightness(1.15);
+}
+.vc-mon__hw:active {
+  transform: translateY(1px);
+}
+.vc-mon__hw:focus-visible {
+  outline: 2px solid var(--inst-focus);
+  outline-offset: 2px;
+}
+.vc-mon__hw--amber {
+  background: linear-gradient(180deg, var(--amber-500), var(--amber-700));
+  color: var(--n-950);
+  border-color: var(--amber-900, var(--inst-bezel-edge));
+}
+.vc-mon__hw--amber[data-muted="1"] {
+  box-shadow: 0 0 14px var(--alarm-caution-glow);
+}
+.vc-mon__knob {
+  margin-top: auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: radial-gradient(circle at 38% 32%, var(--n-700), var(--n-850) 60%, var(--n-950));
+  border: 1.5px solid var(--inst-bezel-edge);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+}
+.vc-mon__knob::after {
+  content: "";
+  position: absolute;
+}
 `);
 
 /* ---- waveform generators — sample(t in [0,1)) → y in [-1,1] ------------- */
@@ -1128,68 +1723,62 @@ function pleth(t) {
   const m = g(t, 0.22, 0.075, 1.0) + g(t, 0.46, 0.06, 0.34);
   return m * 1.6 - 0.8;
 }
-function art(t) {
-  const m = g(t, 0.18, 0.045, 1.0) + g(t, 0.36, 0.05, 0.42);
-  return m * 1.55 - 0.78;
-}
 function capno(t) {
   let v;
   if (t < 0.14) v = 0;else if (t < 0.22) v = (t - 0.14) / 0.08;else if (t < 0.74) v = 1 + (t - 0.22) * 0.06;else if (t < 0.80) v = 1 - (t - 0.74) / 0.06;else v = 0;
   return v * 1.5 - 0.72;
 }
+/* slow impedance respiration wave — smooth, one breath per cycle */
+function resp(t) {
+  return Math.sin(t * Math.PI * 2 - Math.PI / 2) * 0.7;
+}
 
-/* fixed lane stack, matching the uMEC12 Vet screen */
+/* Fixed lane stack — base-rung config. NO invasive arterial line, so no Art
+   lane; respiration is shown instead. Five lanes map 1:1 to the five value
+   blocks (ECG spans its two lanes) so every waveform aligns with its number. */
+/* Canvas cannot read CSS vars per-stroke; these literals MUST mirror the
+   --ch-* channel tokens in tokens/instrument.css (the muscle-memory colour
+   contract). If a channel token changes, change it here in the same commit. */
 const WAVES = [{
   key: "ecg1",
   gen: ecg,
   kind: "beat",
   color: "#00ff66",
   label: "I",
-  tag: "1mV",
-  scale: null
+  tag: "1mV"
 }, {
   key: "ecg2",
   gen: ecg,
   kind: "beat",
   color: "#00ff66",
   label: "II",
-  tag: "1mV",
-  scale: null
+  tag: "1mV"
 }, {
   key: "pleth",
   gen: pleth,
   kind: "beat",
   color: "#00ccff",
   label: "Pleth",
-  tag: "",
-  scale: null
-}, {
-  key: "art",
-  gen: art,
-  kind: "beat",
-  color: "#ff3b30",
-  label: "Art",
-  tag: "",
-  scale: [160, 0],
-  ref: [160, 100, 0]
+  tag: ""
 }, {
   key: "co2",
   gen: capno,
   kind: "breath",
   color: "#ffcc00",
   label: "CO2",
-  tag: "",
-  scale: [50, 0]
+  tag: ""
+}, {
+  key: "resp",
+  gen: resp,
+  kind: "breath",
+  color: "#d7b13a",
+  label: "Resp",
+  tag: ""
 }];
 const DEF = {
   channels: {
     hr: 60,
     spo2: 98,
-    art: {
-      sys: 120,
-      dia: 75,
-      map: 90
-    },
     etco2: 38,
     resp: 20
   },
@@ -1224,17 +1813,18 @@ function HeartIcon() {
  * PatientMonitor — Mindray-uMEC12-Vet-style main monitor (layout matched to the
  * real device; brand wordmarks intentionally NOT reproduced). True SWEEP-
  * rendered waveforms (a cursor erases/rewrites the trace, never scrolls) across
- * five lanes: ECG I, ECG II, Pleth, Art, CO2. Channel colour = identity
- * (Layer A); alarm state = separate, redundantly coded (LED strip + full-screen
- * frame + number flash + mute light) = Layer B. Numerals are a bold neutral
- * tabular sans, matching the device (not a stylised mono).
+ * five lanes: ECG I, ECG II, Pleth, CO2, Resp. (Base-rung config: no invasive
+ * arterial line, so no Art lane/value — that is opt-in for surgical scenarios.)
+ * Channel colour = identity (Layer A); alarm state = separate, redundantly
+ * coded (LED strip + full-screen frame + number flash + mute light) = Layer B.
+ * Numerals are a bold neutral tabular sans, matching the device (not a mono).
  */
 function PatientMonitor({
   patient = {
     species: "dog",
     breed: "Canine",
-    weightKg: 32,
-    weightRange: "10–23 kg"
+    weightKg: 22,
+    weightRange: "18–30 kg"
   },
   channels = {},
   sub = {},
@@ -1272,11 +1862,6 @@ function PatientMonitor({
       ...DEF.nibp,
       ...nibp
     };
-  const artv = typeof ch.art === "number" ? {
-    sys: ch.art,
-    dia: Math.round(ch.art * 0.62),
-    map: Math.round(ch.art * 0.78)
-  } : ch.art;
   const canvasRef = React.useRef(null),
     wrapRef = React.useRef(null);
   const stateRef = React.useRef({
@@ -1335,20 +1920,6 @@ function PatientMonitor({
         const cy = (i + 0.5) * lh,
           amp = lh * 0.34,
           w = WAVES[i];
-        // dashed reference lines (Art)
-        if (w.ref) {
-          ctx.strokeStyle = "rgba(255,65,54,0.28)";
-          ctx.lineWidth = 1;
-          ctx.setLineDash([4, 4]);
-          [-1, 0.15, 1].forEach(r => {
-            const y = cy - r * amp;
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(W, y);
-            ctx.stroke();
-          });
-          ctx.setLineDash([]);
-        }
         ctx.strokeStyle = w.color;
         ctx.lineWidth = 1.8;
         ctx.lineJoin = "round";
@@ -1417,13 +1988,14 @@ function PatientMonitor({
     };
   }, []);
   const beatDur = `${(60 / (ch.hr || 60)).toFixed(2)}s`;
-  return /*#__PURE__*/React.createElement("div", _extends({
+  return /*#__PURE__*/React.createElement("div", {
     className: `vc-mon ${className}`,
     "data-alarm": alarm !== "normal" ? alarm : undefined,
     role: "group",
     "aria-label": `מוניטור מטופל — ${patient.breed || ""}${patient.weightRange ? " " + patient.weightRange : ""}${alarm !== "normal" ? " — התרעה " + (alarm === "critical" ? "קריטית" : "אזהרה") : ""}`,
-    style: style
-  }, rest), /*#__PURE__*/React.createElement("div", {
+    style: style,
+    ...rest
+  }, /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__dev"
   }, /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__brand"
@@ -1471,15 +2043,15 @@ function PatientMonitor({
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vlabel",
     style: {
-      color: "#00ff66"
+      color: "var(--ch-hr)"
     }
   }, "ECG"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vscale"
   }, "100", /*#__PURE__*/React.createElement("br", null), "50")), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__num",
     style: {
-      color: "#00ff66",
-      fontSize: "clamp(26px, 19cqh, 64px)"
+      color: "var(--ch-hr)",
+      fontSize: "clamp(22px, 36cqh, 60px)"
     }
   }, Math.round(ch.hr)), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__vsub"
@@ -1491,41 +2063,21 @@ function PatientMonitor({
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vlabel",
     style: {
-      color: "#00ccff"
+      color: "var(--ch-spo2)"
     }
-  }, "SpO\u2082"), /*#__PURE__*/React.createElement("span", {
+  }, "SpO₂"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vunit"
   }, "%"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vscale"
   }, "100", /*#__PURE__*/React.createElement("br", null), "90")), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__num",
     style: {
-      color: "#00ccff",
-      fontSize: "clamp(22px, 11cqh, 52px)"
+      color: "var(--ch-spo2)",
+      fontSize: "clamp(18px, 34cqh, 40px)"
     }
   }, Math.round(ch.spo2)), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__vsub"
   }, /*#__PURE__*/React.createElement("span", null, "PI ", /*#__PURE__*/React.createElement("b", null, sub.pi ?? 12.0)), /*#__PURE__*/React.createElement("span", null, "PR ", /*#__PURE__*/React.createElement("b", null, sub.pr ?? Math.round(ch.hr))))), /*#__PURE__*/React.createElement("div", {
-    className: "vc-mon__val",
-    "data-alarming": alarming.includes("art") ? "1" : undefined
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "vc-mon__vtop"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "vc-mon__vlabel",
-    style: {
-      color: "#ff3b30"
-    }
-  }, "Art"), /*#__PURE__*/React.createElement("span", {
-    className: "vc-mon__vunit"
-  }, "mmHg"), /*#__PURE__*/React.createElement("span", {
-    className: "vc-mon__vscale"
-  }, "160", /*#__PURE__*/React.createElement("br", null), "100")), /*#__PURE__*/React.createElement("div", {
-    className: "vc-mon__num",
-    style: {
-      color: "#ff3b30",
-      fontSize: "clamp(18px, 8cqh, 38px)"
-    }
-  }, artv.sys, "/", artv.dia, /*#__PURE__*/React.createElement("small", null, "(", artv.map, ")"))), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__val",
     "data-alarming": alarming.includes("etco2") ? "1" : undefined
   }, /*#__PURE__*/React.createElement("div", {
@@ -1533,17 +2085,17 @@ function PatientMonitor({
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vlabel",
     style: {
-      color: "#ffcc00"
+      color: "var(--ch-etco2)"
     }
-  }, "CO\u2082"), /*#__PURE__*/React.createElement("span", {
+  }, "CO₂"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vunit"
   }, "mmHg Et"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vscale"
   }, "60", /*#__PURE__*/React.createElement("br", null), "20")), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__num",
     style: {
-      color: "#ffcc00",
-      fontSize: "clamp(22px, 10cqh, 46px)"
+      color: "var(--ch-etco2)",
+      fontSize: "clamp(18px, 34cqh, 40px)"
     }
   }, Math.round(ch.etco2)), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__vsub"
@@ -1555,19 +2107,21 @@ function PatientMonitor({
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vlabel",
     style: {
-      color: "#ffcc00"
+      color: "var(--ch-rr)"
     }
   }, "Resp"), /*#__PURE__*/React.createElement("span", {
+    className: "vc-mon__vunit"
+  }, "rpm"), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__vscale"
   }, "45", /*#__PURE__*/React.createElement("br", null), "15")), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__num",
     style: {
-      color: "#ffcc00",
-      fontSize: "clamp(20px, 9cqh, 40px)"
+      color: "var(--ch-rr)",
+      fontSize: "clamp(16px, 30cqh, 34px)"
     }
   }, Math.round(ch.resp)), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__vsub"
-  }, /*#__PURE__*/React.createElement("span", null, "Source CO\u2082"))))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "Source Imp."))))), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__band"
   }, /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__bandL"
@@ -1577,10 +2131,10 @@ function PatientMonitor({
     className: "lab"
   }, "Temp ", /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "#8a97a1",
+      color: "var(--text-muted)",
       fontWeight: 400
     }
-  }, "\xB0C")), /*#__PURE__*/React.createElement("span", {
+  }, "°C")), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__bigwhite"
   }, T.t1.toFixed(1)), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__bigwhite",
@@ -1597,15 +2151,15 @@ function PatientMonitor({
     className: "vc-mon__bigwhite"
   }, CO.value.toFixed(1)), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__bsub"
-  }, "C.I. ", CO.ci, " \xB7 TB ", CO.tb), /*#__PURE__*/React.createElement("span", {
+  }, "C.I. ", CO.ci, " · TB ", CO.tb), /*#__PURE__*/React.createElement("span", {
     className: "vc-mon__bsub"
-  }, "NIBP ", NB.sys, "/", NB.dia, " (", NB.map, ") \xB7 ", NB.time))), /*#__PURE__*/React.createElement("div", {
+  }, "NIBP ", NB.sys, "/", NB.dia, " (", NB.map, ") · ", NB.time))), /*#__PURE__*/React.createElement("div", {
     className: "vc-mon__nibp"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lab"
   }, "NIBP ", /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "#8a97a1",
+      color: "var(--text-muted)",
       fontWeight: 400
     }
   }, "mmHg")), /*#__PURE__*/React.createElement("span", {
@@ -1699,7 +2253,7 @@ function PatientMonitor({
   }))), /*#__PURE__*/React.createElement("button", {
     className: "vc-mon__hw vc-mon__hw--amber",
     onClick: onToggleMute,
-    "aria-label": "\u05D0\u05D9\u05E4\u05D5\u05E1 \u05D4\u05EA\u05E8\u05E2\u05D4",
+    "aria-label": "איפוס התרעה",
     title: "Alarm reset"
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 24 24",
@@ -1713,7 +2267,7 @@ function PatientMonitor({
   }))), /*#__PURE__*/React.createElement("button", {
     className: "vc-mon__hw",
     onClick: onNibp,
-    "aria-label": "\u05D4\u05E4\u05E2\u05DC\u05EA NIBP",
+    "aria-label": "הפעלת NIBP",
     title: "NIBP"
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 24 24",
@@ -1731,7 +2285,7 @@ function PatientMonitor({
   }))), /*#__PURE__*/React.createElement("button", {
     className: "vc-mon__hw",
     onClick: onFreeze,
-    "aria-label": "\u05D4\u05E7\u05E4\u05D0\u05EA \u05DE\u05E1\u05DA",
+    "aria-label": "הקפאת מסך",
     title: "Freeze"
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 24 24",
@@ -1743,7 +2297,7 @@ function PatientMonitor({
   }))), /*#__PURE__*/React.createElement("button", {
     className: "vc-mon__hw",
     onClick: onMenu,
-    "aria-label": "\u05EA\u05E6\u05D5\u05D2\u05D4",
+    "aria-label": "תצוגה",
     title: "Display"
   }, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 24 24",
@@ -1766,7 +2320,6 @@ Object.assign(__ds_scope, { PatientMonitor });
 
 // components/status/ConnectionPill.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -1775,17 +2328,51 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-connpill", `
-.vc-connpill{display:inline-flex;align-items:center;gap:var(--sp-2);box-sizing:border-box;
-  min-height:28px;padding-inline:var(--sp-3);border-radius:var(--radius-pill);
-  font-family:var(--font-ui);font-size:var(--fs-xs);font-weight:var(--fw-semibold);
-  letter-spacing:var(--ls-caps);text-transform:uppercase;line-height:1;
-  border:var(--border-w) solid;white-space:nowrap;}
-.vc-connpill__g{display:inline-flex;width:14px;height:14px;flex:0 0 auto;}
-.vc-connpill__dot{width:9px;height:9px;border-radius:50%;background:currentColor;}
-.vc-connpill--live .vc-connpill__dot{animation:vc-live-dot 1.8s var(--ease-standard) infinite;}
-.vc-connpill--reconnecting{ /* hatch reinforces "not live" beyond color */
-  background-image:var(--stale-hatch);}
-.vc-connpill--reconnecting .vc-connpill__g{animation:vc-spin 1s linear infinite;}
+.vc-connpill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  box-sizing: border-box;
+  min-height: 28px;
+  padding-inline: var(--sp-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  line-height: 1;
+  border: var(--border-w) solid;
+  white-space: nowrap;
+  box-shadow: var(--shadow-card);
+  transition: all var(--dur-fast) var(--ease-standard);
+}
+.vc-connpill__g {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+.vc-connpill__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.vc-connpill--live {
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-connpill--live .vc-connpill__dot {
+  animation: vc-live-dot 1.8s var(--ease-standard) infinite;
+}
+.vc-connpill--reconnecting {
+  /* hatch reinforces "not live" beyond color */
+  background-image: var(--stale-hatch);
+  box-shadow: var(--shadow-glow-elevated);
+}
+.vc-connpill--reconnecting .vc-connpill__g {
+  animation: vc-spin 1s linear infinite;
+}
 `);
 const HE = {
   live: "מחובר",
@@ -1878,12 +2465,13 @@ function ConnectionPill({
     background: `var(--status-${state}-fill)`,
     borderColor: `color-mix(in srgb, var(--status-${state}-dot) 55%, transparent)`
   };
-  return /*#__PURE__*/React.createElement("span", _extends({
+  return /*#__PURE__*/React.createElement("span", {
     className: `vc-connpill vc-connpill--${state} ${className}`,
     style: style,
     role: "status",
-    "aria-live": state === "reconnecting" ? "assertive" : "polite"
-  }, rest), /*#__PURE__*/React.createElement("span", {
+    "aria-live": state === "reconnecting" ? "assertive" : "polite",
+    ...rest
+  }, /*#__PURE__*/React.createElement("span", {
     className: "vc-connpill__g",
     style: {
       color: `var(--status-${state}-dot)`
@@ -1897,7 +2485,6 @@ Object.assign(__ds_scope, { ConnectionPill });
 
 // components/status/SessionState.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -1964,10 +2551,11 @@ function SessionState({
   if (variant === "stepper") {
     const railState = state === "paused" ? "running" : state;
     const curIdx = RAIL.indexOf(railState);
-    return /*#__PURE__*/React.createElement("ol", _extends({
+    return /*#__PURE__*/React.createElement("ol", {
       className: `vc-session vc-session--${state} ${className}`,
-      "aria-label": `מצב סשן: ${dict[state]}`
-    }, rest), /*#__PURE__*/React.createElement("div", {
+      "aria-label": `מצב סשן: ${dict[state]}`,
+      ...rest
+    }, /*#__PURE__*/React.createElement("div", {
       className: "vc-session__steps"
     }, RAIL.map((s, i) => {
       const st = i < curIdx ? "done" : i === curIdx ? "current" : "upcoming";
@@ -1984,9 +2572,10 @@ function SessionState({
       className: "vc-session__clock"
     }, elapsed) : null);
   }
-  return /*#__PURE__*/React.createElement("span", _extends({
-    className: `vc-session vc-session--${state} ${className}`
-  }, rest), /*#__PURE__*/React.createElement("span", {
+  return /*#__PURE__*/React.createElement("span", {
+    className: `vc-session vc-session--${state} ${className}`,
+    ...rest
+  }, /*#__PURE__*/React.createElement("span", {
     className: "vc-session__badge",
     role: "status"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1996,23 +2585,34 @@ function SessionState({
     className: "vc-session__clock"
   }, elapsed) : null);
 }
-Object.assign(__ds_scope, { SESSION_STATES, SessionState });
+Object.assign(__ds_scope, { SessionState, SESSION_STATES });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/status/SessionState.jsx", error: String((e && e.message) || e) }); }
 
 // components/status/severity.js
 try { (() => {
 /* VetCrew severity model — shared business logic (not a component).
-   The ONE loudest semantic in the system. Every level is redundantly coded:
-   color + a unique SHAPE (see SeverityGlyph) + a text label + rank/position.
-   Coherence rule: "normal" is QUIET (neutral, uncolored). Color only appears
-   when something is wrong. */
+   The ONE loudest semantic in the system. Every ALARM level is redundantly
+   coded: color + a unique SHAPE (see SeverityGlyph) + a text label + rank/pos.
+   Coherence rule: "normal" is QUIET — neutral, uncolored, and SHAPELESS. Color
+   and shape appear only when something is wrong.
+
+   Two consumers, two granularities (intentional):
+     · review surface (SeverityChip / AAR) uses the full 4-level distinction.
+     · the live monitor's alarm chrome is coarser — see `monitorLevel`.
+       instrument.css implements `caution` + `critical` treatments only, so
+       `watch` + `elevated` both map to `caution` (per the handoff contract).
+       A distinct low-priority "advisory" monitor tier for `watch`
+       (IEC 60601-1-8 low/medium/high) is a possible future refinement and
+       would need its own chrome in instrument.css. */
 const SEVERITY_ORDER = ["normal", "watch", "elevated", "critical"];
 const SEVERITY = {
   normal: {
     rank: 0,
     he: "תקין",
     en: "Normal",
-    shape: "dot",
+    shape: null,
+    motion: "none",
+    monitorLevel: "normal",
     fg: "var(--sev-normal-fg)",
     fill: "var(--sev-normal-fill)",
     edge: "var(--sev-normal-edge)"
@@ -2021,7 +2621,9 @@ const SEVERITY = {
     rank: 1,
     he: "מעקב",
     en: "Watch",
-    shape: "ring",
+    shape: "dot",
+    motion: "none",
+    monitorLevel: "caution",
     fg: "var(--sev-watch-fg)",
     fill: "var(--sev-watch-fill)",
     edge: "var(--sev-watch-edge)"
@@ -2031,6 +2633,8 @@ const SEVERITY = {
     he: "מוחמר",
     en: "Elevated",
     shape: "triangle",
+    motion: "flash-slow",
+    monitorLevel: "caution",
     fg: "var(--sev-elevated-fg)",
     fill: "var(--sev-elevated-fill)",
     edge: "var(--sev-elevated-edge)"
@@ -2040,6 +2644,8 @@ const SEVERITY = {
     he: "קריטי",
     en: "Critical",
     shape: "octagon",
+    motion: "pulse-fast",
+    monitorLevel: "critical",
     fg: "var(--sev-critical-fg)",
     fill: "var(--sev-critical-fill)",
     edge: "var(--sev-critical-edge)"
@@ -2048,17 +2654,28 @@ const SEVERITY = {
 function severityMeta(level) {
   return SEVERITY[level] || SEVERITY.normal;
 }
-Object.assign(__ds_scope, { SEVERITY_ORDER, SEVERITY, severityMeta });
+
+/* Map a review-surface severity level to the live monitor's alarm chrome tier
+   (normal | caution | critical). Kept as a helper so the monitor never reaches
+   into the model's coarsening rule directly. */
+function monitorAlarmLevel(level) {
+  return severityMeta(level).monitorLevel;
+}
+Object.assign(__ds_scope, { severityMeta, monitorAlarmLevel, SEVERITY_ORDER, SEVERITY });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/status/severity.js", error: String((e && e.message) || e) }); }
 
 // components/status/SeverityGlyph.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const {
+  severityMeta
+} = __ds_scope;
+
 /**
- * The shape half of severity's redundant coding. Each level has a distinct
+ * The shape half of severity's redundant coding. Each ALARM level owns a distinct
  * silhouette so criticality is legible with zero color perception:
- * normal = dot, watch = ring, elevated = triangle, critical = octagon.
- * Colored by `currentColor` (inherits the chip/card severity color).
+ *   watch = dot, elevated = triangle, critical = octagon.
+ * `normal` is QUIET — it has no shape and renders NOTHING (a healthy patient is
+ * not an alarm). Colored by `currentColor` (inherits the chip/card severity color).
  */
 function SeverityGlyph({
   level = "normal",
@@ -2066,8 +2683,8 @@ function SeverityGlyph({
   title,
   ...rest
 }) {
-  const shape = __ds_scope.severityMeta(level).shape;
-  const s = size;
+  const shape = severityMeta(level).shape;
+  if (!shape) return null; // normal / quiet — no alarm silhouette to draw
   let node;
   if (shape === "dot") {
     node = /*#__PURE__*/React.createElement("circle", {
@@ -2075,15 +2692,6 @@ function SeverityGlyph({
       cy: "12",
       r: "4.5",
       fill: "currentColor"
-    });
-  } else if (shape === "ring") {
-    node = /*#__PURE__*/React.createElement("circle", {
-      cx: "12",
-      cy: "12",
-      r: "6",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "2.75"
     });
   } else if (shape === "triangle") {
     node = /*#__PURE__*/React.createElement("path", {
@@ -2097,21 +2705,28 @@ function SeverityGlyph({
       fill: "currentColor"
     });
   }
-  return /*#__PURE__*/React.createElement("svg", _extends({
-    width: s,
-    height: s,
+  return /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
     viewBox: "0 0 24 24",
     role: title ? "img" : "presentation",
     "aria-hidden": title ? undefined : true,
-    "aria-label": title
-  }, rest), node);
+    "aria-label": title,
+    ...rest
+  }, node);
 }
 Object.assign(__ds_scope, { SeverityGlyph });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/status/SeverityGlyph.jsx", error: String((e && e.message) || e) }); }
 
 // components/status/SeverityChip.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const {
+  severityMeta,
+  SEVERITY
+} = __ds_scope;
+const {
+  SeverityGlyph
+} = __ds_scope;
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -2120,15 +2735,56 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-sevchip", `
-.vc-sevchip{display:inline-flex;align-items:center;gap:var(--sp-2);box-sizing:border-box;
-  font-family:var(--font-ui);font-weight:var(--fw-semibold);line-height:1;white-space:nowrap;
-  border-radius:var(--radius-pill);border:var(--border-w) solid;}
-.vc-sevchip--md{min-height:32px;padding-inline:var(--sp-3);font-size:var(--fs-sm);}
-.vc-sevchip--sm{min-height:24px;padding-inline:var(--sp-2);font-size:var(--fs-xs);gap:var(--sp-1);}
-.vc-sevchip--lg{min-height:40px;padding-inline:var(--sp-4);font-size:var(--fs-body);gap:var(--sp-2);}
-/* solid = filled tint (default). outline = hairline. bare = glyph+text only. */
-.vc-sevchip__glyph{display:inline-flex;flex:0 0 auto;}
-.vc-sevchip__val{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;}
+.vc-sevchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+  border: var(--border-w) solid;
+  transition: all var(--dur-fast) var(--ease-standard);
+}
+.vc-sevchip--md {
+  min-height: 32px;
+  padding-inline: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+.vc-sevchip--sm {
+  min-height: 24px;
+  padding-inline: var(--sp-2);
+  font-size: var(--fs-xs);
+  gap: var(--sp-1);
+}
+.vc-sevchip--lg {
+  min-height: 40px;
+  padding-inline: var(--sp-4);
+  font-size: var(--fs-body);
+  gap: var(--sp-2);
+}
+
+/* Premium Diffused Status Glows */
+.vc-sevchip[data-appearance="solid"][data-level="watch"] {
+  box-shadow: var(--shadow-glow-watch);
+}
+.vc-sevchip[data-appearance="solid"][data-level="elevated"] {
+  box-shadow: var(--shadow-glow-elevated);
+}
+.vc-sevchip[data-appearance="solid"][data-level="critical"] {
+  box-shadow: var(--shadow-glow-critical);
+}
+
+.vc-sevchip__glyph {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.vc-sevchip__val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+}
 `);
 const SIZE_GLYPH = {
   sm: 12,
@@ -2152,7 +2808,7 @@ function SeverityChip({
   className = "",
   ...rest
 }) {
-  const meta = __ds_scope.severityMeta(level);
+  const meta = severityMeta(level);
   const label = lang === "en" ? meta.en : meta.he;
   const style = appearance === "solid" ? {
     color: meta.fg,
@@ -2169,29 +2825,31 @@ function SeverityChip({
     paddingInline: 0,
     minHeight: "auto"
   };
-  return /*#__PURE__*/React.createElement("span", _extends({
+  return /*#__PURE__*/React.createElement("span", {
     className: `vc-sevchip vc-sevchip--${size} ${className}`,
+    "data-level": level,
+    "data-appearance": appearance,
     style: style,
     role: "status",
-    "aria-label": `${label}${value != null ? " " + value : ""}`
-  }, rest), /*#__PURE__*/React.createElement("span", {
+    "aria-label": `${label}${value != null ? " " + value : ""}`,
+    ...rest
+  }, /*#__PURE__*/React.createElement("span", {
     className: "vc-sevchip__glyph",
     style: {
       color: meta.fg
     }
-  }, /*#__PURE__*/React.createElement(__ds_scope.SeverityGlyph, {
+  }, /*#__PURE__*/React.createElement(SeverityGlyph, {
     level: level,
     size: SIZE_GLYPH[size]
   })), showLabel ? /*#__PURE__*/React.createElement("span", null, label) : null, value != null ? /*#__PURE__*/React.createElement("span", {
     className: "vc-sevchip__val"
   }, value) : null);
 }
-Object.assign(__ds_scope, { SeverityChip, SEVERITY: __ds_scope.SEVERITY });
+Object.assign(__ds_scope, { SEVERITY, SeverityChip });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/status/SeverityChip.jsx", error: String((e && e.message) || e) }); }
 
 // components/timeline/TimelineScrubber.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -2200,29 +2858,168 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-scrub", `
-.vc-scrub{box-sizing:border-box;display:flex;flex-direction:column;gap:var(--sp-3);font-family:var(--font-ui);width:100%;}
-.vc-scrub__head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);}
-.vc-scrub__time{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--fs-body-lg);color:var(--text-strong);letter-spacing:var(--ls-num);}
-.vc-scrub__time small{color:var(--text-faint);font-size:var(--fs-sm);}
-.vc-scrub__legend{display:flex;flex-wrap:wrap;gap:var(--sp-3);}
-.vc-scrub__lg{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-xs);color:var(--text-muted);}
-.vc-scrub__lg svg{width:12px;height:12px;}
-.vc-scrub__main{position:relative;height:44px;border-radius:var(--radius-sm);background:var(--bg-sunken);
-  border:var(--border-w) solid var(--border);cursor:pointer;touch-action:none;}
-.vc-scrub__main:focus-visible{outline:var(--focus-w) solid var(--focus-ring);outline-offset:var(--focus-offset);}
-.vc-scrub__fill{position:absolute;inset-block:0;inset-inline-start:0;background:var(--action-fill);border-start-start-radius:var(--radius-sm);border-end-start-radius:var(--radius-sm);}
-.vc-scrub__playhead{position:absolute;inset-block:-4px;width:3px;background:var(--action);border-radius:var(--radius-pill);transform:translateX(50%);pointer-events:none;}
-.vc-scrub__playhead::before{content:"";position:absolute;inset-inline-start:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:var(--action);border:2px solid var(--surface-raised);}
-.vc-scrub__marker{position:absolute;top:50%;transform:translate(50%,-50%);display:inline-flex;align-items:center;justify-content:center;
-  width:22px;height:22px;border-radius:50%;background:var(--surface-raised);border:var(--border-w) solid var(--border);
-  color:var(--text-muted);cursor:pointer;padding:0;z-index:2;}
-.vc-scrub__marker:hover{border-color:var(--action);z-index:3;}
-.vc-scrub__marker:focus-visible{outline:var(--focus-w) solid var(--focus-ring);outline-offset:2px;z-index:3;}
-.vc-scrub__marker svg{width:13px;height:13px;}
-.vc-scrub__lane{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:var(--sp-3);}
-.vc-scrub__laneName{font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text);text-align:start;}
-.vc-scrub__laneTrack{position:relative;height:26px;border-radius:var(--radius-xs);background:var(--surface-2);border:var(--border-w) solid var(--hairline);}
-.vc-scrub__laneTick{position:absolute;inset-block:0;width:1px;background:var(--playhead-ghost,color-mix(in srgb,var(--action) 45%,transparent));transform:translateX(50%);pointer-events:none;z-index:1;}
+.vc-scrub {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  font-family: var(--font-ui);
+  width: 100%;
+}
+.vc-scrub__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.vc-scrub__time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-body-lg);
+  color: var(--text-primary);
+  letter-spacing: var(--ls-num);
+  font-weight: var(--fw-semibold);
+}
+.vc-scrub__time small {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+}
+.vc-scrub__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.vc-scrub__lg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+  font-weight: var(--fw-medium);
+}
+.vc-scrub__lg svg {
+  width: 12px;
+  height: 12px;
+}
+.vc-scrub__main {
+  position: relative;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--surface-base);
+  border: var(--border-w) solid var(--border-default);
+  cursor: pointer;
+  touch-action: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+  transition: border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+}
+.vc-scrub__main:focus-visible {
+  outline: var(--focus-w) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-color: var(--action);
+}
+.vc-scrub__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: var(--action-fill);
+  border-start-start-radius: var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+}
+.vc-scrub__playhead {
+  position: absolute;
+  inset-block: -4px;
+  width: 3px;
+  background: var(--action);
+  border-radius: var(--radius-pill);
+  transform: translateX(50%);
+  pointer-events: none;
+  box-shadow: 0 0 10px var(--action), 0 0 20px var(--action);
+  z-index: 5;
+}
+.vc-scrub__playhead::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -6px;
+  top: -6px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--action);
+  border: 2px solid var(--surface-overlay);
+  box-shadow: var(--shadow-glow-running);
+}
+.vc-scrub__marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(50%,-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: var(--border-w) solid var(--border-default);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur-fast) var(--ease-standard), 
+              background var(--dur-fast) var(--ease-standard), 
+              transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.vc-scrub__marker:hover {
+  border-color: var(--action);
+  background: var(--surface-card-hover);
+  color: var(--text-primary);
+  z-index: 10;
+  transform: translate(50%,-50%) scale(1.15);
+  box-shadow: var(--shadow-glow-watch);
+}
+.vc-scrub__marker:active {
+  transform: translate(50%,-50%) scale(0.95);
+}
+.vc-scrub__marker:focus-visible {
+  outline: var(--focus-w) solid var(--focus-ring);
+  outline-offset: 2px;
+  z-index: 10;
+}
+.vc-scrub__marker svg {
+  width: 12px;
+  height: 12px;
+}
+.vc-scrub__lane {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.vc-scrub__laneName {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  text-align: start;
+}
+.vc-scrub__laneTrack {
+  position: relative;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-base);
+  border: var(--border-w) solid var(--border-subtle);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.vc-scrub__laneTick {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  background: var(--playhead-ghost, color-mix(in srgb, var(--action) 45%, transparent));
+  transform: translateX(50%);
+  pointer-events: none;
+  z-index: 1;
+}
 `);
 function fmt(s) {
   s = Math.max(0, Math.round(s));
@@ -2354,9 +3151,10 @@ function TimelineScrubber({
     }
   }
   const legendTypes = Array.from(new Set(markers.map(m => m.type || "action")));
-  return /*#__PURE__*/React.createElement("div", _extends({
-    className: `vc-scrub ${className}`
-  }, rest), /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
+    className: `vc-scrub ${className}`,
+    ...rest
+  }, /*#__PURE__*/React.createElement("div", {
     className: "vc-scrub__head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-scrub__time"
@@ -2372,7 +3170,7 @@ function TimelineScrubber({
     className: "vc-scrub__main",
     role: "slider",
     tabIndex: 0,
-    "aria-label": "\u05E6\u05D9\u05E8 \u05D6\u05DE\u05DF \u05D4\u05E1\u05E9\u05DF",
+    "aria-label": "ציר זמן הסשן",
     "aria-valuemin": 0,
     "aria-valuemax": duration,
     "aria-valuenow": Math.round(position),
@@ -2446,7 +3244,18 @@ Object.assign(__ds_scope, { TimelineScrubber });
 
 // components/vitals/VitalCard.jsx
 try { (() => {
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const {
+  severityMeta
+} = __ds_scope;
+const {
+  SeverityChip
+} = __ds_scope;
+const {
+  ConnectionPill
+} = __ds_scope;
+
+/* Injects a component's CSS once. Design-system components are self-contained;
+   we use real CSS classes (not inline styles) so :hover/:focus/:active work. */
 function inject(id, css) {
   if (typeof document === "undefined" || document.getElementById(id)) return;
   const el = document.createElement("style");
@@ -2455,36 +3264,178 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-vital", `
-.vc-vital{position:relative;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--sp-2);
-  background:var(--surface);border:var(--border-w) solid var(--border);border-radius:var(--radius-lg);
-  padding:var(--sp-4) var(--sp-5);overflow:hidden;
-  transition:border-color var(--dur-base) var(--ease-standard),background var(--dur-base) var(--ease-standard);}
-.vc-vital--station{padding:var(--sp-5) var(--sp-6);min-height:180px;}
-.vc-vital--compact{padding:var(--sp-3) var(--sp-4);gap:var(--sp-1);}
-/* severity accent: inline-start edge + faint wash, only when NOT normal */
-.vc-vital[data-sev="watch"]{border-inline-start:4px solid var(--sev-watch-edge);}
-.vc-vital[data-sev="elevated"]{border-inline-start:4px solid var(--sev-elevated-edge);background:color-mix(in srgb,var(--sev-elevated-fill) 40%,var(--surface));}
-.vc-vital[data-sev="critical"]{border-inline-start:4px solid var(--sev-critical-edge);background:color-mix(in srgb,var(--sev-critical-fill) 46%,var(--surface));}
-.vc-vital__head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);flex-wrap:wrap;}
-.vc-vital__labels{display:flex;align-items:baseline;gap:var(--sp-2);min-width:0;flex:1 1 auto;}
-.vc-vital__name{font-family:var(--font-ui);font-weight:var(--fw-semibold);color:var(--text);font-size:var(--fs-body);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.vc-vital--station .vc-vital__name{font-size:var(--fs-h3);}
-.vc-vital__abbr{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-faint);letter-spacing:var(--ls-caps);text-transform:uppercase;}
-.vc-vital__readout{display:flex;align-items:flex-end;gap:var(--sp-2);}
-.vc-vital__num{font-family:var(--font-metric);font-variant-numeric:tabular-nums lining-nums;font-weight:var(--fw-semibold);
-  color:var(--text-strong);line-height:.95;font-size:var(--fs-h1);border-radius:var(--radius-xs);padding-inline:2px;}
-.vc-vital--station .vc-vital__num{font-size:var(--fs-vital);font-weight:var(--fw-medium);}
-.vc-vital__num--up{animation:vc-tick-up var(--dur-tick) var(--ease-standard);}
-.vc-vital__num--down{animation:vc-tick-down var(--dur-tick) var(--ease-standard);}
-.vc-vital__unit{font-family:var(--font-metric);font-size:var(--fs-sm);color:var(--text-muted);padding-bottom:.35em;}
-.vc-vital--station .vc-vital__unit{font-size:var(--fs-body-lg);}
-.vc-vital__trend{display:inline-flex;align-items:center;margin-inline-start:auto;padding-bottom:.35em;}
-.vc-vital__foot{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);min-height:20px;}
+.vc-vital {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 6px; /* concentric padding for double bezel */
+  background: var(--surface-base);
+  border: var(--border-w) solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard), background var(--dur-base) var(--ease-standard);
+  box-shadow: var(--shadow-card);
+}
+.vc-vital__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: 1;
+  background: var(--surface-card);
+  border: var(--border-w) solid var(--border-default);
+  border-radius: calc(var(--radius-xl) - 6px);
+  padding: var(--sp-4) var(--sp-5);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05); /* subtle internal highlight */
+  transition: border-color var(--dur-base) var(--ease-standard), background var(--dur-base) var(--ease-standard);
+}
+.vc-vital--station .vc-vital__inner {
+  padding: var(--sp-5) var(--sp-6);
+  min-height: 168px;
+}
+.vc-vital--compact .vc-vital__inner {
+  padding: var(--sp-3) var(--sp-4);
+  gap: var(--sp-1);
+}
+
+/* severity accents via premium glows and semantic color washes */
+.vc-vital[data-sev="watch"] {
+  border-color: var(--border-watch-subtle);
+  box-shadow: var(--shadow-glow-watch);
+}
+.vc-vital[data-sev="watch"] .vc-vital__inner {
+  border-color: var(--border-watch-subtle);
+  background: var(--bg-watch-subtle);
+}
+
+.vc-vital[data-sev="elevated"] {
+  border-color: var(--border-elevated-subtle);
+  box-shadow: var(--shadow-glow-elevated);
+}
+.vc-vital[data-sev="elevated"] .vc-vital__inner {
+  border-color: var(--border-elevated-subtle);
+  background: var(--bg-elevated-subtle);
+}
+
+.vc-vital[data-sev="critical"] {
+  border-color: var(--border-critical-subtle);
+  box-shadow: var(--shadow-glow-critical);
+}
+.vc-vital[data-sev="critical"] .vc-vital__inner {
+  border-color: var(--border-critical-subtle);
+  background: var(--bg-critical-subtle);
+}
+
+.vc-vital__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.vc-vital__labels {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.vc-vital__name {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vc-vital--station .vc-vital__name {
+  font-size: var(--fs-h3);
+}
+.vc-vital__abbr {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+}
+.vc-vital__readout {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+.vc-vital__num {
+  font-family: var(--font-metric);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  line-height: .95;
+  font-size: var(--fs-h1);
+  border-radius: var(--radius-xs);
+  padding-inline: 2px;
+}
+.vc-vital--station .vc-vital__num {
+  font-size: var(--fs-vital);
+  font-weight: var(--fw-medium);
+}
+.vc-vital__num--up {
+  animation: vc-tick-up var(--dur-tick) var(--ease-standard);
+}
+.vc-vital__num--down {
+  animation: vc-tick-down var(--dur-tick) var(--ease-standard);
+}
+.vc-vital__unit {
+  font-family: var(--font-metric);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  padding-bottom: .35em;
+}
+.vc-vital--station .vc-vital__unit {
+  font-size: var(--fs-body-lg);
+}
+.vc-vital__trend {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: auto;
+  padding-bottom: .35em;
+}
+.vc-vital__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 20px;
+}
+
 /* ---- STALE / RECONNECTING — must NEVER read as live -------------------- */
-.vc-vital--stale .vc-vital__num,.vc-vital--stale .vc-vital__unit,.vc-vital--stale .vc-vital__trend{color:var(--text-faint);filter:grayscale(1);}
-.vc-vital__veil{position:absolute;inset:0;pointer-events:none;background-image:var(--stale-hatch);border-radius:inherit;}
-.vc-vital__veil::after{content:"";position:absolute;inset:0;background:var(--stale-veil);}
-.vc-vital__lastseen{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--status-reconnecting-fg);letter-spacing:var(--ls-num);position:relative;z-index:1;}
+.vc-vital--stale .vc-vital__num, .vc-vital--stale .vc-vital__unit, .vc-vital--stale .vc-vital__trend {
+  color: var(--text-muted);
+  filter: grayscale(1);
+}
+.vc-vital__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--stale-hatch);
+  border-radius: inherit;
+}
+.vc-vital__veil::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--stale-veil);
+}
+.vc-vital__lastseen {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--ls-num);
+  position: relative;
+  z-index: 1;
+}
 `);
 const HE_LASTSEEN = "עודכן לאחרונה";
 const HE_STALE_A11Y = "נתונים לא עדכניים — מתחבר מחדש";
@@ -2547,7 +3498,7 @@ function VitalCard({
   className = "",
   ...rest
 }) {
-  const meta = __ds_scope.severityMeta(level);
+  const meta = severityMeta(level);
   const [flash, setFlash] = React.useState("");
   const prev = React.useRef(value);
   React.useEffect(() => {
@@ -2562,14 +3513,17 @@ function VitalCard({
     }
     prev.current = n;
   }, [value, stale]);
-  const trendColor = level === "normal" ? "var(--text-faint)" : meta.fg;
-  return /*#__PURE__*/React.createElement("div", _extends({
+  const trendColor = level === "normal" ? "var(--text-muted)" : meta.fg;
+  return /*#__PURE__*/React.createElement("div", {
     className: `vc-vital vc-vital--${size} ${stale ? "vc-vital--stale" : ""} ${className}`,
     "data-sev": stale ? "normal" : level,
     role: "group",
     "aria-label": stale ? `${name}${abbr ? " " + abbr : ""} — ${HE_STALE_A11Y}. ${HE_LASTSEEN} ${lastSeen || "—"}` : `${name}${abbr ? " " + abbr : ""}`,
-    "aria-live": "off"
-  }, rest), /*#__PURE__*/React.createElement("div", {
+    "aria-live": "off",
+    ...rest
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "vc-vital__inner"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "vc-vital__head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "vc-vital__labels"
@@ -2577,7 +3531,7 @@ function VitalCard({
     className: "vc-vital__name"
   }, name), abbr ? /*#__PURE__*/React.createElement("span", {
     className: "vc-vital__abbr"
-  }, abbr) : null), !stale && level !== "normal" && size !== "compact" ? /*#__PURE__*/React.createElement(__ds_scope.SeverityChip, {
+  }, abbr) : null), !stale && level !== "normal" && size !== "compact" ? /*#__PURE__*/React.createElement(SeverityChip, {
     level: level,
     appearance: "bare",
     size: size === "station" ? "md" : "sm",
@@ -2597,819 +3551,56 @@ function VitalCard({
     className: "vc-vital__foot"
   }, stale ? /*#__PURE__*/React.createElement("span", {
     className: "vc-vital__lastseen"
-  }, HE_LASTSEEN, " ", lastSeen || "—") : size === "compact" ? /*#__PURE__*/React.createElement(__ds_scope.SeverityChip, {
+  }, HE_LASTSEEN, " ", lastSeen || "—") : size === "compact" ? /*#__PURE__*/React.createElement(SeverityChip, {
     level: level,
     appearance: "bare",
     size: "sm",
     lang: lang
-  }) : level === "normal" ? /*#__PURE__*/React.createElement(__ds_scope.SeverityChip, {
+  }) : level === "normal" ? /*#__PURE__*/React.createElement(SeverityChip, {
     level: "normal",
     appearance: "bare",
     size: "sm",
     lang: lang
-  }) : /*#__PURE__*/React.createElement("span", null), stale ? /*#__PURE__*/React.createElement(__ds_scope.ConnectionPill, {
+  }) : /*#__PURE__*/React.createElement("span", null), stale ? /*#__PURE__*/React.createElement(ConnectionPill, {
     state: "reconnecting",
     lang: lang
   }) : null), stale ? /*#__PURE__*/React.createElement("div", {
     className: "vc-vital__veil",
     "aria-hidden": "true"
-  }) : null);
+  }) : null));
 }
 Object.assign(__ds_scope, { VitalCard });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/vitals/VitalCard.jsx", error: String((e && e.message) || e) }); }
 
-// ui_kits/aar/AarViewer.jsx
-try { (() => {
-/* VetCrew — AAR replay viewer. Register: reflective, data-rich, trustworthy.
-   Composes DS primitives from window.DesignSystem_ad98cb. Exposes window.VCKit.AarViewer. */
-(function () {
-  const R = window.React;
-  const DS = window.DesignSystem_ad98cb;
-  const {
-    TimelineScrubber,
-    SeverityChip,
-    VitalCard,
-    AntsRating,
-    SessionState,
-    Button,
-    IconButton
-  } = DS;
-  const Icon = window.VC.Icon;
-  const D = window.VCAAR_DATA;
-  function interp(series, t) {
-    if (t <= series[0][0]) return series[0][1];
-    for (let i = 1; i < series.length; i++) {
-      if (t <= series[i][0]) {
-        const [t0, v0] = series[i - 1],
-          [t1, v1] = series[i];
-        return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
-      }
-    }
-    return series[series.length - 1][1];
-  }
-  const sevHR = v => v >= 192 ? "critical" : v >= 176 ? "elevated" : v >= 166 ? "watch" : "normal";
-  const sevSpO2 = v => v < 90 ? "critical" : v < 92 ? "elevated" : v < 95 ? "watch" : "normal";
-  const sevRR = v => v >= 52 ? "elevated" : v >= 46 ? "watch" : "normal";
-  const fmt = s => {
-    s = Math.max(0, Math.round(s));
-    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  };
-  const trend = (series, t) => {
-    const a = interp(series, Math.max(0, t - 12)),
-      b = interp(series, t);
-    return b - a > 0.6 ? "up" : b - a < -0.6 ? "down" : "flat";
-  };
-  const VMETA = {
-    hr: {
-      name: "דופק",
-      abbr: "HR",
-      unit: "bpm",
-      sev: sevHR
-    },
-    spo2: {
-      name: "ריווי חמצן",
-      abbr: "SpO₂",
-      unit: "%",
-      sev: sevSpO2
-    },
-    rr: {
-      name: "נשימות",
-      abbr: "RR",
-      unit: "/min",
-      sev: sevRR
-    },
-    temp: {
-      name: "חום",
-      abbr: "TEMP",
-      unit: "°C",
-      sev: () => "normal"
-    }
-  };
-  const TYPES = [{
-    id: "action",
-    label: "פעולות"
-  }, {
-    id: "injection",
-    label: "הזרקות"
-  }, {
-    id: "vitals",
-    label: "מדדים"
-  }, {
-    id: "callout",
-    label: "קריאות"
-  }, {
-    id: "phase",
-    label: "שלבים"
-  }];
-  function FilterChip({
-    active,
-    children,
-    onClick
-  }) {
-    return R.createElement("button", {
-      onClick,
-      className: "aar-fchip",
-      "aria-pressed": active,
-      style: {
-        minHeight: 36,
-        padding: "0 14px",
-        borderRadius: "var(--radius-pill)",
-        cursor: "pointer",
-        fontFamily: "var(--font-ui)",
-        fontSize: "var(--fs-sm)",
-        fontWeight: 600,
-        border: "var(--border-w) solid " + (active ? "var(--action)" : "var(--border)"),
-        background: active ? "var(--action-fill)" : "var(--surface)",
-        color: active ? "var(--action-quiet)" : "var(--text-muted)"
-      }
-    }, children);
-  }
-  function RolePanel({
-    role,
-    event
-  }) {
-    return R.createElement("div", {
-      style: {
-        background: "var(--surface)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--sp-4)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-2)",
-        minWidth: 0
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-2)"
-      }
-    }, R.createElement("span", {
-      style: {
-        fontSize: "var(--fs-sm)",
-        fontWeight: 700,
-        color: "var(--text-strong)"
-      }
-    }, role.label), R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        marginInlineStart: "auto",
-        color: "var(--text-faint)",
-        fontFamily: "var(--font-mono)"
-      }
-    }, role.short)), event ? R.createElement(R.Fragment, null, R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-body)",
-        color: "var(--text)",
-        fontWeight: 600
-      }
-    }, event.label), R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-sm)",
-        color: "var(--text-muted)",
-        lineHeight: "var(--lh-normal)"
-      }
-    }, event.detail), R.createElement("div", {
-      className: "vc-num",
-      style: {
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, "T+" + fmt(event.t))) : R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-sm)",
-        color: "var(--text-faint)",
-        fontStyle: "italic"
-      }
-    }, "טרם פעל בפרק זמן זה"));
-  }
-  function TweakRadio({
-    label,
-    value,
-    options,
-    onChange
-  }) {
-    return R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-2)"
-      }
-    }, R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)"
-      }
-    }, label), R.createElement("div", {
-      role: "radiogroup",
-      "aria-label": label,
-      style: {
-        display: "inline-flex",
-        background: "var(--surface-2)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-md)",
-        padding: 3,
-        gap: 3
-      }
-    }, options.map(o => R.createElement("button", {
-      key: String(o.v),
-      role: "radio",
-      "aria-checked": value === o.v,
-      onClick: () => onChange(o.v),
-      style: {
-        minHeight: 36,
-        padding: "0 14px",
-        borderRadius: "var(--radius-sm)",
-        cursor: "pointer",
-        border: "none",
-        fontFamily: "var(--font-ui)",
-        fontSize: "var(--fs-sm)",
-        fontWeight: 600,
-        background: value === o.v ? "var(--action)" : "transparent",
-        color: value === o.v ? "var(--on-action)" : "var(--text-muted)"
-      }
-    }, o.label))));
-  }
-  function TweaksPanel({
-    dark,
-    setDark,
-    speed,
-    setSpeed,
-    showLanes,
-    setShowLanes,
-    onClose
-  }) {
-    return R.createElement("div", {
-      role: "region",
-      "aria-label": "התאמות תצוגה",
-      style: {
-        display: "flex",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "var(--sp-6)",
-        padding: "var(--sp-3) var(--sp-6)",
-        background: "var(--surface-2)",
-        borderBottom: "var(--border-w) solid var(--border)"
-      }
-    }, R.createElement("span", {
-      style: {
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "var(--sp-2)",
-        fontSize: "var(--fs-sm)",
-        fontWeight: 700,
-        color: "var(--text-strong)"
-      }
-    }, R.createElement(Icon, {
-      name: "sliders-horizontal",
-      size: 16,
-      style: {
-        color: "var(--action-quiet)"
-      }
-    }), "התאמות"), R.createElement(TweakRadio, {
-      label: "ערכת נושא",
-      value: dark ? "dark" : "light",
-      onChange: v => setDark(v === "dark"),
-      options: [{
-        v: "light",
-        label: "יום"
-      }, {
-        v: "dark",
-        label: "לילה"
-      }]
-    }), R.createElement(TweakRadio, {
-      label: "מהירות ניגון",
-      value: speed,
-      onChange: setSpeed,
-      options: [{
-        v: 1,
-        label: "1×"
-      }, {
-        v: 2,
-        label: "2×"
-      }, {
-        v: 4,
-        label: "4×"
-      }]
-    }), R.createElement(TweakRadio, {
-      label: "מסלולי תפקידים",
-      value: showLanes,
-      onChange: setShowLanes,
-      options: [{
-        v: true,
-        label: "מוצג"
-      }, {
-        v: false,
-        label: "מוסתר"
-      }]
-    }), R.createElement(IconButton, {
-      label: "סגור התאמות",
-      onClick: onClose,
-      className: "aar-tweak-close",
-      icon: R.createElement(Icon, {
-        name: "x",
-        size: 18
-      }),
-      style: {
-        marginInlineStart: "auto"
-      }
-    }));
-  }
-  function AarViewer() {
-    const [pos, setPos] = R.useState(196);
-    const [playing, setPlaying] = R.useState(false);
-    const [roleFilter, setRoleFilter] = R.useState(null);
-    const [typeFilter, setTypeFilter] = R.useState(() => new Set());
-    const [selId, setSelId] = R.useState("e7");
-    const [dark, setDark] = R.useState(false);
-    const [speed, setSpeed] = R.useState(2); // tweak: playback rate (1/2/4×)
-    const [showLanes, setShowLanes] = R.useState(true); // tweak: per-role lanes
-    const [tweaksOpen, setTweaksOpen] = R.useState(false);
-    R.useEffect(() => {
-      document.documentElement.dataset.theme = dark ? "dark" : "light";
-    }, [dark]);
-    R.useEffect(() => {
-      if (!playing) return;
-      const id = setInterval(() => setPos(p => {
-        const n = p + 3;
-        if (n >= D.session.duration) {
-          setPlaying(false);
-          return D.session.duration;
-        }
-        return n;
-      }), 200 / speed);
-      return () => clearInterval(id);
-    }, [playing, speed]);
-    const markers = D.events.filter(e => !roleFilter || e.role === roleFilter).filter(e => typeFilter.size === 0 || typeFilter.has(e.type)).map(e => ({
-      t: e.t,
-      type: e.type,
-      role: e.role,
-      label: e.label,
-      severity: e.severity
-    }));
-    const lanes = showLanes ? D.roles.map(r => ({
-      role: r.id,
-      label: r.label
-    })) : null;
-    const sel = D.events.find(e => e.id === selId);
-    const latestForRole = rid => D.events.filter(e => e.role === rid && e.t <= pos).slice(-1)[0];
-    function jumpTo(t, id) {
-      setPos(t);
-      if (id) setSelId(id);
-      setPlaying(false);
-    }
-    function toggleType(id) {
-      setTypeFilter(s => {
-        const n = new Set(s);
-        n.has(id) ? n.delete(id) : n.add(id);
-        return n;
-      });
-    }
-    const vitalNow = k => {
-      const raw = interp(D.vitals[k], pos);
-      return k === "temp" ? raw.toFixed(1) : Math.round(raw);
-    };
-    return R.createElement("div", {
-      className: "aar",
-      dir: "rtl",
-      style: {
-        minHeight: "100vh",
-        background: "var(--bg-canvas)",
-        color: "var(--text)",
-        fontFamily: "var(--font-ui)",
-        display: "flex",
-        flexDirection: "column"
-      }
-    }, /* ---- header ---- */
-    R.createElement("header", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-4)",
-        padding: "var(--sp-4) var(--sp-6)",
-        borderBottom: "var(--border-w) solid var(--border)",
-        background: "var(--surface)"
-      }
-    }, R.createElement("div", {
-      style: {
-        fontWeight: 700,
-        fontSize: "var(--fs-h3)",
-        letterSpacing: "var(--ls-tight)"
-      }
-    }, "Vet", R.createElement("span", {
-      style: {
-        color: "var(--action)"
-      }
-    }, "Crew")), R.createElement("div", {
-      style: {
-        width: 1,
-        height: 28,
-        background: "var(--border)"
-      }
-    }), R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        minWidth: 0
-      }
-    }, R.createElement("span", {
-      style: {
-        fontWeight: 600,
-        fontSize: "var(--fs-body)",
-        color: "var(--text-strong)",
-        whiteSpace: "nowrap"
-      }
-    }, D.session.title), R.createElement("span", {
-      className: "vc-num",
-      style: {
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, D.session.date + " · " + D.session.engine)), R.createElement("div", {
-      style: {
-        marginInlineStart: "auto",
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-4)"
-      }
-    }, R.createElement(SessionState, {
-      state: D.session.state,
-      variant: "stepper"
-    }), R.createElement(IconButton, {
-      label: dark ? "מצב יום" : "מצב לילה",
-      onClick: () => setDark(v => !v),
-      icon: R.createElement(Icon, {
-        name: dark ? "sun" : "moon",
-        size: 20
-      })
-    }), R.createElement(IconButton, {
-      label: "התאמות תצוגה",
-      variant: tweaksOpen ? "solid" : "ghost",
-      onClick: () => setTweaksOpen(v => !v),
-      icon: R.createElement(Icon, {
-        name: "sliders-horizontal",
-        size: 20
-      })
-    }))), tweaksOpen && R.createElement(TweaksPanel, {
-      dark,
-      setDark,
-      speed,
-      setSpeed,
-      showLanes,
-      setShowLanes,
-      onClose: () => setTweaksOpen(false)
-    }), /* ---- body: stage + scores rail ---- */
-    R.createElement("div", {
-      style: {
-        flex: 1,
-        display: "grid",
-        gridTemplateColumns: "1fr 380px",
-        gap: "var(--sp-6)",
-        padding: "var(--sp-6)",
-        alignItems: "start",
-        minHeight: 0
-      }
-    }, /* stage */
-    R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-4)",
-        minWidth: 0
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "baseline",
-        gap: "var(--sp-3)"
-      }
-    }, R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)"
-      }
-    }, "מצב המטופל בזמן"), R.createElement("span", {
-      className: "vc-num",
-      style: {
-        fontSize: "var(--fs-h3)",
-        fontWeight: 600,
-        color: "var(--text-strong)"
-      }
-    }, fmt(pos))), R.createElement("div", {
-      style: {
-        display: "grid",
-        gridTemplateColumns: "repeat(4,1fr)",
-        gap: "var(--sp-3)"
-      }
-    }, ["hr", "spo2", "rr", "temp"].map(k => {
-      const v = vitalNow(k),
-        m = VMETA[k];
-      return R.createElement(VitalCard, {
-        key: k,
-        name: m.name,
-        abbr: m.abbr,
-        value: v,
-        unit: m.unit,
-        level: m.sev(parseFloat(v)),
-        trend: trend(D.vitals[k], pos),
-        size: "compact"
-      });
-    })), R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "baseline",
-        gap: "var(--sp-3)",
-        marginTop: "var(--sp-2)"
-      }
-    }, R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)"
-      }
-    }, "מה ראה כל תפקיד"), R.createElement("span", {
-      style: {
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, "· תצוגה חלקית לכל תפקיד")), R.createElement("div", {
-      style: {
-        display: "grid",
-        gridTemplateColumns: "repeat(3,1fr)",
-        gap: "var(--sp-3)"
-      }
-    }, D.roles.map(r => R.createElement(RolePanel, {
-      key: r.id,
-      role: r,
-      event: latestForRole(r.id)
-    }))), /* selected event detail */
-    sel && R.createElement("div", {
-      style: {
-        background: "var(--surface-2)",
-        border: "var(--border-w) solid var(--border)",
-        borderInlineStart: "4px solid var(--action)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--sp-4)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-2)"
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-2)"
-      }
-    }, R.createElement(Icon, {
-      name: "crosshair",
-      size: 16,
-      style: {
-        color: "var(--action-quiet)"
-      }
-    }), R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)"
-      }
-    }, "אירוע נבחר"), R.createElement("span", {
-      className: "vc-num",
-      style: {
-        marginInlineStart: "auto",
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, "T+" + fmt(sel.t)), sel.severity && R.createElement(SeverityChip, {
-      level: sel.severity,
-      size: "sm"
-    })), R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-body-lg)",
-        fontWeight: 600,
-        color: "var(--text-strong)"
-      }
-    }, sel.label), R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-body)",
-        color: "var(--text-muted)",
-        lineHeight: "var(--lh-normal)"
-      }
-    }, sel.detail))), /* scores rail */
-    R.createElement("aside", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-5)",
-        background: "var(--surface)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--sp-5)",
-        boxShadow: "var(--elev-1)",
-        position: "sticky",
-        top: "var(--sp-6)"
-      }
-    }, R.createElement("div", null, R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-h3)",
-        fontWeight: 700,
-        color: "var(--text-strong)"
-      }
-    }, "דירוג מיומנויות צוות"), R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-sm)",
-        color: "var(--text-muted)"
-      }
-    }, "ANTS · לחיצה על דירוג קופצת לראיה בציר")), R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-5)"
-      }
-    }, D.scores.ants.map(a => R.createElement(AntsRating, {
-      key: a.key,
-      category: a.label,
-      value: a.value,
-      anchors: a.anchors,
-      evidenceCount: a.evidence.length,
-      onChange: () => {},
-      onJumpToEvidence: () => {
-        const ev = D.events.find(e => e.id === a.evidence[0]);
-        if (ev) jumpTo(ev.t, ev.id);
-      }
-    }))), R.createElement("div", {
-      style: {
-        height: 1,
-        background: "var(--hairline)"
-      }
-    }), R.createElement("div", {
-      style: {
-        fontSize: "var(--fs-body)",
-        fontWeight: 700,
-        color: "var(--text-strong)"
-      }
-    }, "צ'קליסט טכני"), R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-2)"
-      }
-    }, D.scores.technical.map((c, i) => R.createElement("button", {
-      key: i,
-      onClick: () => jumpTo(c.t),
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-3)",
-        textAlign: "start",
-        cursor: "pointer",
-        background: "transparent",
-        border: "none",
-        padding: "var(--sp-2)",
-        borderRadius: "var(--radius-sm)",
-        minHeight: 44
-      }
-    }, R.createElement("span", {
-      "aria-hidden": "true",
-      style: {
-        width: 22,
-        height: 22,
-        borderRadius: "var(--radius-xs)",
-        flex: "0 0 auto",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: c.done ? "var(--status-running-fill)" : "var(--surface-2)",
-        border: "var(--border-w) solid " + (c.done ? "var(--status-running-dot)" : "var(--border-strong)"),
-        color: "var(--status-running-fg)"
-      }
-    }, c.done ? R.createElement(Icon, {
-      name: "check",
-      size: 14,
-      stroke: 3
-    }) : null), R.createElement("span", {
-      style: {
-        flex: 1,
-        fontSize: "var(--fs-sm)",
-        color: c.done ? "var(--text)" : "var(--text-muted)"
-      }
-    }, c.label), R.createElement("span", {
-      className: "vc-num",
-      style: {
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, "×" + c.weight)))))), /* ---- footer: transport + scrubber + filters ---- */
-    R.createElement("footer", {
-      style: {
-        borderTop: "var(--border-w) solid var(--border)",
-        background: "var(--surface)",
-        padding: "var(--sp-4) var(--sp-6)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-3)"
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-3)",
-        flexWrap: "wrap"
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        gap: "var(--sp-2)"
-      }
-    }, R.createElement(IconButton, {
-      label: "להתחלה",
-      onClick: () => jumpTo(0),
-      icon: R.createElement(Icon, {
-        name: "skip-forward",
-        size: 20,
-        flip: true
-      })
-    }), R.createElement(IconButton, {
-      label: "אחורה",
-      onClick: () => setPos(p => Math.max(0, p - 10)),
-      icon: R.createElement(Icon, {
-        name: "rewind",
-        size: 20,
-        flip: true
-      })
-    }), R.createElement(IconButton, {
-      label: playing ? "השהה" : "נגן",
-      variant: "solid",
-      size: "lg",
-      onClick: () => setPlaying(v => !v),
-      icon: R.createElement(Icon, {
-        name: playing ? "pause" : "play",
-        size: 22
-      })
-    }), R.createElement(IconButton, {
-      label: "קדימה",
-      onClick: () => setPos(p => Math.min(D.session.duration, p + 10)),
-      icon: R.createElement(Icon, {
-        name: "fast-forward",
-        size: 20,
-        flip: true
-      })
-    })), R.createElement("div", {
-      style: {
-        marginInlineStart: "auto",
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-2)",
-        flexWrap: "wrap"
-      }
-    }, R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)",
-        marginInlineEnd: "var(--sp-1)"
-      }
-    }, "תפקיד"), R.createElement(FilterChip, {
-      active: !roleFilter,
-      onClick: () => setRoleFilter(null)
-    }, "הכל"), D.roles.map(r => R.createElement(FilterChip, {
-      key: r.id,
-      active: roleFilter === r.id,
-      onClick: () => setRoleFilter(x => x === r.id ? null : r.id)
-    }, r.label)))), R.createElement(TimelineScrubber, {
-      duration: D.session.duration,
-      position: pos,
-      markers,
-      lanes,
-      onSeek: t => {
-        setPos(t);
-        setPlaying(false);
-      },
-      onMarkerClick: m => {
-        const ev = D.events.find(e => Math.abs(e.t - m.t) < 1 && e.label === m.label);
-        if (ev) setSelId(ev.id);
-      }
-    }), R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-2)",
-        flexWrap: "wrap"
-      }
-    }, R.createElement("span", {
-      className: "vc-caps",
-      style: {
-        color: "var(--text-faint)",
-        marginInlineEnd: "var(--sp-1)"
-      }
-    }, "סנן לפי סוג"), TYPES.map(t => R.createElement(FilterChip, {
-      key: t.id,
-      active: typeFilter.has(t.id),
-      onClick: () => toggleType(t.id)
-    }, t.label)))));
-  }
-  window.VCKit = window.VCKit || {};
-  window.VCKit.AarViewer = AarViewer;
-})();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/aar/AarViewer.jsx", error: String((e && e.message) || e) }); }
+__ds_ns.AntsRating = __ds_scope.AntsRating;
+
+__ds_ns.Button = __ds_scope.Button;
+
+__ds_ns.IconButton = __ds_scope.IconButton;
+
+__ds_ns.InjectionTrigger = __ds_scope.InjectionTrigger;
+
+__ds_ns.TaskChip = __ds_scope.TaskChip;
+
+__ds_ns.PatientMonitor = __ds_scope.PatientMonitor;
+
+__ds_ns.ConnectionPill = __ds_scope.ConnectionPill;
+
+__ds_ns.SESSION_STATES = __ds_scope.SESSION_STATES;
+
+__ds_ns.SessionState = __ds_scope.SessionState;
+
+__ds_ns.SeverityChip = __ds_scope.SeverityChip;
+
+__ds_ns.SEVERITY = __ds_scope.SEVERITY;
+
+__ds_ns.SeverityGlyph = __ds_scope.SeverityGlyph;
+
+__ds_ns.SEVERITY_ORDER = __ds_scope.SEVERITY_ORDER;
+
+__ds_ns.TimelineScrubber = __ds_scope.TimelineScrubber;
+
+__ds_ns.VitalCard = __ds_scope.VitalCard;
 
 // ui_kits/aar/data.js
 try { (() => {
@@ -3577,252 +3768,490 @@ window.VCAAR_DATA = {
 };
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/aar/data.js", error: String((e && e.message) || e) }); }
 
-// ui_kits/instructor/Console.jsx
+// ui_kits/aar/AarViewer.jsx
 try { (() => {
-/* VetCrew — Instructor console. Register: dense-but-controlled, high-pressure.
-   Fast-fire injections (no confirm); ONLY destructive actions confirm.
-   Exposes window.VCKit.Console. */
+/* VetCrew — AAR replay viewer. Register: reflective, data-rich, trustworthy.
+   Composes DS primitives from window.DesignSystem_ad98cb. Exposes window.VCKit.AarViewer. */
 (function () {
   const R = window.React;
   const DS = window.DesignSystem_ad98cb;
   const {
-    SessionState,
-    ConnectionPill,
+    TimelineScrubber,
+    SeverityChip,
     VitalCard,
-    InjectionTrigger,
+    AntsRating,
+    SessionState,
     Button,
-    IconButton,
-    SeverityChip
+    IconButton
   } = DS;
   const Icon = window.VC.Icon;
-  const D = window.VCINS_DATA;
-  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const D = window.VCAAR_DATA;
+  function interp(series, t) {
+    if (t <= series[0][0]) return series[0][1];
+    for (let i = 1; i < series.length; i++) {
+      if (t <= series[i][0]) {
+        const [t0, v0] = series[i - 1],
+          [t1, v1] = series[i];
+        return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
+      }
+    }
+    return series[series.length - 1][1];
+  }
   const sevHR = v => v >= 192 ? "critical" : v >= 176 ? "elevated" : v >= 166 ? "watch" : "normal";
   const sevSpO2 = v => v < 90 ? "critical" : v < 92 ? "elevated" : v < 95 ? "watch" : "normal";
   const sevRR = v => v >= 52 ? "elevated" : v >= 46 ? "watch" : "normal";
-  function ConfirmDialog({
-    onCancel,
-    onConfirm
+  const fmt = s => {
+    s = Math.max(0, Math.round(s));
+    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  };
+  const trend = (series, t) => {
+    const a = interp(series, Math.max(0, t - 12)),
+      b = interp(series, t);
+    return b - a > 0.6 ? "up" : b - a < -0.6 ? "down" : "flat";
+  };
+  const VMETA = {
+    hr: {
+      name: "דופק",
+      abbr: "HR",
+      unit: "bpm",
+      sev: sevHR
+    },
+    spo2: {
+      name: "ריווי חמצן",
+      abbr: "SpO₂",
+      unit: "%",
+      sev: sevSpO2
+    },
+    rr: {
+      name: "נשימות",
+      abbr: "RR",
+      unit: "/min",
+      sev: sevRR
+    },
+    temp: {
+      name: "חום",
+      abbr: "TEMP",
+      unit: "°C",
+      sev: () => "normal"
+    }
+  };
+  const TYPES = [{
+    id: "action",
+    label: "פעולות"
+  }, {
+    id: "injection",
+    label: "הזרקות"
+  }, {
+    id: "vitals",
+    label: "מדדים"
+  }, {
+    id: "callout",
+    label: "קריאות"
+  }, {
+    id: "phase",
+    label: "שלבים"
+  }];
+  function FilterChip({
+    active,
+    children,
+    onClick
   }) {
-    return R.createElement("div", {
-      role: "dialog",
-      "aria-modal": "true",
+    return R.createElement("button", {
+      onClick,
+      className: "aar-fchip",
+      "aria-pressed": active,
       style: {
-        position: "fixed",
-        inset: 0,
-        background: "color-mix(in srgb, var(--n-950) 55%, transparent)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 50,
-        padding: "var(--sp-6)"
-      }
-    }, R.createElement("div", {
-      style: {
-        background: "var(--surface-raised)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--sp-6)",
-        maxWidth: 440,
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-4)",
-        boxShadow: "var(--elev-4)",
-        border: "var(--border-w) solid var(--border)"
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-3)"
-      }
-    }, R.createElement("span", {
-      style: {
-        color: "var(--sev-critical-fg)",
-        display: "inline-flex"
-      }
-    }, R.createElement(Icon, {
-      name: "octagon-alert",
-      size: 26
-    })), R.createElement("h2", {
-      style: {
-        margin: 0,
-        fontSize: "var(--fs-h2)",
-        color: "var(--text-strong)"
-      }
-    }, "לסיים את הסשן?")), R.createElement("p", {
-      style: {
-        margin: 0,
-        fontSize: "var(--fs-body)",
-        color: "var(--text-muted)",
-        lineHeight: "var(--lh-normal)"
-      }
-    }, "פעולה זו עוצרת את הסימולציה לכל התחנות ומעבירה לתחקיר. לא ניתן לחזור אחורה."), R.createElement("div", {
-      style: {
-        display: "flex",
-        gap: "var(--sp-3)",
-        justifyContent: "flex-start",
-        marginTop: "var(--sp-2)"
-      }
-    }, R.createElement(Button, {
-      variant: "danger",
-      onClick: onConfirm
-    }, "סיים והעבר לתחקיר"), R.createElement(Button, {
-      variant: "ghost",
-      onClick: onCancel
-    }, "המשך סשן"))));
-  }
-  function RoleStatus({
-    role
-  }) {
-    return R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--sp-3)",
-        padding: "var(--sp-3) var(--sp-4)",
-        background: "var(--surface)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-md)",
-        opacity: role.conn === "reconnecting" ? 0.9 : 1
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        minWidth: 0,
-        flex: 1
-      }
-    }, R.createElement("span", {
-      style: {
-        fontWeight: 700,
+        minHeight: 32,
+        padding: "0 14px",
+        borderRadius: "var(--radius-pill)",
+        cursor: "pointer",
+        fontFamily: "var(--font-ui)",
         fontSize: "var(--fs-sm)",
-        color: "var(--text-strong)"
+        fontWeight: 600,
+        border: "var(--border-w) solid " + (active ? "var(--action)" : "var(--border-default)"),
+        background: active ? "var(--action-fill)" : "var(--surface-card)",
+        color: active ? "var(--action-quiet, var(--action))" : "var(--text-secondary)",
+        transition: "all var(--dur-fast) var(--ease-standard)",
+        boxShadow: active ? "var(--shadow-glow-running)" : "var(--shadow-card)"
+      }
+    }, children);
+  }
+  function RolePanel({
+    role,
+    event
+  }) {
+    return R.createElement("div", {
+      style: {
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
+        padding: "4px",
+        boxShadow: "var(--shadow-card)",
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0
+      }
+    }, R.createElement("div", {
+      style: {
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-lg) - 4px)",
+        padding: "var(--sp-3) var(--sp-4)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-2)",
+        flex: 1,
+        minWidth: 0,
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-2)",
+        borderBottom: "var(--border-w) solid var(--border-subtle)",
+        paddingBottom: "var(--sp-1)"
+      }
+    }, R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-sm)",
+        fontWeight: 700,
+        color: "var(--text-primary)"
       }
     }, role.label), R.createElement("span", {
+      className: "vc-caps",
+      style: {
+        marginInlineStart: "auto",
+        color: "var(--text-muted)",
+        fontFamily: "var(--font-mono)",
+        fontSize: "var(--fs-xs)"
+      }
+    }, role.short)), event ? R.createElement(R.Fragment, null, R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-body)",
+        color: "var(--text-primary)",
+        fontWeight: 600
+      }
+    }, event.label), R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-sm)",
+        color: "var(--text-secondary)",
+        lineHeight: "var(--lh-normal)"
+      }
+    }, event.detail), R.createElement("div", {
+      className: "vc-num",
       style: {
         fontSize: "var(--fs-xs)",
         color: "var(--text-muted)",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis"
+        marginTop: "auto",
+        fontFamily: "var(--font-mono)"
       }
-    }, role.who + (role.conn === "reconnecting" ? "" : " · " + role.task))), R.createElement(ConnectionPill, {
-      state: role.conn
+    }, "T+" + fmt(event.t))) : R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-sm)",
+        color: "var(--text-muted)",
+        fontStyle: "italic",
+        marginTop: "auto"
+      }
+    }, "טרם פעל בפרק זמן זה")));
+  }
+  function TweakRadio({
+    label,
+    value,
+    options,
+    onChange
+  }) {
+    return R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-1)"
+      }
+    }, R.createElement("span", {
+      className: "vc-caps",
+      style: {
+        color: "var(--text-muted)",
+        fontSize: "var(--fs-xs)",
+        fontWeight: "var(--fw-semibold)"
+      }
+    }, label), R.createElement("div", {
+      role: "radiogroup",
+      "aria-label": label,
+      style: {
+        display: "inline-flex",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "var(--radius-md)",
+        padding: 3,
+        gap: 3,
+        boxShadow: "inset 0 1px 2px rgba(0,0,0,0.3)"
+      }
+    }, options.map(o => R.createElement("button", {
+      key: String(o.v),
+      role: "radio",
+      "aria-checked": value === o.v,
+      onClick: () => onChange(o.v),
+      style: {
+        minHeight: 32,
+        padding: "0 12px",
+        borderRadius: "calc(var(--radius-md) - 3px)",
+        cursor: "pointer",
+        border: "none",
+        fontFamily: "var(--font-ui)",
+        fontSize: "var(--fs-sm)",
+        fontWeight: 600,
+        background: value === o.v ? "var(--action)" : "transparent",
+        color: value === o.v ? "var(--on-action)" : "var(--text-secondary)",
+        transition: "all var(--dur-fast) var(--ease-standard)"
+      }
+    }, o.label))));
+  }
+  function TweaksPanel({
+    dark,
+    setDark,
+    speed,
+    setSpeed,
+    showLanes,
+    setShowLanes,
+    onClose
+  }) {
+    return R.createElement("div", {
+      role: "region",
+      "aria-label": "התאמות תצוגה",
+      style: {
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: "var(--sp-6)",
+        padding: "var(--sp-3) var(--sp-6)",
+        background: "var(--surface-card)",
+        borderBottom: "var(--border-w) solid var(--border-default)",
+        boxShadow: "var(--shadow-card)"
+      }
+    }, R.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "var(--sp-2)",
+        fontSize: "var(--fs-sm)",
+        fontWeight: 700,
+        color: "var(--text-primary)"
+      }
+    }, R.createElement(Icon, {
+      name: "sliders-horizontal",
+      size: 16,
+      style: {
+        color: "var(--action)"
+      }
+    }), "התאמות"), R.createElement(TweakRadio, {
+      label: "ערכת נושא",
+      value: dark ? "dark" : "light",
+      onChange: v => setDark(v === "dark"),
+      options: [{
+        v: "light",
+        label: "יום"
+      }, {
+        v: "dark",
+        label: "לילה"
+      }]
+    }), R.createElement(TweakRadio, {
+      label: "מהירות ניגון",
+      value: speed,
+      onChange: setSpeed,
+      options: [{
+        v: 1,
+        label: "1×"
+      }, {
+        v: 2,
+        label: "2×"
+      }, {
+        v: 4,
+        label: "4×"
+      }]
+    }), R.createElement(TweakRadio, {
+      label: "מסלולי תפקידים",
+      value: showLanes,
+      onChange: setShowLanes,
+      options: [{
+        v: true,
+        label: "מוצג"
+      }, {
+        v: false,
+        label: "מוסתר"
+      }]
+    }), R.createElement(IconButton, {
+      label: "סגור התאמות",
+      onClick: onClose,
+      className: "aar-tweak-close",
+      icon: R.createElement(Icon, {
+        name: "x",
+        size: 18
+      }),
+      style: {
+        marginInlineStart: "auto"
+      }
     }));
   }
-  function Console() {
+  function AarViewer() {
+    const [pos, setPos] = R.useState(196);
+    const [playing, setPlaying] = R.useState(false);
+    const [roleFilter, setRoleFilter] = R.useState(null);
+    const [typeFilter, setTypeFilter] = R.useState(() => new Set());
+    const [selId, setSelId] = R.useState("e7");
     const [dark, setDark] = R.useState(false);
-    const [elapsed, setElapsed] = R.useState(78);
-    const [paused, setPaused] = R.useState(false);
-    const [vitals, setVitals] = R.useState(D.vitals);
-    const [fired, setFired] = R.useState({});
-    const [shockAvailable, setShockAvailable] = R.useState(true);
-    const [confirm, setConfirm] = R.useState(false);
-    const [ended, setEnded] = R.useState(false);
+    const [speed, setSpeed] = R.useState(2); // tweak: playback rate (1/2/4×)
+    const [showLanes, setShowLanes] = R.useState(true); // tweak: per-role lanes
+    const [tweaksOpen, setTweaksOpen] = R.useState(false);
     R.useEffect(() => {
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     }, [dark]);
     R.useEffect(() => {
-      if (paused || ended) return;
-      const id = setInterval(() => {
-        setElapsed(e => e + 1);
-        setVitals(v => ({
-          hr: Math.max(140, Math.min(200, v.hr + (Math.random() > 0.45 ? 1 : -1))),
-          spo2: Math.max(88, Math.min(97, v.spo2 + (Math.random() > 0.5 ? 0 : Math.random() > 0.5 ? 1 : -1))),
-          rr: Math.max(28, Math.min(54, v.rr + (Math.random() > 0.5 ? 1 : -1))),
-          temp: v.temp
-        }));
-      }, 1000);
+      if (!playing) return;
+      const id = setInterval(() => setPos(p => {
+        const n = p + 3;
+        if (n >= D.session.duration) {
+          setPlaying(false);
+          return D.session.duration;
+        }
+        return n;
+      }), 200 / speed);
       return () => clearInterval(id);
-    }, [paused, ended]);
-    function fire(id, t) {
-      setFired(f => ({
-        ...f,
-        [id]: "T+" + fmt(elapsed)
-      }));
+    }, [playing, speed]);
+    const markers = D.events.filter(e => !roleFilter || e.role === roleFilter).filter(e => typeFilter.size === 0 || typeFilter.has(e.type)).map(e => ({
+      t: e.t,
+      type: e.type,
+      role: e.role,
+      label: e.label,
+      severity: e.severity
+    }));
+    const lanes = showLanes ? D.roles.map(r => ({
+      role: r.id,
+      label: r.label
+    })) : null;
+    const sel = D.events.find(e => e.id === selId);
+    const latestForRole = rid => D.events.filter(e => e.role === rid && e.t <= pos).slice(-1)[0];
+    function jumpTo(t, id) {
+      setPos(t);
+      if (id) setSelId(id);
+      setPlaying(false);
     }
+    function toggleType(id) {
+      setTypeFilter(s => {
+        const n = new Set(s);
+        n.has(id) ? n.delete(id) : n.add(id);
+        return n;
+      });
+    }
+    const vitalNow = k => {
+      const raw = interp(D.vitals[k], pos);
+      return k === "temp" ? raw.toFixed(1) : Math.round(raw);
+    };
     return R.createElement("div", {
+      className: "aar",
       dir: "rtl",
       style: {
-        height: "100vh",
-        background: "var(--bg-canvas)",
-        color: "var(--text)",
+        minHeight: "100vh",
+        background: "var(--surface-base)",
+        color: "var(--text-primary)",
         fontFamily: "var(--font-ui)",
         display: "flex",
-        flexDirection: "column",
-        overflow: "hidden"
+        flexDirection: "column"
       }
-    }, /* command bar */
+    }, /* ---- header ---- */
     R.createElement("header", {
       style: {
         display: "flex",
         alignItems: "center",
         gap: "var(--sp-4)",
-        padding: "var(--sp-3) var(--sp-5)",
-        background: "var(--surface)",
-        borderBottom: "var(--border-w-strong) solid var(--border-strong)"
+        padding: "var(--sp-4) var(--sp-6)",
+        borderBottom: "var(--border-w) solid var(--border-default)",
+        background: "var(--surface-card)",
+        boxShadow: "var(--shadow-card)",
+        zIndex: 10
       }
     }, R.createElement("div", {
       style: {
-        fontWeight: 700,
-        fontSize: "var(--fs-h3)"
+        fontWeight: 800,
+        fontSize: "var(--fs-h3)",
+        letterSpacing: "var(--ls-tight)"
       }
     }, "Vet", R.createElement("span", {
       style: {
         color: "var(--action)"
       }
-    }, "Crew")), R.createElement(SessionState, {
-      state: ended ? "debrief" : paused ? "paused" : "running",
-      elapsed: fmt(elapsed)
-    }), R.createElement("span", {
+    }, "Crew")), R.createElement("div", {
       style: {
-        fontSize: "var(--fs-sm)",
-        color: "var(--text-muted)"
+        width: 1,
+        height: 28,
+        background: "var(--border-subtle)"
       }
-    }, D.session.title + " · " + D.session.engine), R.createElement("div", {
+    }), R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        minWidth: 0
+      }
+    }, R.createElement("span", {
+      style: {
+        fontWeight: 600,
+        fontSize: "var(--fs-body)",
+        color: "var(--text-primary)",
+        whiteSpace: "nowrap"
+      }
+    }, D.session.title), R.createElement("span", {
+      className: "vc-num",
+      style: {
+        fontSize: "var(--fs-xs)",
+        color: "var(--text-muted)",
+        fontFamily: "var(--font-mono)"
+      }
+    }, D.session.date + " · " + D.session.engine)), R.createElement("div", {
       style: {
         marginInlineStart: "auto",
         display: "flex",
         alignItems: "center",
-        gap: "var(--sp-3)"
+        gap: "var(--sp-4)"
       }
-    }, R.createElement(Button, {
-      variant: paused ? "primary" : "secondary",
-      size: "lg",
-      iconStart: R.createElement(Icon, {
-        name: paused ? "play" : "pause",
-        size: 20
-      }),
-      onClick: () => setPaused(p => !p)
-    }, paused ? "המשך" : "השהה"), R.createElement(Button, {
-      variant: "danger",
-      size: "lg",
-      iconStart: R.createElement(Icon, {
-        name: "square",
-        size: 18
-      }),
-      onClick: () => setConfirm(true)
-    }, "סיים סשן"), R.createElement(IconButton, {
+    }, R.createElement(SessionState, {
+      state: D.session.state,
+      variant: "stepper"
+    }), R.createElement(IconButton, {
       label: dark ? "מצב יום" : "מצב לילה",
       onClick: () => setDark(v => !v),
       icon: R.createElement(Icon, {
         name: dark ? "sun" : "moon",
         size: 20
       })
-    }))), /* main: patient + roles | injections */
+    }), R.createElement(IconButton, {
+      label: "התאמות תצוגה",
+      variant: tweaksOpen ? "solid" : "ghost",
+      onClick: () => setTweaksOpen(v => !v),
+      icon: R.createElement(Icon, {
+        name: "sliders-horizontal",
+        size: 20
+      })
+    }))), tweaksOpen && R.createElement(TweaksPanel, {
+      dark,
+      setDark,
+      speed,
+      setSpeed,
+      showLanes,
+      setShowLanes,
+      onClose: () => setTweaksOpen(false)
+    }), /* ---- body: stage + scores rail ---- */
     R.createElement("div", {
       style: {
         flex: 1,
         display: "grid",
-        gridTemplateColumns: "1.35fr 1fr",
-        gap: "var(--sp-5)",
-        padding: "var(--sp-5)",
-        minHeight: 0,
-        overflow: "auto"
+        gridTemplateColumns: "1fr 380px",
+        gap: "var(--sp-6)",
+        padding: "var(--sp-6)",
+        alignItems: "start",
+        minHeight: 0
       }
-    }, /* left: live monitor + roles */
-    R.createElement("section", {
+    }, /* stage */
+    R.createElement("div", {
       style: {
         display: "flex",
         flexDirection: "column",
@@ -3832,180 +4261,366 @@ try { (() => {
     }, R.createElement("div", {
       style: {
         display: "flex",
-        alignItems: "center",
+        alignItems: "baseline",
         gap: "var(--sp-3)"
       }
     }, R.createElement("span", {
       className: "vc-caps",
       style: {
-        color: "var(--text-faint)"
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
       }
-    }, "מוניטור מטופל · חי"), paused && R.createElement(SeverityChip, {
-      level: "normal",
-      appearance: "outline",
-      size: "sm",
-      lang: "he",
-      showLabel: true
-    }), R.createElement("span", {
+    }, "מצב המטופל בזמן"), R.createElement("span", {
+      className: "vc-num",
       style: {
-        marginInlineStart: "auto"
+        fontSize: "var(--fs-h3)",
+        fontWeight: 600,
+        color: "var(--text-primary)",
+        fontFamily: "var(--font-mono)"
       }
-    }, R.createElement(ConnectionPill, {
-      state: paused ? "paused" : "live"
-    }))), R.createElement("div", {
+    }, fmt(pos))), R.createElement("div", {
       style: {
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "var(--sp-3)"
+        gridTemplateColumns: "repeat(4,1fr)",
+        gap: "var(--sp-4)"
       }
-    }, R.createElement(VitalCard, {
-      name: "דופק",
-      abbr: "HR",
-      value: vitals.hr,
-      unit: "bpm",
-      level: sevHR(vitals.hr),
-      trend: "up",
-      size: "station",
-      stale: false
-    }), R.createElement(VitalCard, {
-      name: "ריווי חמצן",
-      abbr: "SpO₂",
-      value: vitals.spo2,
-      unit: "%",
-      level: sevSpO2(vitals.spo2),
-      trend: "down",
-      size: "station"
-    }), R.createElement(VitalCard, {
-      name: "נשימות",
-      abbr: "RR",
-      value: vitals.rr,
-      unit: "/min",
-      level: sevRR(vitals.rr),
-      trend: "up",
-      size: "station"
-    }), R.createElement(VitalCard, {
-      name: "חום",
-      abbr: "TEMP",
-      value: vitals.temp.toFixed(1),
-      unit: "°C",
-      level: "normal",
-      trend: "flat",
-      size: "station"
+    }, ["hr", "spo2", "rr", "temp"].map(k => {
+      const v = vitalNow(k),
+        m = VMETA[k];
+      return R.createElement(VitalCard, {
+        key: k,
+        name: m.name,
+        abbr: m.abbr,
+        value: v,
+        unit: m.unit,
+        level: m.sev(parseFloat(v)),
+        trend: trend(D.vitals[k], pos),
+        size: "compact"
+      });
     })), R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--sp-3)",
+        marginTop: "var(--sp-2)"
+      }
+    }, R.createElement("span", {
       className: "vc-caps",
       style: {
-        color: "var(--text-faint)",
-        marginTop: "var(--sp-1)"
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
       }
-    }, "תחנות מחוברות"), R.createElement("div", {
+    }, "מה ראה כל תפקיד"), R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-xs)",
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-medium)"
+      }
+    }, "· תצוגה חלקית לכל תפקיד")), R.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3,1fr)",
+        gap: "var(--sp-4)"
+      }
+    }, D.roles.map(r => R.createElement(RolePanel, {
+      key: r.id,
+      role: r,
+      event: latestForRole(r.id)
+    }))), /* selected event detail - Ambient Glow styling instead of thick border */
+    sel && function () {
+      const glowShadow = sel.severity === "critical" ? "var(--shadow-glow-critical)" : sel.severity === "elevated" ? "var(--shadow-glow-elevated)" : sel.severity === "watch" ? "var(--shadow-glow-watch)" : "var(--shadow-glow-running)";
+      const borderColor = sel.severity === "critical" ? "var(--border-critical-subtle)" : sel.severity === "elevated" ? "var(--border-elevated-subtle)" : sel.severity === "watch" ? "var(--border-watch-subtle)" : "var(--border-subtle)";
+      const bgSubtle = sel.severity === "critical" ? "var(--bg-critical-subtle)" : sel.severity === "elevated" ? "var(--bg-elevated-subtle)" : sel.severity === "watch" ? "var(--bg-watch-subtle)" : "var(--surface-card)";
+      return R.createElement("div", {
+        style: {
+          background: bgSubtle,
+          border: "var(--border-w) solid " + borderColor,
+          borderRadius: "var(--radius-xl)",
+          padding: "var(--sp-5)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--sp-2)",
+          boxShadow: "inset 0 1px 1px rgba(255,255,255,0.05), " + glowShadow,
+          transition: "all var(--dur-fast) var(--ease-standard)"
+        }
+      }, R.createElement("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--sp-2)"
+        }
+      }, R.createElement(Icon, {
+        name: "crosshair",
+        size: 16,
+        style: {
+          color: "var(--action)"
+        }
+      }), R.createElement("span", {
+        className: "vc-caps",
+        style: {
+          color: "var(--text-muted)",
+          fontWeight: "var(--fw-semibold)"
+        }
+      }, "אירוע נבחר"), R.createElement("span", {
+        className: "vc-num",
+        style: {
+          marginInlineStart: "auto",
+          fontSize: "var(--fs-xs)",
+          color: "var(--text-muted)",
+          fontFamily: "var(--font-mono)"
+        }
+      }, "T+" + fmt(sel.t)), sel.severity && R.createElement(SeverityChip, {
+        level: sel.severity,
+        size: "sm"
+      })), R.createElement("div", {
+        style: {
+          fontSize: "var(--fs-body-lg)",
+          fontWeight: 700,
+          color: "var(--text-primary)",
+          letterSpacing: "var(--ls-tight)"
+        }
+      }, sel.label), R.createElement("div", {
+        style: {
+          fontSize: "var(--fs-body)",
+          color: "var(--text-secondary)",
+          lineHeight: "var(--lh-normal)"
+        }
+      }, sel.detail));
+    }()), /* scores rail - Double Bezel Architecture */
+    R.createElement("aside", {
+      style: {
+        display: "flex",
+        padding: "6px",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-card)",
+        position: "sticky",
+        top: "var(--sp-6)"
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-5)",
+        flex: 1,
+        minWidth: 0,
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
+        padding: "var(--sp-5)",
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
+      }
+    }, R.createElement("div", null, R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-h3)",
+        fontWeight: 700,
+        color: "var(--text-primary)",
+        letterSpacing: "var(--ls-tight)"
+      }
+    }, "דירוג מיומנויות צוות"), R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-sm)",
+        color: "var(--text-secondary)"
+      }
+    }, "ANTS · לחיצה על דירוג קופצת לראיה בציר")), R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-5)"
+      }
+    }, D.scores.ants.map(a => R.createElement(AntsRating, {
+      key: a.key,
+      category: a.label,
+      value: a.value,
+      anchors: a.anchors,
+      evidenceCount: a.evidence.length,
+      onChange: () => {},
+      onJumpToEvidence: () => {
+        const ev = D.events.find(e => e.id === a.evidence[0]);
+        if (ev) jumpTo(ev.t, ev.id);
+      }
+    }))), R.createElement("div", {
+      style: {
+        height: 1,
+        background: "var(--border-subtle)"
+      }
+    }), R.createElement("div", {
+      style: {
+        fontSize: "var(--fs-body)",
+        fontWeight: 700,
+        color: "var(--text-primary)"
+      }
+    }, "צ'קליסט טכני"), R.createElement("div", {
       style: {
         display: "flex",
         flexDirection: "column",
         gap: "var(--sp-2)"
       }
-    }, D.roles.map(r => R.createElement(RoleStatus, {
-      key: r.id,
-      role: r
-    })))), /* right: injections */
-    R.createElement("section", {
+    }, D.scores.technical.map((c, i) => R.createElement("button", {
+      key: i,
+      onClick: () => jumpTo(c.t),
       style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)",
+        textAlign: "start",
+        cursor: "pointer",
+        background: "transparent",
+        border: "none",
+        padding: "var(--sp-2)",
+        borderRadius: "var(--radius-sm)",
+        minHeight: 44,
+        transition: "background var(--dur-fast) var(--ease-standard)"
+      }
+    }, R.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        width: 22,
+        height: 22,
+        borderRadius: "var(--radius-xs)",
+        flex: "0 0 auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: c.done ? "var(--bg-running-subtle)" : "var(--surface-base)",
+        border: "var(--border-w) solid " + (c.done ? "var(--border-running-subtle)" : "var(--border-default)"),
+        color: "var(--text-running)",
+        boxShadow: c.done ? "var(--shadow-glow-running)" : "none"
+      }
+    }, c.done ? R.createElement(Icon, {
+      name: "check",
+      size: 14,
+      stroke: 3
+    }) : null), R.createElement("span", {
+      style: {
+        flex: 1,
+        fontSize: "var(--fs-sm)",
+        color: c.done ? "var(--text-primary)" : "var(--text-secondary)"
+      }
+    }, c.label), R.createElement("span", {
+      className: "vc-num",
+      style: {
+        fontSize: "var(--fs-xs)",
+        color: "var(--text-muted)",
+        fontFamily: "var(--font-mono)"
+      }
+    }, "×" + c.weight))))))), /* ---- footer: transport + scrubber + filters ---- */
+    R.createElement("footer", {
+      style: {
+        borderTop: "var(--border-w) solid var(--border-default)",
+        background: "var(--surface-card)",
+        padding: "var(--sp-4) var(--sp-6)",
         display: "flex",
         flexDirection: "column",
         gap: "var(--sp-3)",
-        minWidth: 0,
-        background: "var(--surface-2)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--sp-4)"
-      }
-    }, R.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "baseline",
-        justifyContent: "space-between"
-      }
-    }, R.createElement("h2", {
-      style: {
-        margin: 0,
-        fontSize: "var(--fs-h3)",
-        color: "var(--text-strong)"
-      }
-    }, "הזרקות אירועים"), R.createElement("span", {
-      style: {
-        fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)"
-      }
-    }, "לחיצה = הזרקה מיידית")), shockAvailable && R.createElement("div", {
-      style: {
-        border: "var(--border-w-strong) solid var(--sev-elevated-edge)",
-        borderRadius: "var(--radius-md)",
-        background: "var(--sev-elevated-fill)",
-        padding: "var(--sp-2)"
+        boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
+        zIndex: 10
       }
     }, R.createElement("div", {
       style: {
         display: "flex",
         alignItems: "center",
-        gap: "var(--sp-2)",
-        padding: "0 var(--sp-1) var(--sp-1)"
+        gap: "var(--sp-3)",
+        flexWrap: "wrap"
       }
-    }, R.createElement(Icon, {
-      name: "triangle-alert",
-      size: 15,
-      style: {
-        color: "var(--sev-elevated-fg)"
-      }
-    }), R.createElement("span", {
-      style: {
-        fontSize: "var(--fs-xs)",
-        fontWeight: 700,
-        color: "var(--sev-elevated-fg)",
-        letterSpacing: "var(--ls-caps)",
-        textTransform: "uppercase"
-      }
-    }, "נפתח לפי תנאי")), R.createElement(InjectionTrigger, {
-      title: D.conditional.title,
-      description: D.conditional.desc,
-      kind: D.conditional.kind,
-      icon: R.createElement(Icon, {
-        name: D.conditional.icon,
-        size: 22
-      }),
-      fired: !!fired[D.conditional.id],
-      firedAt: fired[D.conditional.id],
-      onFire: () => fire(D.conditional.id)
-    })), R.createElement("div", {
+    }, R.createElement("div", {
       style: {
         display: "flex",
-        flexDirection: "column",
-        gap: "var(--sp-3)",
-        overflow: "auto"
+        gap: "var(--sp-2)"
       }
-    }, D.injections.map(inj => R.createElement(InjectionTrigger, {
-      key: inj.id,
-      title: inj.title,
-      description: inj.desc,
-      kind: inj.kind,
+    }, R.createElement(IconButton, {
+      label: "להתחלה",
+      onClick: () => jumpTo(0),
       icon: R.createElement(Icon, {
-        name: inj.icon,
+        name: "skip-forward",
+        size: 20,
+        flip: true
+      })
+    }), R.createElement(IconButton, {
+      label: "אחורה",
+      onClick: () => setPos(p => Math.max(0, p - 10)),
+      icon: R.createElement(Icon, {
+        name: "rewind",
+        size: 20,
+        flip: true
+      })
+    }), R.createElement(IconButton, {
+      label: playing ? "השהה" : "נגן",
+      variant: "solid",
+      size: "lg",
+      onClick: () => setPlaying(v => !v),
+      icon: R.createElement(Icon, {
+        name: playing ? "pause" : "play",
         size: 22
-      }),
-      fired: !!fired[inj.id],
-      firedAt: fired[inj.id],
-      onFire: () => fire(inj.id)
-    }))))), confirm && R.createElement(ConfirmDialog, {
-      onCancel: () => setConfirm(false),
-      onConfirm: () => {
-        setConfirm(false);
-        setEnded(true);
-        setPaused(true);
+      })
+    }), R.createElement(IconButton, {
+      label: "קדימה",
+      onClick: () => setPos(p => Math.min(D.session.duration, p + 10)),
+      icon: R.createElement(Icon, {
+        name: "fast-forward",
+        size: 20,
+        flip: true
+      })
+    })), R.createElement("div", {
+      style: {
+        marginInlineStart: "auto",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-2)",
+        flexWrap: "wrap"
       }
-    }));
+    }, R.createElement("span", {
+      className: "vc-caps",
+      style: {
+        color: "var(--text-muted)",
+        marginInlineEnd: "var(--sp-1)",
+        fontWeight: "var(--fw-semibold)"
+      }
+    }, "תפקיד"), R.createElement(FilterChip, {
+      active: !roleFilter,
+      onClick: () => setRoleFilter(null)
+    }, "הכל"), D.roles.map(r => R.createElement(FilterChip, {
+      key: r.id,
+      active: roleFilter === r.id,
+      onClick: () => setRoleFilter(x => x === r.id ? null : r.id)
+    }, r.label)))), R.createElement(TimelineScrubber, {
+      duration: D.session.duration,
+      position: pos,
+      markers,
+      lanes,
+      onSeek: t => {
+        setPos(t);
+        setPlaying(false);
+      },
+      onMarkerClick: m => {
+        const ev = D.events.find(e => Math.abs(e.t - m.t) < 1 && e.label === m.label);
+        if (ev) setSelId(ev.id);
+      }
+    }), R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-2)",
+        flexWrap: "wrap"
+      }
+    }, R.createElement("span", {
+      className: "vc-caps",
+      style: {
+        color: "var(--text-muted)",
+        marginInlineEnd: "var(--sp-1)",
+        fontWeight: "var(--fw-semibold)"
+      }
+    }, "סנן לפי סוג"), TYPES.map(t => R.createElement(FilterChip, {
+      key: t.id,
+      active: typeFilter.has(t.id),
+      onClick: () => toggleType(t.id)
+    }, t.label)))));
   }
   window.VCKit = window.VCKit || {};
-  window.VCKit.Console = Console;
+  window.VCKit.AarViewer = AarViewer;
 })();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/instructor/Console.jsx", error: String((e && e.message) || e) }); }
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/aar/AarViewer.jsx", error: String((e && e.message) || e) }); }
 
 // ui_kits/instructor/data.js
 try { (() => {
@@ -4083,6 +4698,508 @@ window.VCINS_DATA = {
 };
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/instructor/data.js", error: String((e && e.message) || e) }); }
 
+// ui_kits/instructor/Console.jsx
+try { (() => {
+/* VetCrew — Instructor console. Register: dense-but-controlled, high-pressure.
+   Fast-fire injections (no confirm); ONLY destructive actions confirm.
+   Exposes window.VCKit.Console. */
+(function () {
+  const R = window.React;
+  const DS = window.DesignSystem_ad98cb;
+  const {
+    SessionState,
+    ConnectionPill,
+    VitalCard,
+    InjectionTrigger,
+    Button,
+    IconButton,
+    SeverityChip
+  } = DS;
+  const Icon = window.VC.Icon;
+  const D = window.VCINS_DATA;
+  const fmt = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const sevHR = v => v >= 192 ? "critical" : v >= 176 ? "elevated" : v >= 166 ? "watch" : "normal";
+  const sevSpO2 = v => v < 90 ? "critical" : v < 92 ? "elevated" : v < 95 ? "watch" : "normal";
+  const sevRR = v => v >= 52 ? "elevated" : v >= 46 ? "watch" : "normal";
+  function ConfirmDialog({
+    onCancel,
+    onConfirm
+  }) {
+    return R.createElement("div", {
+      role: "dialog",
+      "aria-modal": "true",
+      style: {
+        position: "fixed",
+        inset: 0,
+        background: "rgba(7, 13, 16, 0.65)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        padding: "var(--sp-6)"
+      }
+    }, R.createElement("div", {
+      style: {
+        padding: "6px",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-overlay)",
+        width: "100%",
+        maxWidth: 440
+      }
+    }, R.createElement("div", {
+      style: {
+        background: "var(--surface-overlay)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
+        padding: "var(--sp-6)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-4)",
+        border: "var(--border-w) solid var(--border-default)",
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)"
+      }
+    }, R.createElement("span", {
+      style: {
+        color: "var(--text-critical)",
+        display: "inline-flex"
+      }
+    }, R.createElement(Icon, {
+      name: "octagon-alert",
+      size: 26
+    })), R.createElement("h2", {
+      style: {
+        margin: 0,
+        fontSize: "var(--fs-h2)",
+        color: "var(--text-primary)",
+        fontWeight: "var(--fw-semibold)",
+        letterSpacing: "var(--ls-tight)"
+      }
+    }, "לסיים את הסשן?")), R.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: "var(--fs-body)",
+        color: "var(--text-secondary)",
+        lineHeight: "var(--lh-normal)"
+      }
+    }, "פעולה זו עוצרת את הסימולציה לכל התחנות ומעבירה לתחקיר. לא ניתן לחזור אחורה."), R.createElement("div", {
+      style: {
+        display: "flex",
+        gap: "var(--sp-3)",
+        justifyContent: "flex-start",
+        marginTop: "var(--sp-2)"
+      }
+    }, R.createElement(Button, {
+      variant: "danger",
+      onClick: onConfirm
+    }, "סיים והעבר לתחקיר"), R.createElement(Button, {
+      variant: "ghost",
+      onClick: onCancel
+    }, "המשך סשן")))));
+  }
+  function RoleStatus({
+    role
+  }) {
+    return R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)",
+        padding: "4px",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-md)",
+        opacity: role.conn === "reconnecting" ? 0.9 : 1
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)",
+        padding: "var(--sp-2) var(--sp-3)",
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-md) - 4px)",
+        flex: 1,
+        minWidth: 0
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        minWidth: 0,
+        flex: 1
+      }
+    }, R.createElement("span", {
+      style: {
+        fontWeight: 700,
+        fontSize: "var(--fs-sm)",
+        color: "var(--text-primary)"
+      }
+    }, role.label), R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-xs)",
+        color: "var(--text-secondary)",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }
+    }, role.who + (role.conn === "reconnecting" ? "" : " · " + role.task))), R.createElement(ConnectionPill, {
+      state: role.conn
+    })));
+  }
+  function Console() {
+    const [dark, setDark] = R.useState(false);
+    const [elapsed, setElapsed] = R.useState(78);
+    const [paused, setPaused] = R.useState(false);
+    const [vitals, setVitals] = R.useState(D.vitals);
+    const [fired, setFired] = R.useState({});
+    const [shockAvailable, setShockAvailable] = R.useState(true);
+    const [confirm, setConfirm] = R.useState(false);
+    const [ended, setEnded] = R.useState(false);
+    R.useEffect(() => {
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    }, [dark]);
+    R.useEffect(() => {
+      if (paused || ended) return;
+      const id = setInterval(() => {
+        setElapsed(e => e + 1);
+        setVitals(v => ({
+          hr: Math.max(140, Math.min(200, v.hr + (Math.random() > 0.45 ? 1 : -1))),
+          spo2: Math.max(88, Math.min(97, v.spo2 + (Math.random() > 0.5 ? 0 : Math.random() > 0.5 ? 1 : -1))),
+          rr: Math.max(28, Math.min(54, v.rr + (Math.random() > 0.5 ? 1 : -1))),
+          temp: v.temp
+        }));
+      }, 1000);
+      return () => clearInterval(id);
+    }, [paused, ended]);
+    function fire(id, t) {
+      setFired(f => ({
+        ...f,
+        [id]: "T+" + fmt(elapsed)
+      }));
+    }
+    return R.createElement("div", {
+      dir: "rtl",
+      style: {
+        height: "100vh",
+        background: "var(--surface-base)",
+        color: "var(--text-primary)",
+        fontFamily: "var(--font-ui)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden"
+      }
+    }, /* command bar */
+    R.createElement("header", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-4)",
+        padding: "var(--sp-3) var(--sp-5)",
+        background: "var(--surface-card)",
+        borderBottom: "var(--border-w-strong) solid var(--border-default)",
+        boxShadow: "var(--shadow-card)",
+        zIndex: 10
+      }
+    }, R.createElement("div", {
+      style: {
+        fontWeight: 800,
+        fontSize: "var(--fs-h3)",
+        letterSpacing: "var(--ls-tight)"
+      }
+    }, "Vet", R.createElement("span", {
+      style: {
+        color: "var(--action)"
+      }
+    }, "Crew")), R.createElement(SessionState, {
+      state: ended ? "debrief" : paused ? "paused" : "running",
+      elapsed: fmt(elapsed)
+    }), R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-sm)",
+        color: "var(--text-secondary)",
+        fontWeight: "var(--fw-medium)"
+      }
+    }, D.session.title + " · " + D.session.engine), R.createElement("div", {
+      style: {
+        marginInlineStart: "auto",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)"
+      }
+    }, R.createElement(Button, {
+      variant: paused ? "primary" : "secondary",
+      size: "lg",
+      iconStart: R.createElement(Icon, {
+        name: paused ? "play" : "pause",
+        size: 20
+      }),
+      onClick: () => setPaused(p => !p)
+    }, paused ? "המשך" : "השהה"), R.createElement(Button, {
+      variant: "danger",
+      size: "lg",
+      iconStart: R.createElement(Icon, {
+        name: "square",
+        size: 18
+      }),
+      onClick: () => setConfirm(true)
+    }, "סיים סשן"), R.createElement(IconButton, {
+      label: dark ? "מצב יום" : "מצב לילה",
+      onClick: () => setDark(v => !v),
+      icon: R.createElement(Icon, {
+        name: dark ? "sun" : "moon",
+        size: 20
+      })
+    }))), /* main: patient + roles | injections */
+    R.createElement("div", {
+      style: {
+        flex: 1,
+        display: "grid",
+        gridTemplateColumns: "1.35fr 1fr",
+        gap: "var(--sp-5)",
+        padding: "var(--sp-5)",
+        minHeight: 0,
+        overflow: "auto"
+      }
+    }, /* left: live monitor + roles */
+    R.createElement("section", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-4)",
+        minWidth: 0
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-3)"
+      }
+    }, R.createElement("span", {
+      className: "vc-caps",
+      style: {
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
+      }
+    }, "מוניטור מטופל · חי"), paused && R.createElement(SeverityChip, {
+      level: "normal",
+      appearance: "outline",
+      size: "sm",
+      lang: "he",
+      showLabel: true
+    }), R.createElement("span", {
+      style: {
+        marginInlineStart: "auto"
+      }
+    }, R.createElement(ConnectionPill, {
+      state: paused ? "paused" : "live"
+    }))), R.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "var(--sp-4)"
+      }
+    }, R.createElement(VitalCard, {
+      name: "דופק",
+      abbr: "HR",
+      value: vitals.hr,
+      unit: "bpm",
+      level: sevHR(vitals.hr),
+      trend: "up",
+      size: "station",
+      stale: false
+    }), R.createElement(VitalCard, {
+      name: "ריווי חמצן",
+      abbr: "SpO₂",
+      value: vitals.spo2,
+      unit: "%",
+      level: sevSpO2(vitals.spo2),
+      trend: "down",
+      size: "station"
+    }), R.createElement(VitalCard, {
+      name: "נשימות",
+      abbr: "RR",
+      value: vitals.rr,
+      unit: "/min",
+      level: sevRR(vitals.rr),
+      trend: "up",
+      size: "station"
+    }), R.createElement(VitalCard, {
+      name: "חום",
+      abbr: "TEMP",
+      value: vitals.temp.toFixed(1),
+      unit: "°C",
+      level: "normal",
+      trend: "flat",
+      size: "station"
+    })), R.createElement("div", {
+      className: "vc-caps",
+      style: {
+        color: "var(--text-muted)",
+        marginTop: "var(--sp-2)",
+        fontWeight: "var(--fw-semibold)"
+      }
+    }, "תחנות מחוברות"), R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-2)"
+      }
+    }, D.roles.map(r => R.createElement(RoleStatus, {
+      key: r.id,
+      role: r
+    })))), /* right: injections - Double Bezel Architecture */
+    R.createElement("section", {
+      style: {
+        display: "flex",
+        padding: "6px",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-card)",
+        minWidth: 0
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-3)",
+        minWidth: 0,
+        flex: 1,
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
+        padding: "var(--sp-4)",
+        overflow: "auto",
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        borderBottom: "var(--border-w) solid var(--border-subtle)",
+        paddingBottom: "var(--sp-2)"
+      }
+    }, R.createElement("h2", {
+      style: {
+        margin: 0,
+        fontSize: "var(--fs-h3)",
+        color: "var(--text-primary)",
+        fontWeight: "var(--fw-bold)",
+        letterSpacing: "var(--ls-tight)"
+      }
+    }, "הזרקות אירועים"), R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-xs)",
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-medium)"
+      }
+    }, "לחיצה = הזרקה מיידית")), shockAvailable && R.createElement("div", {
+      style: {
+        border: "var(--border-w-strong) solid var(--border-elevated-subtle)",
+        borderRadius: "var(--radius-lg)",
+        background: "var(--bg-elevated-subtle)",
+        padding: "var(--sp-3)",
+        boxShadow: "var(--shadow-glow-elevated)"
+      }
+    }, R.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--sp-2)",
+        padding: "0 var(--sp-1) var(--sp-2)"
+      }
+    }, R.createElement(Icon, {
+      name: "triangle-alert",
+      size: 15,
+      style: {
+        color: "var(--text-elevated)"
+      }
+    }), R.createElement("span", {
+      style: {
+        fontSize: "var(--fs-xs)",
+        fontWeight: 700,
+        color: "var(--text-elevated)",
+        letterSpacing: "var(--ls-caps)",
+        textTransform: "uppercase"
+      }
+    }, "נפתח לפי תנאי")), R.createElement(InjectionTrigger, {
+      title: D.conditional.title,
+      description: D.conditional.desc,
+      kind: D.conditional.kind,
+      icon: R.createElement(Icon, {
+        name: D.conditional.icon,
+        size: 22
+      }),
+      fired: !!fired[D.conditional.id],
+      firedAt: fired[D.conditional.id],
+      onFire: () => fire(D.conditional.id)
+    })), R.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--sp-3)"
+      }
+    }, D.injections.map(inj => R.createElement(InjectionTrigger, {
+      key: inj.id,
+      title: inj.title,
+      description: inj.desc,
+      kind: inj.kind,
+      icon: R.createElement(Icon, {
+        name: inj.icon,
+        size: 22
+      }),
+      fired: !!fired[inj.id],
+      firedAt: fired[inj.id],
+      onFire: () => fire(inj.id)
+    })))))), confirm && R.createElement(ConfirmDialog, {
+      onCancel: () => setConfirm(false),
+      onConfirm: () => {
+        setConfirm(false);
+        setEnded(true);
+        setPaused(true);
+      }
+    }));
+  }
+  window.VCKit = window.VCKit || {};
+  window.VCKit.Console = Console;
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/instructor/Console.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/trainee/data.js
+try { (() => {
+/* VetCrew trainee station — sample data. window.VCTR_DATA */
+window.VCTR_DATA = {
+  role: {
+    label: "טכנאי ראשי",
+    who: "נועה ל."
+  },
+  patient: "כלב · גזע גדול · GDV",
+  // what THIS role sees (partial view). abp is withheld — must ask the team.
+  visible: {
+    hr: 168,
+    spo2: 92
+  },
+  withheld: [{
+    abbr: "ABP",
+    name: "לחץ דם",
+    holder: "וטרינר"
+  }],
+  steps: ["אשר זהות מטופל ומשקל", "הכן ערכת צנתר 18G", "בצע גישה ורידית — גף קדמי שמאלי", "חבר סט עירוי ובצע בולוס גבישי", "קרא מדדים בקול לצוות", "תעד את הפעולה ועדכן וטרינר"]
+};
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/trainee/data.js", error: String((e && e.message) || e) }); }
+
 // ui_kits/trainee/Station.jsx
 try { (() => {
 /* VetCrew — Trainee station. Register: calm, glanceable, deliberately partial.
@@ -4114,27 +5231,30 @@ try { (() => {
       "aria-label": label,
       style: {
         display: "inline-flex",
-        background: "var(--surface-2)",
-        border: "var(--border-w) solid var(--border)",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-default)",
         borderRadius: "var(--radius-md)",
         padding: 3,
-        gap: 3
+        gap: 3,
+        boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.35)"
       }
     }, options.map(o => R.createElement("button", {
       key: o.v,
       onClick: () => onChange(o.v),
       "aria-pressed": value === o.v,
       style: {
-        minHeight: 36,
-        padding: "0 12px",
-        borderRadius: "var(--radius-sm)",
+        minHeight: 32,
+        padding: "0 14px",
+        borderRadius: "calc(var(--radius-md) - 3px)",
         cursor: "pointer",
         border: "none",
         fontFamily: "var(--font-ui)",
         fontSize: "var(--fs-sm)",
         fontWeight: 600,
         background: value === o.v ? "var(--action)" : "transparent",
-        color: value === o.v ? "var(--on-action)" : "var(--text-muted)"
+        color: value === o.v ? "var(--on-action)" : "var(--text-secondary)",
+        transition: "all var(--dur-fast) var(--ease-standard)",
+        boxShadow: value === o.v ? "var(--shadow-glow-running)" : "none"
       }
     }, o.label)));
   }
@@ -4143,44 +5263,57 @@ try { (() => {
   }) {
     return R.createElement("div", {
       style: {
-        background: "var(--surface)",
-        border: "var(--border-w) dashed var(--border-strong)",
-        borderRadius: "var(--radius-lg)",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        padding: "6px",
+        boxShadow: "var(--shadow-card)",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 180
+      }
+    }, R.createElement("div", {
+      style: {
+        background: "var(--surface-card)",
+        border: "var(--border-w) dashed var(--border-default)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
         padding: "var(--sp-5) var(--sp-6)",
-        minHeight: 180,
         display: "flex",
         flexDirection: "column",
         gap: "var(--sp-2)",
         justifyContent: "center",
         alignItems: "center",
-        textAlign: "center"
+        textAlign: "center",
+        flex: 1,
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
       }
     }, R.createElement(Icon, {
       name: "eye-off",
       size: 30,
       style: {
-        color: "var(--text-faint)"
+        color: "var(--text-muted)",
+        opacity: 0.5
       }
     }), R.createElement("div", {
       style: {
         fontSize: "var(--fs-h3)",
         fontWeight: 600,
-        color: "var(--text-muted)"
+        color: "var(--text-secondary)"
       }
     }, item.name), R.createElement("div", {
       style: {
         fontFamily: "var(--font-mono)",
         fontSize: "var(--fs-xs)",
-        color: "var(--text-faint)",
+        color: "var(--text-muted)",
         letterSpacing: "var(--ls-caps)",
         textTransform: "uppercase"
       }
     }, item.abbr), R.createElement("div", {
       style: {
         fontSize: "var(--fs-sm)",
-        color: "var(--text-faint)"
+        color: "var(--text-muted)"
       }
-    }, "לא בתחום שלך · בקש מ" + item.holder));
+    }, "לא בתחום שלך · בקש מ" + item.holder)));
   }
   function Station() {
     const [dark, setDark] = R.useState(false);
@@ -4208,8 +5341,8 @@ try { (() => {
       dir: "rtl",
       style: {
         minHeight: "100vh",
-        background: "var(--bg-canvas)",
-        color: "var(--text)",
+        background: "var(--surface-base)",
+        color: "var(--text-primary)",
         fontFamily: "var(--font-ui)",
         display: "flex",
         flexDirection: "column"
@@ -4221,14 +5354,17 @@ try { (() => {
         alignItems: "center",
         gap: "var(--sp-3)",
         padding: "var(--sp-2) var(--sp-5)",
-        background: "var(--surface-2)",
-        borderBottom: "var(--border-w) solid var(--border)",
-        flexWrap: "wrap"
+        background: "var(--surface-card)",
+        borderBottom: "var(--border-w) solid var(--border-default)",
+        flexWrap: "wrap",
+        boxShadow: "var(--shadow-card)",
+        zIndex: 10
       }
     }, R.createElement("span", {
       className: "vc-caps",
       style: {
-        color: "var(--text-faint)"
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
       }
     }, "תצוגת הדגמה"), R.createElement(Seg, {
       label: "מודליות",
@@ -4274,8 +5410,8 @@ try { (() => {
         alignItems: "center",
         gap: "var(--sp-4)",
         padding: "var(--sp-4) var(--sp-6)",
-        borderBottom: "var(--border-w) solid var(--border)",
-        background: "var(--surface)"
+        borderBottom: "var(--border-w) solid var(--border-default)",
+        background: "var(--surface-card)"
       }
     }, R.createElement("div", {
       style: {
@@ -4287,12 +5423,13 @@ try { (() => {
       style: {
         fontSize: "var(--fs-h2)",
         fontWeight: 700,
-        color: "var(--text-strong)"
+        color: "var(--text-primary)",
+        letterSpacing: "var(--ls-tight)"
       }
     }, D.role.label), R.createElement("span", {
       style: {
         fontSize: "var(--fs-sm)",
-        color: "var(--text-muted)"
+        color: "var(--text-secondary)"
       }
     }, D.patient)), R.createElement("div", {
       style: {
@@ -4326,11 +5463,12 @@ try { (() => {
         alignItems: "center",
         gap: "var(--sp-3)",
         padding: "var(--sp-4)",
-        background: "var(--status-reconnecting-fill)",
+        background: "var(--bg-elevated-subtle)",
         backgroundImage: "var(--stale-hatch)",
-        border: "var(--border-w-strong) solid var(--status-reconnecting-dot)",
+        border: "var(--border-w-strong) solid var(--border-elevated-subtle)",
         borderRadius: "var(--radius-lg)",
-        color: "var(--status-reconnecting-fg)"
+        color: "var(--text-elevated)",
+        boxShadow: "var(--shadow-glow-elevated)"
       }
     }, R.createElement(Icon, {
       name: "wifi-off",
@@ -4378,17 +5516,27 @@ try { (() => {
       lastSeen: "12:04:38"
     }), R.createElement(WithheldTile, {
       item: D.withheld[0]
-    })), /* task / tempo panel */
+    })), /* task / tempo panel - Double Bezel Architecture */
     mode === "base" ? R.createElement("div", {
       style: {
-        background: "var(--surface)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-lg)",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        padding: "6px",
+        boxShadow: "var(--shadow-card)",
+        display: "flex",
+        flexDirection: "column"
+      }
+    }, R.createElement("div", {
+      style: {
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
         padding: "var(--sp-6)",
         display: "flex",
         flexDirection: "column",
         gap: "var(--sp-4)",
-        boxShadow: "var(--elev-1)"
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
       }
     }, R.createElement("div", {
       style: {
@@ -4399,7 +5547,8 @@ try { (() => {
     }, R.createElement("span", {
       className: "vc-caps",
       style: {
-        color: "var(--text-faint)"
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
       }
     }, "שלב " + (step + 1) + " מתוך " + D.steps.length), R.createElement("span", {
       style: {
@@ -4417,8 +5566,9 @@ try { (() => {
       style: {
         fontSize: "var(--fs-display)",
         fontWeight: 700,
-        color: "var(--text-strong)",
-        lineHeight: "var(--lh-snug)"
+        color: "var(--text-primary)",
+        lineHeight: "var(--lh-snug)",
+        letterSpacing: "var(--ls-tight)"
       }
     }, D.steps[step]), R.createElement("div", {
       style: {
@@ -4444,17 +5594,27 @@ try { (() => {
         name: "megaphone",
         size: 20
       })
-    }, "בקש מידע מהצוות"))) : R.createElement("div", {
+    }, "בקש מידע מהצוות")))) : R.createElement("div", {
       style: {
-        background: "var(--surface)",
-        border: "var(--border-w) solid var(--border)",
-        borderRadius: "var(--radius-lg)",
+        background: "var(--surface-base)",
+        border: "var(--border-w) solid var(--border-subtle)",
+        borderRadius: "var(--radius-xl)",
+        padding: "6px",
+        boxShadow: "var(--shadow-card)",
+        display: "flex",
+        flexDirection: "column"
+      }
+    }, R.createElement("div", {
+      style: {
+        background: "var(--surface-card)",
+        border: "var(--border-w) solid var(--border-default)",
+        borderRadius: "calc(var(--radius-xl) - 6px)",
         padding: "var(--sp-6)",
         display: "flex",
         alignItems: "center",
         gap: "var(--sp-4)",
-        boxShadow: "var(--elev-1)",
-        flexWrap: "wrap"
+        flexWrap: "wrap",
+        boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)"
       }
     }, R.createElement("div", {
       style: {
@@ -4465,12 +5625,13 @@ try { (() => {
     }, R.createElement("span", {
       className: "vc-caps",
       style: {
-        color: "var(--text-faint)"
+        color: "var(--text-muted)",
+        fontWeight: "var(--fw-semibold)"
       }
     }, "זמן אמת · המטופל מתדרדר"), R.createElement("span", {
       style: {
         fontSize: "var(--fs-body)",
-        color: "var(--text-muted)"
+        color: "var(--text-secondary)"
       }
     }, "פעל ותקשר בזמן אמת — אין השהיה בין פעולות")), R.createElement("div", {
       style: {
@@ -4494,64 +5655,11 @@ try { (() => {
         name: "hand",
         size: 20
       })
-    }, "בקש עזרה")))));
+    }, "בקש עזרה"))))));
   }
   window.VCKit = window.VCKit || {};
   window.VCKit.Station = Station;
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/trainee/Station.jsx", error: String((e && e.message) || e) }); }
-
-// ui_kits/trainee/data.js
-try { (() => {
-/* VetCrew trainee station — sample data. window.VCTR_DATA */
-window.VCTR_DATA = {
-  role: {
-    label: "טכנאי ראשי",
-    who: "נועה ל."
-  },
-  patient: "כלב · גזע גדול · GDV",
-  // what THIS role sees (partial view). abp is withheld — must ask the team.
-  visible: {
-    hr: 168,
-    spo2: 92
-  },
-  withheld: [{
-    abbr: "ABP",
-    name: "לחץ דם",
-    holder: "וטרינר"
-  }],
-  steps: ["אשר זהות מטופל ומשקל", "הכן ערכת צנתר 18G", "בצע גישה ורידית — גף קדמי שמאלי", "חבר סט עירוי ובצע בולוס גבישי", "קרא מדדים בקול לצוות", "תעד את הפעולה ועדכן וטרינר"]
-};
-})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/trainee/data.js", error: String((e && e.message) || e) }); }
-
-__ds_ns.AntsRating = __ds_scope.AntsRating;
-
-__ds_ns.Button = __ds_scope.Button;
-
-__ds_ns.IconButton = __ds_scope.IconButton;
-
-__ds_ns.InjectionTrigger = __ds_scope.InjectionTrigger;
-
-__ds_ns.TaskChip = __ds_scope.TaskChip;
-
-__ds_ns.PatientMonitor = __ds_scope.PatientMonitor;
-
-__ds_ns.ConnectionPill = __ds_scope.ConnectionPill;
-
-__ds_ns.SESSION_STATES = __ds_scope.SESSION_STATES;
-
-__ds_ns.SessionState = __ds_scope.SessionState;
-
-__ds_ns.SeverityChip = __ds_scope.SeverityChip;
-
-__ds_ns.SEVERITY = __ds_scope.SEVERITY;
-
-__ds_ns.SeverityGlyph = __ds_scope.SeverityGlyph;
-
-__ds_ns.SEVERITY_ORDER = __ds_scope.SEVERITY_ORDER;
-
-__ds_ns.TimelineScrubber = __ds_scope.TimelineScrubber;
-
-__ds_ns.VitalCard = __ds_scope.VitalCard;
 
 })();

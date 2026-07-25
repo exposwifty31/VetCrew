@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VetCrew · הצעת קונספט — מצגת</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Self-contained: every slide lives under deck/ and works from file://
+     (double-click index.html). Fonts load from Google when online and fall
+     back to system fonts offline. */
+  html,body{margin:0;height:100%;background:var(--surface-base);font-family:var(--font-ui);color:var(--text-primary);overflow:hidden;}
+
+  .deck{position:fixed;inset:0;}
+  .slide{position:absolute;inset:0;opacity:0;visibility:hidden;overflow:hidden;
+    transition:opacity var(--dur-base) var(--ease-standard),visibility 0s linear var(--dur-base);}
+  .slide.active{opacity:1;visibility:visible;transition-delay:0s;}
+  .slide iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--surface-base);}
+  .slide .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;}
+
+  /* takeaway strip — the one line the room should leave with */
+  .takeaway{position:absolute;bottom:0;inset-inline:0;z-index:6;box-sizing:border-box;
+    padding:14px min(9vw,130px);background:rgba(6,10,14,.88);border-top:1px solid var(--border-default);
+    font-size:var(--fs-body);font-weight:600;color:var(--text-primary);line-height:var(--lh-snug);}
+
+  /* chapter tag on embedded slides — same visual family as the zonetag */
+  .chapter{position:absolute;top:12px;inset-inline-start:14px;z-index:6;
+    font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-muted);background:rgba(0,0,0,.45);padding:4px 10px;border-radius:var(--radius-xs);pointer-events:none;}
+
+  /* ── content slides ── */
+  .content{display:flex;flex-direction:column;justify-content:center;gap:var(--sp-6);
+    padding:min(9vh,96px) min(9vw,130px);box-sizing:border-box;}
+  .kicker{font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--action-quiet,#74c9d0);}
+  .content h1{margin:0;font-size:var(--fs-display);font-weight:700;line-height:var(--lh-snug);max-width:22ch;}
+  .content ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--sp-4);max-width:62ch;}
+  .content li{position:relative;padding-inline-start:26px;font-size:var(--fs-body-lg);line-height:var(--lh-normal);color:var(--text-secondary);}
+  .content li::before{content:"";position:absolute;inset-inline-start:0;top:.62em;width:10px;height:10px;
+    border-radius:2px;background:var(--action);}
+  .content li b{color:var(--text-primary);font-weight:600;}
+  .punch{font-size:var(--fs-h3);font-weight:700;color:var(--text-primary);border-inline-start:3px solid var(--action);
+    padding-inline-start:var(--sp-4);max-width:52ch;}
+
+  /* cover */
+  .cover{align-items:flex-start;}
+  .cover .mark{font-family:var(--font-metric);font-weight:700;font-size:clamp(64px,10vw,128px);line-height:1;
+    letter-spacing:-.02em;color:var(--text-primary);}
+  .cover .mark span{color:var(--action-quiet,#74c9d0);}
+  .cover h2{margin:0;font-size:var(--fs-h2);font-weight:600;color:var(--text-secondary);max-width:30ch;line-height:var(--lh-snug);}
+  .cover .meta{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted);letter-spacing:.06em;}
+  .cover .hint{position:absolute;bottom:26px;inset-inline-start:min(9vw,130px);
+    font-size:var(--fs-xs);color:var(--text-muted);display:flex;align-items:center;gap:8px;}
+
+  /* ── navigation chrome ── */
+  .nav{position:fixed;bottom:18px;inset-inline-end:18px;z-index:20;display:flex;gap:8px;}
+  .nav button{width:44px;height:44px;border-radius:var(--radius-sm);cursor:pointer;
+    background:var(--surface-card);border:1px solid var(--border-default);color:var(--text-secondary);
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:border-color var(--dur-fast) var(--ease-standard),color var(--dur-fast) var(--ease-standard);}
+  .nav button:hover{border-color:var(--action);color:var(--text-primary);}
+  .nav button:focus-visible{outline:2px solid var(--focus-ring,#7fd6df);outline-offset:2px;}
+  .nav button:active{transform:scale(.95);}
+  .nav svg{width:20px;height:20px;}
+  .counter{position:fixed;bottom:29px;inset-inline-start:18px;z-index:20;
+    font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted);letter-spacing:.1em;
+    font-variant-numeric:tabular-nums;}
+  .dots{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:8px;}
+  .dots button{width:10px;height:10px;border-radius:50%;border:1px solid var(--border-default);
+    background:transparent;cursor:pointer;padding:0;}
+  .dots button[aria-current="true"]{background:var(--action);border-color:var(--action);}
+  .dots button:focus-visible{outline:2px solid var(--focus-ring,#7fd6df);outline-offset:2px;}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+  <!-- 1 · cover -->
+  <section class="slide content cover" data-title="פתיחה">
+    <div class="mark">Vet<span>Crew</span></div>
+    <h2>הכשרת צוות למחלקות חירום וטרינריות</h2>
+    <div class="punch">איך נדע שטכנאי חדש מוכן להתחיל לעבוד?</div>
+    <div class="meta">הצעת קונספט · דרג בסיס · 2026</div>
+    <div class="hint" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      חיצים לניווט בין השקפים
+    </div>
+  </section>
+
+  <!-- 2 · the problem -->
+  <section class="slide content" data-title="הבעיה">
+    <div class="kicker">מה קורה היום</div>
+    <h1>איך יודעים היום שטכנאי חדש יכול להתחיל לעבוד?</h1>
+    <ul>
+      <li><b>תחושת בטן.</b> בעיקר ההתרשמות של הטכנאי החופף — בלי תיעוד, בלי ראיות.</li>
+      <li><b>המבחן שלך.</b> בכתב, תיאורטי — לא משקף את העבודה בפועל, ומכסה רק חלק מהידע הנדרש.</li>
+      <li><b>והכי חשוב: לחץ מההנהלה.</b> מחסור בטכנאים דוחף להעסיק מהר — לפני שיש דרך אמיתית לדעת מי מוכן.</li>
+    </ul>
+    <div class="punch">אין תשתית. זו בדיוק ההזדמנות — וזה מה שנבנה.</div>
+  </section>
+
+  <!-- 3 · the vision (mountain) -->
+  <section class="slide" data-title="החזון">
+    <span class="chapter">01 · החזון — הר הכשירות</span>
+    <iframe title="הר המוכנות — חזון ההתקדמות" data-src="mountain.html"></iframe>
+  </section>
+
+  <!-- 4 · the product (split-screen) -->
+  <section class="slide" data-title="המוצר">
+    <span class="chapter">02 · המוצר — תחנת דרג בסיס</span>
+    <iframe title="תחנת מתאמן — משימות מול מוניטור" data-src="split-screen.html"></iframe>
+    <div class="takeaway">תחנת העבודה של הטכנאי: משימות בצד אחד, מוניטור חי בצד שני. כל לחיצה נרשמת — עם חותמת זמן.</div>
+  </section>
+
+  <!-- 5 · the proof (T2 NIBP, interactive) -->
+  <section class="slide" data-title="ההוכחה">
+    <span class="chapter">03 · ההוכחה — T2 · NIBP (אינטראקטיבי — אפשר ללחוץ)</span>
+    <iframe title="T2 NIBP — גוף החלטה אינטראקטיבי" data-src="t2-nibp.html"></iframe>
+    <div class="takeaway">השקף הזה חי — נסי בעצמך: תנוחה, מיקום, מידת שרוול. המערכת לא חוסמת טעות ולא מרמזת — היא מתעדת, ומחכה לשיקול הדעת שלך.</div>
+  </section>
+
+  <!-- 6 · the evidence record (AAR) -->
+  <section class="slide" data-title="התיעוד">
+    <span class="chapter">04 · התיעוד — סקירה לאחר סשן (AAR)</span>
+    <img class="shot" src="assets/aar-screen.png" alt="מסך סקירה לאחר סשן — ציר זמן של אירועים, דירוג ANTS לכל ממד, וצ'קליסט טכני">
+    <div class="takeaway">התוצאה: הטכנאי נבחן בתנאי לחץ שמדמים מציאות אמיתית — רשומה מלאה שאפשר לפתוח ולבקר, לא ציון באוויר. ובלי שום סיכון לבעלי חיים אמיתיים.</div>
+  </section>
+
+  <!-- 7 · the Reviewer role -->
+  <section class="slide content" data-title="התפקיד שלך">
+    <div class="kicker">התפקיד שלך</div>
+    <h1>Reviewer — הסמכות המקצועית של התשתית</h1>
+    <ul>
+      <li><b>ראיות, לא גזר־דין.</b> המערכת מפיקה רשומת ביצוע מלאה; השיפוט המקצועי נשאר אצל בן־אדם. זה התפקיד.</li>
+      <li><b>סקירת סשנים מוקלטים, בקצב שלך</b> — לא דירוג חי תחת לחץ. כך פועל גם גוף ההסמכה האמריקאי (AVECCTN) בשיפוט המשמעותי שלו.</li>
+      <li><b>דירוג ANTS</b> בארבעה ממדים לא־טכניים: ניהול משימה · עבודת צוות · מודעות מצבית · קבלת החלטות.</li>
+      <li><b>אישור קליני.</b> אף תרחיש לא מדרג אף אחד לפני חתימתך — והחתימה נרשמת לצד גרסת התרחיש.</li>
+    </ul>
+  </section>
+
+  <!-- 8 · the ask -->
+  <section class="slide content" data-title="ההצעה">
+    <div class="kicker">ההצעה</div>
+    <h1>פיילוט דרג־בסיס — קטן, מדיד, בלי סיכון</h1>
+    <ul>
+      <li><b>תרחיש אחד:</b> T2 · NIBP — טכנאי יחיד מול תחנת משימות ומוניטור.</li>
+      <li><b>רשומה מלאה:</b> כל פעולה עם חותמת זמן ושיוך לתפקיד — ניתנת לשחזור ולסקירה.</li>
+      <li><b>ותק בהכשרה נשמר מהסשן הראשון</b> — הציר שמולו נמדדת כל התקדמות.</li>
+      <li><b>אפס עבודה מהמנהל.</b> האישור הקליני שלך הוא השער לכל דירוג.</li>
+    </ul>
+    <div class="punch">השאלה היחידה להיום: ממשיכים לבנות?</div>
+  </section>
+
+</main>
+
+<div class="counter" id="counter" aria-live="polite"></div>
+<div class="dots" id="dots" role="tablist" aria-label="שקפים"></div>
+<div class="nav">
+  <button id="prev" aria-label="השקף הקודם">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+  <button id="next" aria-label="השקף הבא">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+</div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll(".slide")];
+  const dots = document.getElementById("dots");
+  const counter = document.getElementById("counter");
+  let cur = -1;
+
+  slides.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-label", `${i + 1} · ${s.dataset.title}`);
+    b.addEventListener("click", () => go(i));
+    dots.appendChild(b);
+  });
+
+  function load(i) {
+    const f = slides[i] && slides[i].querySelector("iframe[data-src]");
+    if (f) { f.src = f.dataset.src; f.removeAttribute("data-src"); }
+  }
+
+  function go(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    if (i === cur) return;
+    cur = i;
+    slides.forEach((s, k) => s.classList.toggle("active", k === i));
+    [...dots.children].forEach((d, k) => d.setAttribute("aria-current", k === i ? "true" : "false"));
+    /* dir=ltr so "3 / 8" doesn't visually flip under the RTL page direction */
+    counter.innerHTML = `<span dir="ltr">${i + 1} / ${slides.length}</span>`;
+    load(i); load(i + 1); // lazy: active slide + preload the next
+    history.replaceState(null, "", "#" + (i + 1));
+  }
+
+  document.getElementById("next").addEventListener("click", () => go(cur + 1));
+  document.getElementById("prev").addEventListener("click", () => go(cur - 1));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    switch (e.key) {
+      /* RTL deck: forward is leftward */
+      case "ArrowLeft": case "PageDown": case " ": go(cur + 1); e.preventDefault(); break;
+      case "ArrowRight": case "PageUp": go(cur - 1); e.preventDefault(); break;
+      case "Home": go(0); e.preventDefault(); break;
+      case "End": go(slides.length - 1); e.preventDefault(); break;
+    }
+  });
+
+  go(Math.max(0, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+})();
+</script>
+</body>
+</html>
