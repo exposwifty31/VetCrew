@@ -1,4 +1,5 @@
 import type { EngineEvent, SessionPhase } from "./events.js";
+import { canTransition } from "./fsm.js";
 import { prngInit, prngNext } from "./prng.js";
 import type { ScenarioDef, TriggerDef, VitalEffect } from "./scenario.js";
 
@@ -159,6 +160,11 @@ export function reduce(state: EngineState, event: EngineEvent): EngineState {
       };
     }
     case "phase_change":
+      // FSM guard (CLAUDE.md §4): an illegal transition stays in the log as
+      // the record of the attempt, but state refuses to move.
+      if (!canTransition(state.phase, event.phase)) {
+        return { ...state, appliedSeq: event.seq };
+      }
       return { ...state, phase: event.phase, appliedSeq: event.seq };
     default: {
       const exhaustive: never = event;

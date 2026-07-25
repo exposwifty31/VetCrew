@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 
-import { buildAar, evaluateChecklist, type EngineEvent } from "@vetcrew/engine";
+import { buildAar, canTransition, evaluateChecklist, type EngineEvent, type SessionPhase } from "@vetcrew/engine";
 import {
   antsDomainSchema,
   engineEventSchema,
@@ -53,6 +53,17 @@ async function loadSession(db: Db, tenantId: string, id: string) {
     .from(simSessions)
     .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)));
   return rows[0];
+}
+
+/** Walk phase_change events through the FSM from a starting phase. */
+function projectPhase(from: SessionPhase, events: readonly EngineEvent[]): SessionPhase {
+  let phase = from;
+  for (const event of events) {
+    if (event.type === "phase_change" && canTransition(phase, event.phase)) {
+      phase = event.phase;
+    }
+  }
+  return phase;
 }
 
 async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
@@ -126,32 +137,72 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const id = paramId(req);
-    const session = id === null ? undefined : await loadSession(db, tenantId, id);
-    if (session === undefined) {
+    if (id === null) {
       res.status(404).json({ error: "session not found" });
       return;
     }
     const events = parsed.data.events;
-    await db.insert(sessionEvents).values(
-      events.map((event) => ({
-        tenantId,
-        sessionId: session.id,
-        seq: event.seq,
-        type: event.type,
-        role: event.type === "action" ? event.role : null,
-        actorId: event.type === "action" ? event.actorId : null,
-        payload: event,
-      })),
-    );
-    // Denormalized phase for listings; the log stays authoritative.
-    const lastPhase = [...events].reverse().find((e) => e.type === "phase_change");
-    if (lastPhase !== undefined && lastPhase.type === "phase_change") {
-      await db
-        .update(simSessions)
-        .set({ phase: lastPhase.phase })
-        .where(eq(simSessions.id, session.id));
+    // Every session-dependent read happens INSIDE the transaction under a row
+    // lock, so concurrent appends serialize instead of racing the seq check
+    // (audit R1/R4 + PR review). The DB trigger (migration 0004) backstops.
+    type AppendResult =
+      | { kind: "not_found" }
+      | { kind: "gap"; expected: number }
+      | { kind: "ok" };
+    const result: AppendResult = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(simSessions)
+        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
+        .for("update");
+      const session = rows[0];
+      if (session === undefined) return { kind: "not_found" };
+      const maxRows = await tx
+        .select({ seq: sessionEvents.seq })
+        .from(sessionEvents)
+        .where(eq(sessionEvents.sessionId, session.id))
+        .orderBy(desc(sessionEvents.seq))
+        .limit(1);
+      const currentMax = maxRows[0]?.seq ?? 0;
+      // Seq authority: a batch must continue the log contiguously; retroactive
+      // or gapped seqs would rewrite the replay of the evidence record.
+      const contiguous = events.every((event, i) => event.seq === currentMax + 1 + i);
+      if (!contiguous) return { kind: "gap", expected: currentMax + 1 };
+      const nextPhase = projectPhase(session.phase as SessionPhase, events);
+      await tx.insert(sessionEvents).values(
+        events.map((event) => ({
+          tenantId,
+          sessionId: session.id,
+          seq: event.seq,
+          type: event.type,
+          role: event.type === "action" ? event.role : null,
+          actorId: event.type === "action" ? event.actorId : null,
+          payload: event,
+        })),
+      );
+      if (nextPhase !== session.phase) {
+        // Denormalized phase for listings; the log stays authoritative.
+        await tx.update(simSessions).set({ phase: nextPhase }).where(eq(simSessions.id, session.id));
+      }
+      return { kind: "ok" };
+    });
+    switch (result.kind) {
+      case "not_found":
+        res.status(404).json({ error: "session not found" });
+        return;
+      case "gap":
+        res.status(409).json({
+          error: `events must continue the log contiguously from seq ${result.expected}`,
+        });
+        return;
+      case "ok":
+        res.status(201).json({ appended: events.length });
+        return;
+      default: {
+        const exhaustive: never = result;
+        throw new Error(`Unhandled result: ${JSON.stringify(exhaustive)}`);
+      }
     }
-    res.status(201).json({ appended: events.length });
   });
 
   router.get("/:id/aar", async (req: Request, res: Response) => {
@@ -214,45 +265,104 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const id = paramId(req);
-    const session = id === null ? undefined : await loadSession(db, tenantId, id);
-    if (session === undefined) {
+    if (id === null) {
       res.status(404).json({ error: "session not found" });
       return;
     }
-    // Scoring gate: time-in-training must exist before a session can be scored —
-    // it is the progression axis and cannot be backfilled (CLAUDE.md §4).
-    if (session.traineeTimeInTrainingDays === null) {
-      res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
-      return;
-    }
-    // Evidence must point at events that actually exist in THIS session —
-    // a rating with fabricated evidence is worse than no rating (§2.3).
-    const existingSeqRows = await db
-      .select({ seq: sessionEvents.seq })
-      .from(sessionEvents)
-      .where(eq(sessionEvents.sessionId, session.id));
-    const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
-    const unknownSeqs = parsed.data.ratings
-      .flatMap((rating) => rating.evidenceEventSeqs)
-      .filter((seq) => !existingSeqs.has(seq));
-    if (unknownSeqs.length > 0) {
-      res.status(422).json({
-        error: `evidence references events not in this session: ${[...new Set(unknownSeqs)].join(", ")}`,
-      });
-      return;
-    }
-    await db.insert(antsRatings).values(
-      parsed.data.ratings.map((rating) => ({
+    // Phase guard, evidence check, and seq derivation all read session state,
+    // so they run INSIDE the transaction under a row lock — a concurrent
+    // append cannot make the debrief check stale or collide the scored seq.
+    type RatingsResult =
+      | { kind: "not_found" }
+      | { kind: "wrong_phase"; phase: string }
+      | { kind: "no_time_in_training" }
+      | { kind: "unknown_evidence"; seqs: number[] }
+      | { kind: "ok" };
+    const result: RatingsResult = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(simSessions)
+        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
+        .for("update");
+      const session = rows[0];
+      if (session === undefined) return { kind: "not_found" };
+      // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
+      // session in any other phase cannot be rated.
+      if (session.phase !== "debrief") return { kind: "wrong_phase", phase: session.phase };
+      // Scoring gate: time-in-training must exist before a session can be
+      // scored — it is the progression axis and cannot be backfilled (§4).
+      if (session.traineeTimeInTrainingDays === null) return { kind: "no_time_in_training" };
+      // Evidence must point at events that actually exist in THIS session —
+      // a rating with fabricated evidence is worse than no rating (§2.3).
+      const existingSeqRows = await tx
+        .select({ seq: sessionEvents.seq })
+        .from(sessionEvents)
+        .where(eq(sessionEvents.sessionId, session.id));
+      const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
+      const unknownSeqs = parsed.data.ratings
+        .flatMap((rating) => rating.evidenceEventSeqs)
+        .filter((seq) => !existingSeqs.has(seq));
+      if (unknownSeqs.length > 0) {
+        return { kind: "unknown_evidence", seqs: [...new Set(unknownSeqs)] };
+      }
+      let currentMax = 0;
+      for (const seq of existingSeqs) {
+        if (seq > currentMax) currentMax = seq;
+      }
+      // The scored transition goes THROUGH the log (audit F-b): replaying the
+      // events must yield the same phase the projection column reports.
+      const scoredEvent: EngineEvent = {
+        seq: currentMax + 1,
+        type: "phase_change",
+        phase: "scored",
+      };
+      await tx.insert(antsRatings).values(
+        parsed.data.ratings.map((rating) => ({
+          tenantId,
+          sessionId: session.id,
+          raterId: parsed.data.raterId,
+          domain: rating.domain,
+          score: rating.score,
+          evidenceEventSeqs: rating.evidenceEventSeqs,
+        })),
+      );
+      await tx.insert(sessionEvents).values({
         tenantId,
         sessionId: session.id,
-        raterId: parsed.data.raterId,
-        domain: rating.domain,
-        score: rating.score,
-        evidenceEventSeqs: rating.evidenceEventSeqs,
-      })),
-    );
-    await db.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
-    res.status(201).json({ rated: parsed.data.ratings.length });
+        seq: scoredEvent.seq,
+        type: scoredEvent.type,
+        role: null,
+        actorId: null,
+        payload: scoredEvent,
+      });
+      await tx.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
+      return { kind: "ok" };
+    });
+    switch (result.kind) {
+      case "not_found":
+        res.status(404).json({ error: "session not found" });
+        return;
+      case "wrong_phase":
+        res.status(409).json({
+          error: `session is in phase "${result.phase}"; ratings are submitted from debrief`,
+        });
+        return;
+      case "no_time_in_training":
+        res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
+        return;
+      case "unknown_evidence":
+        res.status(422).json({
+          error: `evidence references events not in this session: ${result.seqs.join(", ")}`,
+        });
+        return;
+      case "ok":
+        res.status(201).json({ rated: parsed.data.ratings.length });
+        return;
+      default: {
+        const exhaustive: never = result;
+        throw new Error(`Unhandled result: ${JSON.stringify(exhaustive)}`);
+      }
+    }
   });
 
   return router;

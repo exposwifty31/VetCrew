@@ -49,8 +49,11 @@ const SMOKE_SCENARIO: ScenarioDef = {
 };
 
 function engineSmoke() {
-  const events: EngineEvent[] = [{ seq: 1, type: "phase_change", phase: "running" }];
-  let seq = 1;
+  const events: EngineEvent[] = [
+    { seq: 1, type: "phase_change", phase: "briefing" },
+    { seq: 2, type: "phase_change", phase: "running" },
+  ];
+  let seq = 2;
   for (let i = 0; i < 30; i++) {
     events.push({ seq: ++seq, type: "tick", dtMs: 1000 });
     if (i === 14) {

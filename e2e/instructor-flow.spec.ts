@@ -65,21 +65,27 @@ test("instructor reviews the AAR and submits an evidence-linked rating", async (
 
   await expectNoSeriousA11yViolations(page, "aar");
 
-  // Evidence-linked rating: select two action events as evidence, score all
-  // three ANTS dimensions, submit.
-  const evidence = page.getByRole("checkbox");
-  await evidence.nth(0).check();
-  await evidence.nth(1).check();
+  // Checklist evidence references are operable: each failed item links to
+  // the timeline moment that produced it.
+  await expect(page.getByRole("button", { name: /מעבר לאירוע \d+ בציר הזמן/ }).first()).toBeVisible();
+
+  // Evidence-linked rating: name the rater, then for EACH ANTS domain select
+  // it, mark its own evidence event, and score it (per-domain traceability).
+  await page.getByLabel("שם המדרג").fill("מדריכת-בדיקה");
+  const domainButtons = page.locator("button[aria-pressed]");
   const fours = page.getByRole("button", { name: "4", exact: true });
-  const domainCount = await fours.count();
+  const domainCount = await domainButtons.count();
   expect(domainCount).toBe(3);
   for (let i = 0; i < domainCount; i++) {
+    await domainButtons.nth(i).click();
+    await page.getByRole("checkbox").nth(i).check();
     await fours.nth(i).click();
   }
   await page.getByRole("button", { name: "שליחת דירוג" }).click();
 
-  // The stored ratings render back from the server, evidence seqs included.
+  // The stored ratings render back from the server, rater + evidence included.
   await expect(page.getByRole("heading", { name: "דירוגים שנשמרו" })).toBeVisible();
+  await expect(page.getByText("מדריכת-בדיקה").first()).toBeVisible();
   await expect(page.getByText("מדורג").first()).toBeVisible();
 });
 
@@ -87,9 +93,9 @@ test("an incomplete rating is rejected client-side", async ({ page, request }) =
   const sessionId = await runSession(request);
   await page.goto(`/#/aar/${sessionId}`);
   await expect(page.getByRole("heading", { name: "דירוג ANTS" })).toBeVisible();
-  // No evidence selected, no scores set.
+  // No rater, no evidence, no scores.
   await page.getByRole("button", { name: "שליחת דירוג" }).click();
   await expect(
-    page.getByText("יש לדרג את כל הממדים ולסמן לפחות אירוע אחד כעדות"),
+    page.getByText("יש למלא שם מדרג, לדרג כל ממד ולסמן לו לפחות אירוע עדות אחד"),
   ).toBeVisible();
 });

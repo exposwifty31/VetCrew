@@ -8,6 +8,7 @@ export {
   type SessionPhase,
   type TickEvent,
 } from "./events.js";
+export { PHASE_TRANSITIONS, canTransition } from "./fsm.js";
 export {
   createInitialState,
   reduce,

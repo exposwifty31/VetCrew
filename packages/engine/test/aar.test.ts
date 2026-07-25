@@ -20,21 +20,22 @@ const SCENARIO: ScenarioDef = {
 };
 
 const EVENTS: EngineEvent[] = [
-  { seq: 1, type: "phase_change", phase: "running" },
-  { seq: 2, type: "tick", dtMs: 10_000 },
-  { seq: 3, type: "action", role: "technician", actorId: "t1", action: "oxygen_on" },
-  { seq: 4, type: "tick", dtMs: 10_000 },
-  { seq: 5, type: "phase_change", phase: "debrief" },
+  { seq: 1, type: "phase_change", phase: "briefing" },
+  { seq: 2, type: "phase_change", phase: "running" },
+  { seq: 3, type: "tick", dtMs: 10_000 },
+  { seq: 4, type: "action", role: "technician", actorId: "t1", action: "oxygen_on" },
+  { seq: 5, type: "tick", dtMs: 10_000 },
+  { seq: 6, type: "phase_change", phase: "debrief" },
 ];
 
 describe("AAR builder", () => {
   test("timeline attributes every event with its session time", () => {
     const aar = buildAar(7, EVENTS, SCENARIO);
-    expect(aar.timeline).toHaveLength(5);
-    const action = aar.timeline.find((entry) => entry.seq === 3);
+    expect(aar.timeline).toHaveLength(6);
+    const action = aar.timeline.find((entry) => entry.seq === 4);
     expect(action?.timeMs).toBe(10_000);
     expect(action?.role).toBe("technician");
-    const lastTick = aar.timeline.find((entry) => entry.seq === 4);
+    const lastTick = aar.timeline.find((entry) => entry.seq === 5);
     expect(lastTick?.timeMs).toBe(20_000);
   });
 

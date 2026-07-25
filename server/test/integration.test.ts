@@ -141,6 +141,44 @@ describe("event-log persistence + replay round-trip", () => {
     await expect(pool.query("update vc_session_events set type = 'tampered' where id = (select id from vc_session_events limit 1)")).rejects.toThrow(/append-only/);
     await expect(pool.query("delete from vc_session_events where id = (select id from vc_session_events limit 1)")).rejects.toThrow(/append-only/);
   });
+
+  test("a retroactive or gapped seq cannot rewrite the log (route and DB)", async () => {
+    const session = await createSession({ scenarioSlug: SCENARIO_SLUG, traineeTimeInTrainingDays: 10 });
+    await appendEvents(session.id, demoEvents());
+
+    // Route: a batch that does not continue the log contiguously is 409.
+    const retro = await api(`/api/sessions/${session.id}/events`, {
+      method: "POST",
+      body: JSON.stringify({ events: [{ seq: 3, type: "tick", dtMs: 1000 }] }),
+    });
+    expect(retro.status).toBe(409);
+
+    // DB backstop (migration 0004): a direct insert at a low seq is rejected.
+    await expect(
+      pool.query(
+        `insert into vc_session_events (tenant_id, session_id, seq, type, payload)
+         values ($1, $2, 3, 'tick', '{"seq":3,"type":"tick","dtMs":1000}')`,
+        [tenantId, session.id],
+      ),
+    ).rejects.toThrow(/not contiguous/);
+    await expect(
+      pool.query(
+        `insert into vc_session_events (tenant_id, session_id, seq, type, payload)
+         values ($1, $2, 999, 'tick', '{"seq":999,"type":"tick","dtMs":1000}')`,
+        [tenantId, session.id],
+      ),
+    ).rejects.toThrow(/not contiguous/);
+  });
+
+  test("an illegal phase jump stays in the log but the projection refuses it", async () => {
+    const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
+    // draft -> scored is not a legal transition; the event is recorded, the
+    // session's projected phase must remain draft (FSM, CLAUDE.md §4).
+    await appendEvents(session.id, [{ seq: 1, type: "phase_change", phase: "scored" }]);
+    const list = await api("/api/sessions");
+    const listing = (await list.json()) as { sessions: { id: string; phase: string }[] };
+    expect(listing.sessions.find((s) => s.id === session.id)?.phase).toBe("draft");
+  });
 });
 
 describe("tenant isolation", () => {
@@ -229,6 +267,23 @@ describe("score -> source-event traceability", () => {
     expect(res.status).toBe(422);
   });
 
+  test("a session that is not in debrief cannot be rated", async () => {
+    const session = await createSession({
+      scenarioSlug: SCENARIO_SLUG,
+      traineeTimeInTrainingDays: 60,
+    });
+    // Only briefing+running appended — the session never reached debrief.
+    await appendEvents(session.id, demoEvents().slice(0, 2));
+    const res = await api(`/api/sessions/${session.id}/ratings`, {
+      method: "POST",
+      body: JSON.stringify({
+        raterId: "it-rater",
+        ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [1] }],
+      }),
+    });
+    expect(res.status).toBe(409);
+  });
+
   test("a valid evidence-linked rating is stored and the session becomes scored", async () => {
     const session = await createSession({
       scenarioSlug: SCENARIO_SLUG,
@@ -251,9 +306,13 @@ describe("score -> source-event traceability", () => {
     const aar = await api(`/api/sessions/${session.id}/aar`);
     const body = (await aar.json()) as {
       session: { phase: string };
+      aar: { finalPhase: string };
       ratings: { domain: string; score: number; evidenceEventSeqs: number[] }[];
     };
     expect(body.session.phase).toBe("scored");
+    // The scored transition went THROUGH the log: replay agrees with the
+    // projection column (audit F-b — no derived state without a source event).
+    expect(body.aar.finalPhase).toBe("scored");
     expect(body.ratings).toHaveLength(3);
     const tm = body.ratings.find((r) => r.domain === "task_management");
     expect(tm?.evidenceEventSeqs).toEqual([4, 7]);

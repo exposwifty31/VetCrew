@@ -64,6 +64,19 @@
   --inst-raise:  0 1px 0 var(--inst-bezel-1), 0 -1px 0 var(--inst-bezel-edge), 0 10px 30px rgba(0,0,0,0.55);
 }
 
+/* Layer A channel identity on LIGHT review surfaces (the AAR): the same
+   parameter identities, darkened for >=4.5:1 text contrast on light cards.
+   Single source of truth — components must never hardcode channel hex. */
+:root[data-theme="light"] {
+  --ch-hr:    #087a33;   /* ECG / heart rate — green family */
+  --ch-spo2:  #0077b6;   /* SpO₂ — cyan/blue family */
+  --ch-rr:    #6b5500;   /* respiration — dark gold, same yellow identity */
+  --ch-etco2: #6b5500;
+  --ch-art:   #b3261e;
+  --ch-nibp:  #334155;
+  --ch-temp:  #334155;
+}
+
 /* alarm chrome animations — flash IS part of the signal, not decoration */
 @keyframes vc-alarm-crit { 0%,100%{ opacity:1 } 50%{ opacity:0.28 } }
 @keyframes vc-alarm-caut { 0%,100%{ opacity:0.95 } 50%{ opacity:0.45 } }
