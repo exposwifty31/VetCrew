@@ -146,6 +146,8 @@ describe("session create binds role_stations", () => {
       .where(eq(roleStations.sessionId, body.session.id));
     const technician = stations.find((s) => s.role === "technician");
     expect(technician?.assignedUserId).toBe("named-trainee");
+    const instructor = stations.find((s) => s.role === "instructor");
+    expect(instructor?.assignedUserId).toBe("inst-1");
   });
 });
 

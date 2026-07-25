@@ -116,6 +116,35 @@ function assignedUserIdForStationRole(
   }
 }
 
+function buildRoleStationRows(
+  tenantId: string,
+  sessionId: string,
+  scenarioRoles: string[],
+  bindings: CreateBindings,
+  authEnabled: boolean,
+): {
+  tenantId: string;
+  sessionId: string;
+  role: string;
+  assignedUserId: string | null;
+}[] {
+  const rows = scenarioRoles.map((role) => ({
+    tenantId,
+    sessionId,
+    role,
+    assignedUserId: authEnabled ? assignedUserIdForStationRole(role, bindings) : null,
+  }));
+  if (authEnabled && bindings.instructorUserId !== null && !scenarioRoles.includes("instructor")) {
+    rows.push({
+      tenantId,
+      sessionId,
+      role: "instructor",
+      assignedUserId: bindings.instructorUserId,
+    });
+  }
+  return rows;
+}
+
 function resolveCreateBindings(
   auth: AuthSnapshot,
   traineeId: string | undefined,
@@ -301,12 +330,7 @@ export function createSessionRouter(
       return;
     }
     await db.insert(roleStations).values(
-      authored.roles.map((role) => ({
-        tenantId,
-        sessionId: session.id,
-        role,
-        assignedUserId: authEnabled ? assignedUserIdForStationRole(role, bindings) : null,
-      })),
+      buildRoleStationRows(tenantId, session.id, authored.roles, bindings, authEnabled),
     );
     res.status(201).json({
       session: {

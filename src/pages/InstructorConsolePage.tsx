@@ -4,8 +4,8 @@ import type { InstructorViewWire, SessionPhase } from "@vetcrew/shared";
 
 import { CompactAuthBanner } from "../components/AuthBar.js";
 import {
+  e2eOrNoBearerToken,
   hasClerkPublishableKey,
-  noBearerToken,
   useClerkBearerToken,
 } from "../hooks/useBearerToken.js";
 import { t } from "../i18n";
@@ -39,7 +39,7 @@ export default function InstructorConsolePage({ sessionId }: Props) {
   if (hasClerkPublishableKey) {
     return <InstructorConsolePageWithClerk sessionId={sessionId} />;
   }
-  return <InstructorConsolePageBody sessionId={sessionId} getToken={noBearerToken} />;
+  return <InstructorConsolePageBody sessionId={sessionId} getToken={e2eOrNoBearerToken} />;
 }
 
 function InstructorConsolePageWithClerk({ sessionId }: Props) {

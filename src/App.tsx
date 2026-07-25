@@ -5,8 +5,8 @@ import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 import { createSession, fetchSessions, type SessionSummary } from "./api.js";
 import AuthBar from "./components/AuthBar.js";
 import {
+  e2eOrNoBearerToken,
   hasClerkPublishableKey,
-  noBearerToken,
   useClerkBearerToken,
 } from "./hooks/useBearerToken.js";
 import { t } from "./i18n";
@@ -134,7 +134,11 @@ export default function App() {
       </LazyRoute>
     );
   }
-  return hasClerkPublishableKey ? <HomePageWithClerk /> : <HomePage getToken={noBearerToken} />;
+  return hasClerkPublishableKey ? (
+    <HomePageWithClerk />
+  ) : (
+    <HomePage getToken={e2eOrNoBearerToken} />
+  );
 }
 
 function HomePageWithClerk() {

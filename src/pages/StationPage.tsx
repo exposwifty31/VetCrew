@@ -4,8 +4,8 @@ import type { ClientIntent, RoleViewWire } from "@vetcrew/shared";
 
 import { CompactAuthBanner } from "../components/AuthBar.js";
 import {
+  e2eOrNoBearerToken,
   hasClerkPublishableKey,
-  noBearerToken,
   useClerkBearerToken,
 } from "../hooks/useBearerToken.js";
 import { t } from "../i18n";
@@ -26,7 +26,7 @@ export default function StationPage({ sessionId }: Props) {
   if (hasClerkPublishableKey) {
     return <StationPageWithClerk sessionId={sessionId} />;
   }
-  return <StationPageBody sessionId={sessionId} getToken={noBearerToken} />;
+  return <StationPageBody sessionId={sessionId} getToken={e2eOrNoBearerToken} />;
 }
 
 function StationPageWithClerk({ sessionId }: Props) {

@@ -9,6 +9,7 @@ import {
 } from "../api.js";
 import { errorMessageKeyFromUnknown } from "../apiErrors.js";
 import AuthBar from "../components/AuthBar.js";
+import { readE2ETestToken } from "../e2e-token.js";
 import { hasClerkPublishableKey } from "../hooks/useBearerToken.js";
 import { t, type MessageKey } from "../i18n/index.js";
 
@@ -68,8 +69,17 @@ function useClerkAuthSession(): AuthSession {
   const auth = useAuth();
   return {
     isLoaded: auth.isLoaded,
-    isSignedIn: Boolean(auth.isSignedIn),
-    getToken: async () => (await auth.getToken()) ?? null,
+    isSignedIn: Boolean(auth.isSignedIn) || readE2ETestToken() !== null,
+    getToken: async () => readE2ETestToken() ?? (await auth.getToken()) ?? null,
+  };
+}
+
+function useDevAuthSession(): AuthSession {
+  const e2e = readE2ETestToken();
+  return {
+    isLoaded: true,
+    isSignedIn: e2e !== null,
+    getToken: async () => readE2ETestToken(),
   };
 }
 
@@ -81,15 +91,20 @@ export default function ManagerEvidencePage({
   focus?: "evidence" | "trend";
 }) {
   if (!hasClerkPublishableKey) {
-    return (
-      <ManagerEvidenceBody
-        traineeId={traineeId}
-        focus={focus}
-        session={{ isLoaded: true, isSignedIn: false, getToken: async () => null }}
-      />
-    );
+    return <ManagerEvidenceDev traineeId={traineeId} focus={focus} />;
   }
   return <ManagerEvidenceWithClerk traineeId={traineeId} focus={focus} />;
+}
+
+function ManagerEvidenceDev({
+  traineeId,
+  focus,
+}: {
+  traineeId: string;
+  focus: "evidence" | "trend";
+}) {
+  const session = useDevAuthSession();
+  return <ManagerEvidenceBody traineeId={traineeId} focus={focus} session={session} />;
 }
 
 function ManagerEvidenceWithClerk({

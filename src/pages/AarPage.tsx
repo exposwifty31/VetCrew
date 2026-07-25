@@ -6,8 +6,8 @@ import { fetchAar, submitRatings, type AarResponse } from "../api.js";
 import { errorMessageKeyFromUnknown } from "../apiErrors.js";
 import AuthBar from "../components/AuthBar.js";
 import {
+  e2eOrNoBearerToken,
   hasClerkPublishableKey,
-  noBearerToken,
   useClerkBearerToken,
 } from "../hooks/useBearerToken.js";
 import { t, type MessageKey } from "../i18n/index.js";
@@ -127,7 +127,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
   if (hasClerkPublishableKey) {
     return <AarPageWithClerk sessionId={sessionId} />;
   }
-  return <AarPageBody sessionId={sessionId} getToken={noBearerToken} />;
+  return <AarPageBody sessionId={sessionId} getToken={e2eOrNoBearerToken} />;
 }
 
 function AarPageWithClerk({ sessionId }: { sessionId: string }) {
