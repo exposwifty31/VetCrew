@@ -12,6 +12,7 @@ inject("vc-task", `
   box-sizing: border-box;
   display: block;
   width: 100%;
+  flex-shrink: 0; /* never compress a chip to fit a flex-column list; the list scrolls */
   padding: 6px; /* concentric padding for double bezel */
   background: var(--surface-base);
   border: var(--border-w) solid var(--border-subtle);

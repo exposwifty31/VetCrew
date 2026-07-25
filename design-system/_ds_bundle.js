@@ -417,7 +417,7 @@ function inject(id, css) {
   document.head.appendChild(el);
 }
 inject("vc-task", `
-.vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;
+.vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;flex-shrink:0;
   min-height:var(--touch-min);padding:12px;text-align:start;
   background:var(--task-surface);border:1px solid var(--task-edge);border-radius:8px;
   font-family:var(--font-ui);color:var(--task-text);cursor:pointer;
