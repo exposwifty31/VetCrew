@@ -14,16 +14,20 @@ type Messages = Record<MessageKey, string>;
 const dictionaries: Partial<Record<Locale, Messages>> = { he };
 
 let activeLocale: Locale = "he";
+let localeRequestId = 0;
 
 export function getLocale(): Locale {
   return activeLocale;
 }
 
 export async function setLocale(locale: Locale): Promise<void> {
+  const requestId = ++localeRequestId;
   if (locale === "en" && dictionaries.en === undefined) {
     const mod = await import("./en.json");
     dictionaries.en = mod.default as Messages;
   }
+  // A newer setLocale call won while this dictionary was loading; drop this one.
+  if (requestId !== localeRequestId) return;
   activeLocale = locale;
   document.documentElement.lang = locale;
   document.documentElement.dir = locale === "he" ? "rtl" : "ltr";

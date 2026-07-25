@@ -85,14 +85,15 @@ describe("engine determinism", () => {
     expect(JSON.stringify(replayed)).toBe(JSON.stringify(incremental));
   });
 
-  test("reduce is pure: input state is not mutated", () => {
+  test("reduce is pure: no input state is mutated across the entire fixture", () => {
     const events = fixtureEvents();
-    const initial = createInitialState(42, SCENARIO);
-    const snapshot = JSON.stringify(initial);
-    const firstEvent = events[0];
-    if (firstEvent === undefined) throw new Error("fixture is empty");
-    reduce(initial, firstEvent);
-    expect(JSON.stringify(initial)).toBe(snapshot);
+    let state = createInitialState(42, SCENARIO);
+    for (const event of events) {
+      const snapshot = JSON.stringify(state);
+      const next = reduce(state, event);
+      expect(JSON.stringify(state)).toBe(snapshot);
+      state = next;
+    }
   });
 
   test("state is JSON-serializable (no functions, no Date, no undefined holes)", () => {

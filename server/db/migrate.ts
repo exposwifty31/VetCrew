@@ -15,6 +15,9 @@ export async function runMigrations(pool: Pool): Promise<string[]> {
   const client = await pool.connect();
   const applied: string[] = [];
   try {
+    // Serialize migration runners across replicas (Railway can boot two
+    // instances during a deploy). Session-scoped; released on disconnect.
+    await client.query("select pg_advisory_lock(823764001)");
     await client.query(
       `create table if not exists vc_migrations (
          name text primary key,
@@ -37,6 +40,7 @@ export async function runMigrations(pool: Pool): Promise<string[]> {
       }
     }
   } finally {
+    await client.query("select pg_advisory_unlock(823764001)").catch(() => undefined);
     client.release();
   }
   return applied;

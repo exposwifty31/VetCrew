@@ -2,12 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
+import { fetchSessions, type SessionSummary } from "./api.js";
 import { t } from "./i18n";
+import AarPage from "./pages/AarPage.js";
 
 interface Health {
   ok: boolean;
   auth: "clerk" | "dev-bypass";
-  db: "configured" | "not-configured";
+  db: "ready" | "starting" | "not-configured";
+}
+
+function useHashRoute(): string {
+  const [hash, setHash] = useState(window.location.hash);
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  return hash;
 }
 
 /** Layer A channel identity — label + fixed position, never hue alone. */
@@ -60,15 +72,31 @@ function engineSmoke() {
 }
 
 export default function App() {
+  const route = useHashRoute();
+  const aarMatch = /^#\/aar\/(.+)$/.exec(route);
+  if (aarMatch?.[1] !== undefined) {
+    return <AarPage sessionId={aarMatch[1]} />;
+  }
+  return <HomePage />;
+}
+
+function HomePage() {
   const [health, setHealth] = useState<Health | null | "down">(null);
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const engine = useMemo(engineSmoke, []);
 
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/health", { signal: controller.signal })
-      .then((res) => res.json() as Promise<Health>)
-      .then(setHealth)
+      .then((res) => {
+        if (!res.ok) throw new Error(`health: ${res.status}`);
+        return res.json() as Promise<Health>;
+      })
+      .then((body) => setHealth(body.ok ? body : "down"))
       .catch(() => setHealth("down"));
+    fetchSessions()
+      .then(setSessions)
+      .catch(() => setSessions([]));
     return () => controller.abort();
   }, []);
 
@@ -115,6 +143,37 @@ export default function App() {
         <p style={{ fontVariantNumeric: "tabular-nums" }}>
           {t("shell.engine.summary", { events: engine.events, hr: engine.hr, spo2: engine.spo2 })}
         </p>
+      </section>
+
+      <section style={{ marginBlockStart: 32 }}>
+        <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("home.sessions.heading")}</h2>
+        {sessions.length === 0 ? (
+          <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.sessions.empty")}</p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+            {sessions.map((session) => (
+              <li
+                key={session.id}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  border: "1px solid var(--border-default, #2a3a42)",
+                  borderRadius: "var(--r-md, 8px)",
+                }}
+              >
+                <span style={{ flex: 1 }}>
+                  {session.traineeId ?? "—"} · v{session.scenarioVersion} ·{" "}
+                  {t(`phase.${session.phase}`)}
+                </span>
+                <a href={`#/aar/${session.id}`} style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                  {t("home.sessions.open")}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );

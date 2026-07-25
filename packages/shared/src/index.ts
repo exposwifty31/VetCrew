@@ -9,6 +9,15 @@ export {
   type SessionPhase,
 } from "./contracts.js";
 export {
+  authoredScenarioSchema,
+  checklistItemSchema,
+  checklistRuleSchema,
+  injectionMenuItemSchema,
+  scenarioActionSchema,
+  type AuthoredScenario,
+  type ChecklistItemWire,
+} from "./authored-scenario.js";
+export {
   scenarioDefSchema,
   triggerConditionSchema,
   triggerDefSchema,

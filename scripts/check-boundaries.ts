@@ -27,13 +27,18 @@ function listTsFiles(dir: string): string[] {
   return out;
 }
 
-const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s[^;]*?from\s+["']([^"']+)["']|(?:^|\n)\s*import\s+["']([^"']+)["']/g;
+const STATIC_IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s[^;]*?from\s+["']([^"']+)["']|(?:^|\n)\s*import\s+["']([^"']+)["']/g;
+const DYNAMIC_IMPORT_RE = /\b(?:import|require)\s*\(\s*["']([^"']+)["']\s*\)/g;
 
 function importsOf(file: string): string[] {
   const source = readFileSync(file, "utf8");
   const specs: string[] = [];
-  for (const match of source.matchAll(IMPORT_RE)) {
+  for (const match of source.matchAll(STATIC_IMPORT_RE)) {
     const spec = match[1] ?? match[2];
+    if (spec !== undefined) specs.push(spec);
+  }
+  for (const match of source.matchAll(DYNAMIC_IMPORT_RE)) {
+    const spec = match[1];
     if (spec !== undefined) specs.push(spec);
   }
   return specs;
@@ -52,10 +57,15 @@ function check(dir: string, isViolation: (spec: string, file: string) => string 
   }
 }
 
-check("packages/engine/src", (spec) => {
-  if (spec.startsWith("./") || spec.startsWith("../")) {
-    // Relative escapes above src/ would leave the package.
-    return spec.startsWith("../") ? "engine-is-pure: relative import escapes engine src" : null;
+const engineSrc = resolve(repoRoot, "packages/engine/src");
+
+check("packages/engine/src", (spec, file) => {
+  if (spec.startsWith(".")) {
+    // Normalize before judging: "./../x" and "./a/../../x" escape src/ too.
+    const target = resolve(dirname(file), spec);
+    return target === engineSrc || target.startsWith(`${engineSrc}/`)
+      ? null
+      : "engine-is-pure: relative import escapes engine src";
   }
   return "engine-is-pure: engine must have zero external imports";
 });

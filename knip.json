@@ -1,5 +1,5 @@
 {
-  "ignoreDependencies": ["@clerk/react", "@vetcrew/shared", "vitest", "tailwindcss"],
+  "ignoreDependencies": ["@clerk/react", "vitest", "tailwindcss"],
   "rules": {
     "exports": "warn",
     "types": "warn"
