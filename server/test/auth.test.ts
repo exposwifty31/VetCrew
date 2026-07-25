@@ -14,14 +14,14 @@ describe("requireSignedIn", () => {
     const app = express();
     app.get(
       "/api/trainees/:id/evidence",
-      requireSignedIn(true, () => ({ isAuthenticated: false })),
+      requireSignedIn(true, () => ({ isAuthenticated: false, userId: null, role: null })),
       (_req, res) => {
         res.json({ leak: true });
       },
     );
     app.get(
       "/api/open",
-      requireSignedIn(false, () => ({ isAuthenticated: false })),
+      requireSignedIn(false, () => ({ isAuthenticated: false, userId: null, role: null })),
       (_req, res) => {
         res.json({ open: true });
       },
@@ -52,7 +52,11 @@ describe("requireSignedIn", () => {
   });
 
   test("unused Request param keeps AuthReader signature stable", () => {
-    const reader = (_req: Request) => ({ isAuthenticated: true as const });
+    const reader = (_req: Request) => ({
+      isAuthenticated: true as const,
+      userId: "user-1",
+      role: "trainee" as const,
+    });
     expect(reader({} as Request).isAuthenticated).toBe(true);
   });
 });
@@ -65,7 +69,7 @@ describe("session REST auth gate", () => {
     const app = express();
     app.use(express.json());
     // Mimic production mount: auth middleware wraps the session surface.
-    app.use("/api/sessions", requireSignedIn(true, () => ({ isAuthenticated: false })));
+    app.use("/api/sessions", requireSignedIn(true, () => ({ isAuthenticated: false, userId: null, role: null })));
     app.get("/api/sessions", (_req, res) => {
       res.json({ sessions: [{ id: "should-not-leak" }] });
     });
