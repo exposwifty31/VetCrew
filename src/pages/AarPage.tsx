@@ -14,8 +14,10 @@ import { t, type MessageKey } from "../i18n/index.js";
 
 type Filter = "all" | "actions" | "injections" | "phases";
 
+// Channel colours (identity, never severity — CLAUDE.md §4). Values chosen
+// for >=4.5:1 contrast as legend text on the light AAR card surface.
 const VITAL_COLORS: Record<string, string> = {
-  hr: "#0a8f3c",
+  hr: "#087a33",
   spo2: "#0077b6",
   rr: "#b45309",
 };
@@ -70,7 +72,12 @@ function VitalsChart({
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", direction: "ltr" }} role="img">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ width: "100%", direction: "ltr" }}
+        role="img"
+        aria-label={t("aar.vitals.heading")}
+      >
         {paths.map((p) => (
           <path key={p.name} d={p.d} fill="none" stroke={p.color} strokeWidth={2} />
         ))}

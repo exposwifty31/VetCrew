@@ -19,7 +19,7 @@
   /* Typography */
   --text-primary:       var(--n-900);   /* Primary high-contrast text */
   --text-secondary:     var(--n-600);   /* Secondary body text */
-  --text-muted:         var(--n-500);   /* Quiet labels/captions */
+  --text-muted:         var(--n-600);   /* Quiet labels/captions — n-500 fails AA on light fills */
 
   /* Status Semantic Variants (Light Theme) */
   --bg-critical-subtle:     var(--verm-fill-l);
@@ -36,7 +36,7 @@
 
   --bg-running-subtle:      var(--green-fill-l);
   --border-running-subtle:  var(--green-300);
-  --text-running:           var(--green-600);
+  --text-running:           var(--green-700);
 
   /* Elevation & Glow Shadows */
   --shadow-card:            0 12px 30px -4px rgba(24, 36, 43, 0.04), 0 4px 12px -2px rgba(24, 36, 43, 0.02);
