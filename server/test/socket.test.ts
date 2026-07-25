@@ -48,6 +48,9 @@ beforeAll(async () => {
   attachLiveSocket(httpServer, {
     tenantId,
     registry,
+    db,
+    authEnabled: false,
+    readAuthFromToken: async () => ({ isAuthenticated: false, userId: null, role: null }),
     allowDevBypass: true,
   });
   await new Promise<void>((resolve) => {

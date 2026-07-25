@@ -15,21 +15,53 @@ import {
   type AntsDomain,
 } from "@vetcrew/shared";
 import { and, asc, eq, inArray } from "drizzle-orm";
-import { Router, type Request, type Response, type RequestHandler } from "express";
+import { Router, type Request, type Response } from "express";
 
+import { readAuth, requireRole, requireSignedIn, type AuthReader } from "../auth.js";
 import type { Db } from "../db/client.js";
 import { antsRatings, scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
 import { compileScenario } from "../scenarios.js";
 
 const EVIDENCE_PHASES = ["scored", "archived"] as const;
 
-async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
+export type ManagerRouterOptions = {
+  authEnabled: boolean;
+  clerkEnabled: boolean;
+  readAuth?: AuthReader;
+};
+
+async function loadEventsBySessionIds(
+  db: Db,
+  sessionIds: string[],
+): Promise<Map<string, EngineEvent[]>> {
+  if (sessionIds.length === 0) {
+    return new Map();
+  }
   const rows = await db
-    .select({ payload: sessionEvents.payload })
+    .select({
+      sessionId: sessionEvents.sessionId,
+      seq: sessionEvents.seq,
+      payload: sessionEvents.payload,
+    })
     .from(sessionEvents)
-    .where(eq(sessionEvents.sessionId, sessionId))
-    .orderBy(asc(sessionEvents.seq));
-  return rows.map((row) => engineEventSchema.parse(row.payload));
+    .where(inArray(sessionEvents.sessionId, sessionIds));
+
+  const grouped = new Map<string, { seq: number; event: EngineEvent }[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.sessionId) ?? [];
+    list.push({ seq: row.seq, event: engineEventSchema.parse(row.payload) });
+    grouped.set(row.sessionId, list);
+  }
+
+  const eventsBySession = new Map<string, EngineEvent[]>();
+  for (const [sessionId, list] of grouped) {
+    list.sort((a, b) => a.seq - b.seq);
+    eventsBySession.set(
+      sessionId,
+      list.map((entry) => entry.event),
+    );
+  }
+  return eventsBySession;
 }
 
 /**
@@ -41,10 +73,14 @@ async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
 export function createManagerRouter(
   db: Db,
   tenantId: string,
-  requireAuth: RequestHandler = (_req, _res, next) => next(),
+  options?: ManagerRouterOptions,
 ): Router {
   const router = Router();
-  router.use(requireAuth);
+  if (options !== undefined) {
+    const readAuthFn = options.readAuth ?? readAuth;
+    router.use(requireSignedIn(options.clerkEnabled, readAuthFn));
+    router.use(requireRole("manager", options.authEnabled, readAuthFn));
+  }
 
   router.get("/trainees/:traineeId/evidence", async (req: Request, res: Response) => {
     const traineeId = req.params["traineeId"];
@@ -76,10 +112,15 @@ export function createManagerRouter(
       )
       .orderBy(asc(simSessions.createdAt));
 
+    const eventsBySession = await loadEventsBySessionIds(
+      db,
+      rows.map((row) => row.sessionId),
+    );
+
     const sessions = [];
     for (const row of rows) {
       const authored = authoredScenarioSchema.parse(row.definition);
-      const events = await loadEvents(db, row.sessionId);
+      const events = eventsBySession.get(row.sessionId) ?? [];
       const compiled = compileScenario(authored);
       const checklist = evaluateChecklist(events, authored.checklist);
       const tasks = evaluateTasks(row.seed, events, compiled);
@@ -146,10 +187,15 @@ export function createManagerRouter(
       .where(and(...conditions))
       .orderBy(asc(simSessions.createdAt));
 
+    const eventsBySession = await loadEventsBySessionIds(
+      db,
+      rows.map((row) => row.sessionId),
+    );
+
     const points = [];
     for (const row of rows) {
       const authored = authoredScenarioSchema.parse(row.definition);
-      const events = await loadEvents(db, row.sessionId);
+      const events = eventsBySession.get(row.sessionId) ?? [];
       const compiled = compileScenario(authored);
       const checklist = evaluateChecklist(events, authored.checklist);
       const tasks = evaluateTasks(row.seed, events, compiled);

@@ -14,6 +14,9 @@ import {
 } from "@vetcrew/shared";
 import { Server, type Socket } from "socket.io";
 
+import type { TokenAuthReader } from "../auth.js";
+import type { Db } from "../db/client.js";
+import { assertRoleStationBinding } from "../routes/sessions.js";
 import type { RoomRegistry } from "./room-registry.js";
 import type { SessionRoom } from "./session-room.js";
 
@@ -43,14 +46,21 @@ type SocketData = {
 export type LiveSocketOptions = {
   readonly tenantId: string;
   readonly registry: RoomRegistry;
+  readonly db: Db;
+  readonly authEnabled: boolean;
+  readonly readAuthFromToken: TokenAuthReader;
   /**
    * When true, join is allowed without Clerk (loud console warning).
-   * Security veto: not for pitch/pilot until role_stations binding ships.
+   * Only when NODE_ENV=development and auth is fully off.
    */
   readonly allowDevBypass: boolean;
   /** Socket.IO CORS origin — `true` reflects any (dev); prod should be explicit. */
   readonly corsOrigin?: string | boolean | string[];
 };
+
+function bindingRole(stationKind: StationKind, joinRole: string): string {
+  return stationKind === "instructor" ? "instructor" : joinRole;
+}
 
 function socketRoom(sessionId: string): string {
   return `session:${sessionId}`;
@@ -187,14 +197,44 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         ack?.(reject);
         return;
       }
-      if (!options.allowDevBypass) {
-        const reject = {
-          code: "auth" as const,
-          message: "live join requires authenticated role binding (not yet enabled)",
-        };
-        socket.emit(LIVE_EVENTS.reject, reject);
-        ack?.(reject);
-        return;
+
+      const { sessionId, role, lastSeq, actorId: clientActorId, stationKind } = parsed.data;
+      let actorId: string;
+
+      if (options.allowDevBypass) {
+        actorId =
+          clientActorId ?? (stationKind === "instructor" ? "dev-instructor" : "dev-trainee");
+      } else {
+        const handshakeToken = socket.handshake.auth?.["token"];
+        const token = typeof handshakeToken === "string" ? handshakeToken : undefined;
+        const auth = await options.readAuthFromToken(token);
+        if (!auth.isAuthenticated || auth.userId === null) {
+          const reject = {
+            code: "auth" as const,
+            message: "live join requires authentication",
+          };
+          socket.emit(LIVE_EVENTS.reject, reject);
+          ack?.(reject);
+          return;
+        }
+        const stationRole = bindingRole(stationKind, role);
+        const bound = await assertRoleStationBinding(
+          options.db,
+          options.tenantId,
+          sessionId,
+          stationRole,
+          auth.userId,
+        );
+        if (!bound) {
+          const reject = {
+            code: "auth" as const,
+            message: "user is not assigned to this role station",
+          };
+          socket.emit(LIVE_EVENTS.reject, reject);
+          ack?.(reject);
+          return;
+        }
+        actorId = auth.userId;
       }
 
       // Clear prior membership if re-joining.
@@ -202,7 +242,6 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
       data.unsubPresence?.();
       data.unsubRoomPresence?.();
 
-      const { sessionId, role, lastSeq, actorId, stationKind } = parsed.data;
       if (stationKind === "instructor" && role !== "instructor") {
         const reject = {
           code: "role_bound" as const,
@@ -254,7 +293,7 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
       const binding: SocketBinding = {
         sessionId,
         role,
-        actorId: actorId ?? (stationKind === "instructor" ? "dev-instructor" : "dev-trainee"),
+        actorId,
         tenantId: options.tenantId,
         stationKind,
       };

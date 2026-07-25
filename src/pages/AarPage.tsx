@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { AntsDomain } from "@vetcrew/shared";
 
 import { fetchAar, submitRatings, type AarResponse } from "../api.js";
+import { errorMessageKeyFromUnknown } from "../apiErrors.js";
+import AuthBar from "../components/AuthBar.js";
 import {
+  e2eOrNoBearerToken,
   hasClerkPublishableKey,
-  noBearerToken,
   useClerkBearerToken,
 } from "../hooks/useBearerToken.js";
 import { t, type MessageKey } from "../i18n/index.js";
@@ -125,7 +127,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
   if (hasClerkPublishableKey) {
     return <AarPageWithClerk sessionId={sessionId} />;
   }
-  return <AarPageBody sessionId={sessionId} getToken={noBearerToken} />;
+  return <AarPageBody sessionId={sessionId} getToken={e2eOrNoBearerToken} />;
 }
 
 function AarPageWithClerk({ sessionId }: { sessionId: string }) {
@@ -141,7 +143,7 @@ function AarPageBody({
   getToken: () => Promise<string | null>;
 }) {
   const [data, setData] = useState<AarResponse | null>(null);
-  const [error, setError] = useState(false);
+  const [loadError, setLoadError] = useState<MessageKey | null>(null);
   const [scrubMs, setScrubMs] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [raterId, setRaterId] = useState("");
@@ -169,7 +171,7 @@ function AarPageBody({
   useEffect(() => {
     let cancelled = false;
     setData(null);
-    setError(false);
+    setLoadError(null);
     setScrubMs(0);
     setFilter("all");
     setRaterId("");
@@ -186,8 +188,8 @@ function AarPageBody({
         setData(d);
         setScrubMs(d.aar.durationMs);
         setActiveDomain(d.scenario.scoringDimensions[0] ?? null);
-      } catch {
-        if (!cancelled) setError(true);
+      } catch (err) {
+        if (!cancelled) setLoadError(errorMessageKeyFromUnknown(err));
       }
     })();
     return () => {
@@ -223,8 +225,25 @@ function AarPageBody({
     return seqs;
   }, [data]);
 
-  if (error) return <main style={{ padding: 32 }}>{t("aar.error")}</main>;
-  if (data === null) return <main style={{ padding: 32 }}>{t("aar.loading")}</main>;
+  if (loadError !== null) {
+    return (
+      <main style={{ padding: 32 }}>
+        <AuthBar />
+        <p role="alert">{t(loadError)}</p>
+        <a href="#/" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+          {t("aar.back")}
+        </a>
+      </main>
+    );
+  }
+  if (data === null) {
+    return (
+      <main style={{ padding: 32 }}>
+        <AuthBar />
+        <p>{t("aar.loading")}</p>
+      </main>
+    );
+  }
 
   const { session, scenario, aar, checklist, tasks, ratings } = data;
 
@@ -299,6 +318,7 @@ function AarPageBody({
 
   return (
     <main style={{ maxWidth: 860, marginInline: "auto", padding: 24 }}>
+      <AuthBar />
       <a
         href="#/"
         style={{ color: "var(--text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}

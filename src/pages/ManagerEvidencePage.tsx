@@ -7,6 +7,10 @@ import {
   type TraineeEvidenceResponse,
   type TraineeTrendResponse,
 } from "../api.js";
+import { errorMessageKeyFromUnknown } from "../apiErrors.js";
+import AuthBar from "../components/AuthBar.js";
+import { readE2ETestToken } from "../e2e-token.js";
+import { hasClerkPublishableKey } from "../hooks/useBearerToken.js";
 import { t, type MessageKey } from "../i18n/index.js";
 
 /**
@@ -22,9 +26,6 @@ const card: CSSProperties = {
   marginBlockStart: 16,
 };
 
-const hasClerkKey =
-  typeof import.meta.env.VITE_CLERK_PUBLISHABLE_KEY === "string" &&
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.length > 0;
 
 function driftKey(drift: TraineeTrendResponse["overallDrift"]): MessageKey {
   switch (drift) {
@@ -68,8 +69,17 @@ function useClerkAuthSession(): AuthSession {
   const auth = useAuth();
   return {
     isLoaded: auth.isLoaded,
-    isSignedIn: Boolean(auth.isSignedIn),
-    getToken: async () => (await auth.getToken()) ?? null,
+    isSignedIn: Boolean(auth.isSignedIn) || readE2ETestToken() !== null,
+    getToken: async () => readE2ETestToken() ?? (await auth.getToken()) ?? null,
+  };
+}
+
+function useDevAuthSession(): AuthSession {
+  const e2e = readE2ETestToken();
+  return {
+    isLoaded: true,
+    isSignedIn: e2e !== null,
+    getToken: async () => readE2ETestToken(),
   };
 }
 
@@ -80,16 +90,21 @@ export default function ManagerEvidencePage({
   traineeId: string;
   focus?: "evidence" | "trend";
 }) {
-  if (!hasClerkKey) {
-    return (
-      <ManagerEvidenceBody
-        traineeId={traineeId}
-        focus={focus}
-        session={{ isLoaded: true, isSignedIn: false, getToken: async () => null }}
-      />
-    );
+  if (!hasClerkPublishableKey) {
+    return <ManagerEvidenceDev traineeId={traineeId} focus={focus} />;
   }
   return <ManagerEvidenceWithClerk traineeId={traineeId} focus={focus} />;
+}
+
+function ManagerEvidenceDev({
+  traineeId,
+  focus,
+}: {
+  traineeId: string;
+  focus: "evidence" | "trend";
+}) {
+  const session = useDevAuthSession();
+  return <ManagerEvidenceBody traineeId={traineeId} focus={focus} session={session} />;
 }
 
 function ManagerEvidenceWithClerk({
@@ -113,15 +128,23 @@ function ManagerEvidenceBody({
   session: AuthSession;
 }) {
   const { isLoaded, isSignedIn, getToken } = session;
-  const [evidence, setEvidence] = useState<TraineeEvidenceResponse | null | "error">(null);
-  const [trend, setTrend] = useState<TraineeTrendResponse | null | "error">(null);
+  const [evidence, setEvidence] = useState<TraineeEvidenceResponse | null>(null);
+  const [trend, setTrend] = useState<TraineeTrendResponse | null>(null);
+  const [loadError, setLoadError] = useState<MessageKey | null>(null);
   const [showInternal, setShowInternal] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
+    if (hasClerkPublishableKey && !isSignedIn) {
+      setEvidence(null);
+      setTrend(null);
+      setLoadError("auth.required");
+      return;
+    }
     let cancelled = false;
     setEvidence(null);
     setTrend(null);
+    setLoadError(null);
     void (async () => {
       try {
         const token = isSignedIn ? await getToken() : null;
@@ -136,10 +159,9 @@ function ManagerEvidenceBody({
         // rows with the badge rather than an empty desk.
         const hasReviewed = ev.sessions.some((s) => s.clinicallyReviewed);
         if (!hasReviewed && ev.sessions.length > 0) setShowInternal(true);
-      } catch {
+      } catch (err) {
         if (cancelled) return;
-        setEvidence("error");
-        setTrend("error");
+        setLoadError(errorMessageKeyFromUnknown(err));
       }
     })();
     return () => {
@@ -147,17 +169,28 @@ function ManagerEvidenceBody({
     };
   }, [traineeId, isLoaded, isSignedIn, getToken]);
 
-  if (evidence === null || trend === null) {
+  if (!isLoaded || (evidence === null && trend === null && loadError === null)) {
     return (
       <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
+        <AuthBar />
         <p>{t("manager.loading")}</p>
       </main>
     );
   }
-  if (evidence === "error" || trend === "error") {
+  if (loadError !== null) {
     return (
       <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
-        <p>{t("manager.error")}</p>
+        <AuthBar />
+        <p role="alert">{t(loadError)}</p>
+        <a href="#/">{t("manager.back")}</a>
+      </main>
+    );
+  }
+  if (evidence === null || trend === null) {
+    return (
+      <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
+        <AuthBar />
+        <p role="alert">{t("shell.networkError")}</p>
         <a href="#/">{t("manager.back")}</a>
       </main>
     );
@@ -170,6 +203,7 @@ function ManagerEvidenceBody({
 
   return (
     <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
+      <AuthBar />
       <a href="#/" style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}>
         {t("manager.back")}
       </a>
@@ -270,9 +304,16 @@ function ManagerEvidenceBody({
                   padding: "12px 14px",
                   border: "1px solid var(--border-default)",
                   borderRadius: "var(--r-md, 8px)",
+                  minWidth: 0,
                 }}
               >
-                <span style={{ flex: 1, minWidth: 200 }}>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflowWrap: "anywhere",
+                  }}
+                >
                   {session.scenarioSlug} · v{session.scenarioVersion} ·{" "}
                   {t("manager.evidence.tit", { days: session.traineeTimeInTrainingDays })} ·{" "}
                   {t("manager.evidence.tech", { percent: session.technicalPercent })} ·{" "}

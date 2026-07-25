@@ -5,7 +5,6 @@ import {
   evaluateChecklist,
   evaluateTasks,
   type EngineEvent,
-  type SessionPhase,
 } from "@vetcrew/engine";
 import {
   antsDomainSchema,
@@ -17,6 +16,11 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
+import {
+  readAuth,
+  type AuthReader,
+  type AuthSnapshot,
+} from "../auth.js";
 import type { Db } from "../db/client.js";
 import {
   antsRatings,
@@ -27,6 +31,18 @@ import {
 } from "../db/schema/index.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { compileScenario } from "../scenarios.js";
+
+function readAuthIfEnabled(req: Request, authEnabled: boolean, readAuthFn: AuthReader): AuthSnapshot {
+  if (!authEnabled) {
+    return { isAuthenticated: false, userId: null, role: null };
+  }
+  return readAuthFn(req);
+}
+
+export type SessionRouterOptions = {
+  readonly authEnabled?: boolean;
+  readonly readAuth?: AuthReader;
+};
 
 const createSessionSchema = z.object({
   scenarioSlug: z.string().min(1),
@@ -44,7 +60,7 @@ const appendEventsSchema = z.object({
 });
 
 const submitRatingsSchema = z.object({
-  raterId: z.string().min(1),
+  raterId: z.string().min(1).optional(),
   ratings: z
     .array(
       z.object({
@@ -80,7 +96,168 @@ async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
   return rows.map((row) => engineEventSchema.parse(row.payload));
 }
 
-export function createSessionRouter(db: Db, tenantId: string): Router {
+type CreateBindings = {
+  readonly sessionTraineeId: string | null;
+  readonly technicianUserId: string | null;
+  readonly instructorUserId: string | null;
+};
+
+function assignedUserIdForStationRole(
+  stationRole: string,
+  bindings: CreateBindings,
+): string | null {
+  switch (stationRole) {
+    case "technician":
+      return bindings.technicianUserId;
+    case "instructor":
+      return bindings.instructorUserId;
+    default:
+      return null;
+  }
+}
+
+function buildRoleStationRows(
+  tenantId: string,
+  sessionId: string,
+  scenarioRoles: string[],
+  bindings: CreateBindings,
+  authEnabled: boolean,
+): {
+  tenantId: string;
+  sessionId: string;
+  role: string;
+  assignedUserId: string | null;
+}[] {
+  const rows = scenarioRoles.map((role) => ({
+    tenantId,
+    sessionId,
+    role,
+    assignedUserId: authEnabled ? assignedUserIdForStationRole(role, bindings) : null,
+  }));
+  if (authEnabled && bindings.instructorUserId !== null && !scenarioRoles.includes("instructor")) {
+    rows.push({
+      tenantId,
+      sessionId,
+      role: "instructor",
+      assignedUserId: bindings.instructorUserId,
+    });
+  }
+  return rows;
+}
+
+function resolveCreateBindings(
+  auth: AuthSnapshot,
+  traineeId: string | undefined,
+): CreateBindings | "forbidden" {
+  const role = auth.role;
+  switch (role) {
+    case "trainee": {
+      if (traineeId !== undefined && traineeId !== auth.userId) {
+        return "forbidden";
+      }
+      const userId = auth.userId;
+      if (userId === null) {
+        return "forbidden";
+      }
+      return {
+        sessionTraineeId: userId,
+        technicianUserId: userId,
+        instructorUserId: null,
+      };
+    }
+    case "instructor":
+    case "manager": {
+      const creatorId = auth.userId;
+      if (creatorId === null) {
+        return "forbidden";
+      }
+      return {
+        sessionTraineeId: traineeId ?? null,
+        technicianUserId: traineeId ?? null,
+        instructorUserId: creatorId,
+      };
+    }
+    case null: {
+      const userId = auth.userId;
+      if (userId === null) {
+        return "forbidden";
+      }
+      return {
+        sessionTraineeId: traineeId ?? null,
+        technicianUserId: traineeId ?? null,
+        instructorUserId: userId,
+      };
+    }
+    default: {
+      const exhaustive: never = role;
+      throw new Error(`Unhandled role: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
+/** Live join allowlist — sessionId + scenario role must match assigned_user_id. */
+export async function assertRoleStationBinding(
+  db: Db,
+  tenantId: string,
+  sessionId: string,
+  role: string,
+  userId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ assignedUserId: roleStations.assignedUserId })
+    .from(roleStations)
+    .where(
+      and(
+        eq(roleStations.tenantId, tenantId),
+        eq(roleStations.sessionId, sessionId),
+        eq(roleStations.role, role),
+      ),
+    );
+  const row = rows[0];
+  return row !== undefined && row.assignedUserId === userId;
+}
+
+/** REST ownership — manager/instructor see all; trainees only assigned stations. */
+async function assertSessionAccess(
+  db: Db,
+  tenantId: string,
+  sessionId: string,
+  auth: AuthSnapshot,
+  authEnabled: boolean,
+): Promise<boolean> {
+  if (!authEnabled) {
+    return true;
+  }
+  const role = auth.role;
+  switch (role) {
+    case "manager":
+    case "instructor":
+      return true;
+    case "trainee":
+    case null:
+      break;
+    default: {
+      const exhaustive: never = role;
+      throw new Error(`Unhandled role: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+  if (auth.userId === null) {
+    return false;
+  }
+  const rows = await db
+    .select({ assignedUserId: roleStations.assignedUserId })
+    .from(roleStations)
+    .where(and(eq(roleStations.tenantId, tenantId), eq(roleStations.sessionId, sessionId)));
+  return rows.some((row) => row.assignedUserId === auth.userId);
+}
+
+export function createSessionRouter(
+  db: Db,
+  tenantId: string,
+  options: SessionRouterOptions = {},
+): Router {
+  const authEnabled = options.authEnabled ?? false;
+  const readAuthFn = options.readAuth ?? readAuth;
   const router = Router();
 
   router.get("/", async (_req: Request, res: Response) => {
@@ -108,6 +285,19 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const input = parsed.data;
+    let bindings: CreateBindings = {
+      sessionTraineeId: input.traineeId ?? null,
+      technicianUserId: null,
+      instructorUserId: null,
+    };
+    if (authEnabled) {
+      const resolved = resolveCreateBindings(readAuthIfEnabled(req, authEnabled, readAuthFn), input.traineeId);
+      if (resolved === "forbidden") {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      bindings = resolved;
+    }
     const conditions = [eq(scenarios.tenantId, tenantId), eq(scenarios.slug, input.scenarioSlug)];
     if (input.scenarioVersion !== undefined) {
       conditions.push(eq(scenarios.version, input.scenarioVersion));
@@ -130,7 +320,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         scenarioId: scenario.id,
         scenarioVersion: scenario.version,
         seed: input.seed ?? randomInt(1, 2 ** 31),
-        traineeId: input.traineeId ?? null,
+        traineeId: bindings.sessionTraineeId,
         traineeTimeInTrainingDays: input.traineeTimeInTrainingDays ?? null,
       })
       .returning();
@@ -139,13 +329,8 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(500).json({ error: "failed to create session" });
       return;
     }
-    // Assignment stubs only — Clerk binding is still a Security veto (Sprint 4).
     await db.insert(roleStations).values(
-      authored.roles.map((role) => ({
-        tenantId,
-        sessionId: session.id,
-        role,
-      })),
+      buildRoleStationRows(tenantId, session.id, authored.roles, bindings, authEnabled),
     );
     res.status(201).json({
       session: {
@@ -167,7 +352,13 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(404).json({ error: "session not found" });
       return;
     }
-    // Sole seq authority — REST and the live room share appendSessionEvents.
+    const session = await loadSession(db, tenantId, id);
+    if (session === undefined) {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    const allowed = await assertSessionAccess(db, tenantId, id, auth, authEnabled);
     const result = await appendSessionEvents(db, {
       tenantId,
       sessionId: id,
@@ -196,6 +387,12 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
     const session = id === null ? undefined : await loadSession(db, tenantId, id);
     if (session === undefined) {
       res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    const allowed = await assertSessionAccess(db, tenantId, session.id, auth, authEnabled);
+    if (!allowed) {
+      res.status(403).json({ error: "forbidden" });
       return;
     }
     const scenarioRows = await db
@@ -258,6 +455,38 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(404).json({ error: "session not found" });
       return;
     }
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    const allowed = await assertSessionAccess(db, tenantId, id, auth, authEnabled);
+    if (!allowed) {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+    const raterId = authEnabled ? auth.userId : parsed.data.raterId;
+    if (raterId === null || raterId === undefined || raterId.length === 0) {
+      res.status(400).json({ error: "raterId required" });
+      return;
+    }
+    const sessionForGate = await loadSession(db, tenantId, id);
+    if (sessionForGate === undefined) {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const scenarioForGate = await db
+      .select({ clinicallyReviewed: scenarios.clinicallyReviewed })
+      .from(scenarios)
+      .where(eq(scenarios.id, sessionForGate.scenarioId));
+    const scenarioRow = scenarioForGate[0];
+    if (scenarioRow === undefined) {
+      res.status(500).json({ error: "session references missing scenario" });
+      return;
+    }
+    if (
+      !scenarioRow.clinicallyReviewed &&
+      process.env.VETCREW_ALLOW_UNREVIEWED_SCORES !== "1"
+    ) {
+      res.status(403).json({ error: "scenario_not_clinically_reviewed" });
+      return;
+    }
     // Phase guard, evidence check, and seq derivation all read session state,
     // so they run INSIDE the transaction under a row lock — a concurrent
     // append cannot make the debrief check stale or collide the scored seq.
@@ -298,7 +527,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         parsed.data.ratings.map((rating) => ({
           tenantId,
           sessionId: session.id,
-          raterId: parsed.data.raterId,
+          raterId,
           domain: rating.domain,
           score: rating.score,
           evidenceEventSeqs: rating.evidenceEventSeqs,

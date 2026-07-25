@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 
-import { requireSignedIn } from "./auth.js";
+import { createReadAuthFromToken, isAuthEnabled, readAuth, requireSignedIn } from "./auth.js";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
@@ -72,18 +72,28 @@ async function boot() {
     // API routers MUST mount before the SPA catch-all (tech-debt #1).
     // Session REST is hiring-evidence surface — signed-in when Clerk is on.
     // E2E/integration leave Clerk keys unset so requireSignedIn is a no-op.
+    const authEnabled = isAuthEnabled(clerkEnabled);
     const signedIn = requireSignedIn(clerkEnabled);
-    app.use("/api/sessions", signedIn, createSessionRouter(db, tenantId));
+    const allowDevBypass = env.NODE_ENV === "development" && !authEnabled;
+    app.use(
+      "/api/sessions",
+      signedIn,
+      createSessionRouter(db, tenantId, { authEnabled, readAuth }),
+    );
     // Manager evidence is employee-performance PII — signed-in when Clerk is on.
-    app.use("/api", createManagerRouter(db, tenantId, signedIn));
+    app.use(
+      "/api",
+      createManagerRouter(db, tenantId, { authEnabled, clerkEnabled, readAuth }),
+    );
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {
       tenantId,
       registry,
-      // Clerk keys may be present for SPA/manager auth while role_stations
-      // binding is still open — keep the loud join bypass in development only.
-      allowDevBypass: env.NODE_ENV === "development",
+      db,
+      authEnabled,
+      readAuthFromToken: createReadAuthFromToken(secretKey),
+      allowDevBypass,
       corsOrigin: resolveCorsOrigin(env.NODE_ENV),
     });
     dbReady = true;

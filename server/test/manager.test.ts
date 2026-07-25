@@ -3,8 +3,9 @@ import type { AddressInfo } from "node:net";
 
 import type { EngineEventBody } from "@vetcrew/shared";
 import express from "express";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 
+import { isAuthEnabled, readAuth, requireSignedIn } from "../auth.js";
 import { createDb } from "../db/client.js";
 import { runMigrations } from "../db/migrate.js";
 import { createManagerRouter } from "../routes/manager.js";
@@ -18,6 +19,8 @@ const TEST_DATABASE_URL =
 
 const SCENARIO_SLUG = "base-rung-resp-distress";
 const TRAINEE = "manager-evidence-trainee";
+const ORIGINAL_TEST_AUTH = process.env.VETCREW_TEST_AUTH;
+const ORIGINAL_ALLOW_UNREVIEWED = process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
 
 let pool: ReturnType<typeof createDb>["pool"];
 let db: ReturnType<typeof createDb>["db"];
@@ -30,6 +33,13 @@ async function api(path: string, init?: RequestInit): Promise<Response> {
     headers: { "content-type": "application/json" },
     ...init,
   });
+}
+
+function authHeader(userId: string, role: "manager" | "instructor" | "trainee"): Record<string, string> {
+  return {
+    "content-type": "application/json",
+    authorization: `Bearer test:${userId}:${role}`,
+  };
 }
 
 async function createSession(body: Record<string, unknown>): Promise<{ id: string }> {
@@ -64,6 +74,7 @@ async function scoreSession(sessionId: string, score: number): Promise<void> {
 }
 
 beforeAll(async () => {
+  process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = "1";
   const dbName = new URL(TEST_DATABASE_URL).pathname.replace(/^\//, "");
   if (!/test/i.test(dbName)) {
     throw new Error(
@@ -92,6 +103,11 @@ afterAll(async () => {
     server.close((err) => (err ? reject(err) : resolve()));
   });
   await pool.end();
+  if (ORIGINAL_ALLOW_UNREVIEWED === undefined) {
+    delete process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
+  } else {
+    process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = ORIGINAL_ALLOW_UNREVIEWED;
+  }
 });
 
 describe("manager evidence + trend", () => {
@@ -172,5 +188,71 @@ describe("manager evidence + trend", () => {
     const evidenceRes = await api(`/api/trainees/${TRAINEE}/evidence`);
     const evidence = (await evidenceRes.json()) as { sessions: { scenarioSlug: string }[] };
     expect(evidence.sessions.every((s) => s.scenarioSlug !== "mgr-other-scenario")).toBe(true);
+  });
+});
+
+describe("manager role gate (VETCREW_TEST_AUTH=1)", () => {
+  let authServer: Server;
+  let authBaseUrl: string;
+
+  beforeEach(() => {
+    process.env.VETCREW_TEST_AUTH = "1";
+  });
+
+  beforeAll(async () => {
+    process.env.VETCREW_TEST_AUTH = "1";
+    const clerkEnabled = false;
+    const authEnabled = isAuthEnabled(clerkEnabled);
+    const app = express();
+    app.use(express.json());
+    app.use(
+      "/api/sessions",
+      requireSignedIn(clerkEnabled, readAuth),
+      createSessionRouter(db, tenantId, { authEnabled, readAuth }),
+    );
+    app.use("/api", createManagerRouter(db, tenantId, { authEnabled, clerkEnabled, readAuth }));
+    await new Promise<void>((resolve, reject) => {
+      authServer = app.listen(0, (err?: Error) => (err ? reject(err) : resolve()));
+    });
+    authBaseUrl = `http://127.0.0.1:${(authServer.address() as AddressInfo).port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      authServer.close((err) => (err ? reject(err) : resolve()));
+    });
+    if (ORIGINAL_TEST_AUTH === undefined) {
+      delete process.env.VETCREW_TEST_AUTH;
+    } else {
+      process.env.VETCREW_TEST_AUTH = ORIGINAL_TEST_AUTH;
+    }
+  });
+
+  async function authApi(path: string, init?: RequestInit): Promise<Response> {
+    return fetch(`${authBaseUrl}${path}`, init);
+  }
+
+  test("trainee bearer gets 403 on evidence and trend", async () => {
+    const evidenceRes = await authApi(`/api/trainees/${TRAINEE}/evidence`, {
+      headers: authHeader("trainee-gate", "trainee"),
+    });
+    expect(evidenceRes.status).toBe(403);
+
+    const trendRes = await authApi(`/api/trainees/${TRAINEE}/trend`, {
+      headers: authHeader("trainee-gate", "trainee"),
+    });
+    expect(trendRes.status).toBe(403);
+  });
+
+  test("manager bearer gets 200 on evidence and trend", async () => {
+    const evidenceRes = await authApi(`/api/trainees/${TRAINEE}/evidence`, {
+      headers: authHeader("mgr-gate", "manager"),
+    });
+    expect(evidenceRes.status).toBe(200);
+
+    const trendRes = await authApi(`/api/trainees/${TRAINEE}/trend`, {
+      headers: authHeader("mgr-gate", "manager"),
+    });
+    expect(trendRes.status).toBe(200);
   });
 });
