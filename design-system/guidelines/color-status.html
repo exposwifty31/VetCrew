@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" viewport="700x210" name="Status channels" subtitle="Session + connection states — a separate language from patient severity" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>
+  .pills{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
+  .pill{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:34px;padding-inline:var(--sp-3);border-radius:var(--radius-pill);border:var(--border-w) solid;font-size:var(--fs-sm);font-weight:var(--fw-semibold)}
+  .dot{width:10px;height:10px;border-radius:50%}
+</style></head>
+<body>
+<div class="spec">
+  <div class="grp">
+    <p class="lbl">Status tokens (never teal, never a severity hue)</p>
+    <div class="pills">
+      <span class="pill" style="color:var(--status-running-fg);background:var(--status-running-fill);border-color:var(--status-running-dot)"><span class="dot" style="background:var(--status-running-dot)"></span>פעיל · running</span>
+      <span class="pill" style="color:var(--status-paused-fg);background:var(--status-paused-fill);border-color:var(--status-paused-dot)"><span class="dot" style="background:var(--status-paused-dot)"></span>מושהה · paused</span>
+      <span class="pill" style="color:var(--status-offline-fg);background:var(--status-offline-fill);border-color:var(--status-offline-dot)"><span class="dot" style="background:var(--status-offline-dot)"></span>מנותק · offline</span>
+      <span class="pill" style="color:var(--status-reconnecting-fg);background:var(--status-reconnecting-fill);border-color:var(--status-reconnecting-dot);background-image:var(--stale-hatch)"><span class="dot" style="background:var(--status-reconnecting-dot)"></span>מתחבר מחדש · reconnecting</span>
+    </div>
+  </div>
+  <p class="note">Running is its own green so it never competes with teal (action). Reconnecting adds a diagonal hatch, so "data may be stale" is legible even where amber and neutral can't be told apart.</p>
+</div>
+</body>
+</html>

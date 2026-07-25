@@ -1,0 +1,39 @@
+<!-- @dsCard group="Colors" viewport="700x260" name="Surface roles — light & dark" subtitle="Both themes are first-class; dark is a true low-light 'monitor' dark, not black" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>
+  body{background:var(--n-200)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+  .theme{border-radius:var(--radius-lg);padding:var(--sp-4);background:var(--bg-canvas);color:var(--text);border:var(--border-w) solid var(--border)}
+  .stack{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-2)}
+  .s{border-radius:var(--radius-sm);padding:var(--sp-2) var(--sp-3);border:var(--border-w) solid var(--border);font-family:var(--font-mono);font-size:var(--fs-xs)}
+  .cap{font-size:var(--fs-xs);font-weight:var(--fw-semibold);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--text-faint)}
+</style></head>
+<body>
+<div class="spec" style="padding:var(--sp-4)">
+  <div class="cols">
+    <div class="theme" data-theme="light">
+      <p class="cap">Light · clinical</p>
+      <div class="stack">
+        <div class="s" style="background:var(--bg-canvas)">--bg-canvas</div>
+        <div class="s" style="background:var(--surface)">--surface (card)</div>
+        <div class="s" style="background:var(--surface-2)">--surface-2</div>
+        <div class="s" style="background:var(--surface-raised)">--surface-raised</div>
+        <div class="s" style="background:var(--bg-sunken)">--bg-sunken (tracks)</div>
+      </div>
+    </div>
+    <div class="theme" data-theme="dark">
+      <p class="cap">Dark · low-light room</p>
+      <div class="stack">
+        <div class="s" style="background:var(--bg-canvas)">--bg-canvas</div>
+        <div class="s" style="background:var(--surface)">--surface (card)</div>
+        <div class="s" style="background:var(--surface-2)">--surface-2</div>
+        <div class="s" style="background:var(--surface-raised)">--surface-raised</div>
+        <div class="s" style="background:var(--bg-sunken)">--bg-sunken (tracks)</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

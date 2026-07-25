@@ -1,0 +1,146 @@
+<!-- @dsCard group="Base rung" viewport="1280x860" name="Split-screen — zones coexist without colour collision" subtitle="Task panel (matte work-software) beside the monitor (glowing instrument); one permitted crossing" -->
+<!-- @startingPoint section="Screens" subtitle="Base-rung split screen — task panel + patient monitor, contained colour systems" viewport="1280x860" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VetCrew · תחנת מתאמן — דרג בסיס</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;height:100%;background:var(--inst-room);}
+  #root{height:100vh;}
+  /* the two zones sit side by side like two physical devices, with a real seam */
+  .stage{position:relative;height:100vh;display:grid;grid-template-columns:minmax(400px,1fr) 8px 1.35fr;background:var(--inst-room);}
+  .seam{background:linear-gradient(90deg,var(--task-seam),var(--n-950) 45%,var(--n-950) 55%,var(--inst-bezel-edge));
+    box-shadow:inset 1px 0 0 rgba(150,170,190,.08),inset -1px 0 0 rgba(150,170,190,.06);}
+  /* ZONE A — task panel: matte graphite work-software */
+  .taskzone{background:var(--task-bg);display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+  .taskzone__head{padding:16px 18px;border-bottom:1px solid var(--task-hair);display:flex;align-items:center;gap:12px;}
+  .taskzone__head h1{margin:0;font-family:var(--font-ui);font-size:18px;font-weight:700;color:var(--task-text);}
+  .taskzone__head .who{font-family:var(--font-ui);font-size:13px;color:var(--task-text-dim);}
+  .taskzone__prog{margin-inline-start:auto;font-family:var(--font-mono);font-size:12px;color:var(--task-text-dim);letter-spacing:.04em;}
+  .taskzone__list{flex:1;min-height:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .taskzone__foot{padding:12px 18px;border-top:1px solid var(--task-hair);font-family:var(--font-ui);font-size:12px;color:var(--task-text-faint);display:flex;align-items:center;gap:8px;}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;}
+  /* ZONE B — instrument: black glass */
+  .instzone{background:var(--inst-room);display:flex;flex-direction:column;min-width:0;padding:16px;gap:14px;overflow:hidden;}
+  .instzone__patient{display:flex;align-items:center;gap:14px;color:var(--inst-text);}
+  .instzone__patient .avatar{width:52px;height:52px;border-radius:12px;background:var(--inst-rail);border:1px solid var(--inst-hair);display:flex;align-items:center;justify-content:center;color:var(--inst-text-dim);}
+  .instzone__patient h2{margin:0;font-size:19px;font-weight:700;}
+  .instzone__patient .sub{font-size:13px;color:var(--inst-text-dim);}
+  .instzone__mon{flex:1;min-height:0;}
+  .zonetag{position:absolute;top:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--task-text-faint);background:rgba(0,0,0,.35);padding:3px 8px;border-radius:4px;z-index:6;}
+  .zonetag--a{inset-inline-start:12px;}
+  .zonetag--b{inset-inline-end:12px;color:var(--inst-text-faint);}
+  /* the ONE permitted crossing: critical-alarm frame enclosing BOTH zones */
+  .crit-frame{position:fixed;inset:0;pointer-events:none;z-index:40;border:5px solid var(--alarm-critical);
+    box-shadow:inset 0 0 40px rgba(255,42,42,.35);animation:vc-alarm-crit .5s steps(1,end) infinite;}
+  .demobar{position:fixed;inset-block-end:14px;inset-inline-start:50%;transform:translateX(-50%);z-index:50;
+    display:flex;gap:8px;align-items:center;background:rgba(10,15,24,.92);border:1px solid var(--inst-hair);
+    border-radius:10px;padding:8px 12px;backdrop-filter:blur(6px);}
+  .demobar .lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--inst-text-faint);}
+  .demobar button{min-height:34px;padding:0 12px;border-radius:7px;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:600;
+    background:var(--inst-rail);border:1px solid var(--inst-hair);color:var(--inst-text-dim);}
+  .demobar button[aria-pressed="true"]{background:var(--inst-action-fill);border-color:var(--inst-action);color:var(--inst-action-hover);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { TaskChip, PatientMonitor } = window.DesignSystem_ad98cb;
+function Screen(){
+  const [alarm,setAlarm] = React.useState("normal");
+  const [rep,setRep] = React.useState("");
+  const [route,setRoute] = React.useState(undefined);   // NEVER pre-filled — the route is a scored decision
+  const [hr,setHr] = React.useState(96);
+  const [spo2,setSpo2] = React.useState(98);
+  React.useEffect(()=>{
+    const crit = alarm==="critical";
+    const id=setInterval(()=>{
+      setHr(v=>{ const t=crit?196:96; return Math.round(v+(t-v)*0.12+(Math.random()-.5)); });
+      setSpo2(v=>{ const t=crit?89:98; return Math.round(v+(t-v)*0.12); });
+    },900); return ()=>clearInterval(id);
+  },[alarm]);
+  const alarming = alarm==="critical" ? ["hr","spo2"] : alarm==="caution" ? ["spo2"] : [];
+  return (
+    <div className="stage" data-alarm={alarm!=="normal"?alarm:undefined}>
+      {/* ZONE A — task panel (matte) */}
+      <section className="taskzone">
+        <span className="zonetag zonetag--a">אזור משימות · תוכנת עבודה</span>
+        <div className="taskzone__head">
+          <h1>משימות</h1><span className="who">צ'רלי · לברדור · 22 ק״ג</span>
+          <span className="taskzone__prog">2 / 6</span>
+        </div>
+        <div className="taskzone__list">
+          <TaskChip code="do" state="done" title="בצע TPR על צ'רלי" detail="דופק, נשימות, חום" />
+          <TaskChip code="timed" state="done" title="NIBP · 10:15" detail="בוצע בחלון" />
+          {/* Medication: the TITLE states drug + mg only — never the route.
+              Route is a separately scored decision the trainee must make unaided. */}
+          <TaskChip code="report" title="Cefazolin · 250 mg" detail="חשב נפח, בחר נתיב מתן, ודווח"
+            reportUnit="ml" reportValue={rep} onReportChange={setRep}
+            routeOptions={["IV","IM","SC","PO"]} route={route} onRouteChange={setRoute} />
+          <TaskChip code="timed" title="NIBP כל 15 דקות" detail="מדידה הבאה" window={{label:"חלון 15 דק׳",remaining:"נותרו 4:12",closing:true}} />
+          <TaskChip code="do" title="בדיקת שתן — איסוף דגימה" />
+          <TaskChip code="approval" title="מתן מורפיום 2 mg" detail="דורש אישור רופא בכיר" onCallDoctor={()=>{}} />
+        </div>
+        <div className="taskzone__foot">
+          צבעי משימה: <span className="swatch" style={{background:"var(--task-do)"}}></span>בצע
+          <span className="swatch" style={{background:"var(--task-report)"}}></span>דווח
+          <span className="swatch" style={{background:"var(--task-timed)"}}></span>מתוזמן
+          <span className="swatch" style={{background:"var(--task-approval)"}}></span>אישור — מוכלים באזור זה בלבד
+        </div>
+      </section>
+
+      {/* SEAM — the physical boundary between the two devices */}
+      <div className="seam" aria-hidden="true"></div>
+
+      {/* ZONE B — instrument (glowing) */}
+      <section className="instzone">
+        <span className="zonetag zonetag--b">אזור מכשור · מוניטור</span>
+        <div className="instzone__patient">
+          <div className="avatar" aria-hidden="true">
+            {/* species-neutral paw — the species is stated in text and in the
+                monitor header; a species-specific glyph here only risks
+                contradicting the patient (it previously showed a cat on a dog). */}
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><ellipse cx="7" cy="8" rx="2.1" ry="2.7"/><ellipse cx="12" cy="6.2" rx="2.2" ry="2.9"/><ellipse cx="17" cy="8" rx="2.1" ry="2.7"/><ellipse cx="19.6" cy="13" rx="1.9" ry="2.3"/><path d="M12 11.5c2.9 0 5.4 2.2 5.4 4.6 0 1.9-1.5 3.1-3.6 3.1-1 0-1.3-.3-1.8-.3s-.8.3-1.8.3c-2.1 0-3.6-1.2-3.6-3.1 0-2.4 2.5-4.6 5.4-4.6Z"/></svg>
+          </div>
+          <div>
+            <h2>צ'רלי</h2>
+            <div className="sub">Canine · 22 ק״ג · חדר טיפול 2</div>
+          </div>
+        </div>
+        <div className="instzone__mon">
+          <PatientMonitor
+            patient={{species:"dog",breed:"Canine",weightKg:22,weightRange:"18–30 kg"}}
+            channels={{hr,spo2,etco2:38,resp:20}}
+            sub={{pvcs:0,st:"OFF",pi:12.0,pr:hr,awrr:20,fi:2}}
+            nibp={{sys:118,dia:72,map:87,time:"10:15",pr:hr}}
+            alarm={alarm} alarming={alarming}
+            style={{height:"100%"}}
+          />
+        </div>
+      </section>
+
+      {alarm==="critical" ? <div className="crit-frame" aria-hidden="true"></div> : null}
+
+      <div className="demobar">
+        <span className="lbl">הדגמה · מצב התרעה</span>
+        {["normal","caution","critical"].map(a=>(
+          <button key={a} aria-pressed={alarm===a} onClick={()=>setAlarm(a)}>
+            {a==="normal"?"תקין":a==="caution"?"אזהרה":"קריטי (חוצה אזורים)"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Screen/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Touch & control sizing" subtitle="≥44px touch floor; tuned for tablets at arm's length" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>.boxes{display:flex;gap:var(--sp-4);align-items:flex-end;flex-wrap:wrap}
+.b{background:var(--action-fill);border:var(--border-w-strong) dashed var(--action);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--action-quiet);font-family:var(--font-mono);font-size:var(--fs-xs)}</style></head>
+<body>
+<div class="spec">
+  <div class="boxes">
+    <div class="b" style="width:40px;height:40px">40</div>
+    <div class="b" style="width:44px;height:44px">44</div>
+    <div class="b" style="width:120px;height:48px">48 · default</div>
+    <div class="b" style="width:160px;height:56px">56 · lg triggers</div>
+  </div>
+  <p class="note">--touch-min 44 is the hard floor. --control-h 48 is the default (arm's length); --control-h-lg 56 for instructor injection targets; --control-h-sm 40 only in dense desktop AAR toolbars.</p>
+</div>
+</body>
+</html>

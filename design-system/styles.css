@@ -5,6 +5,7 @@
    ========================================================================== */
 @import url("./tokens/fonts.css");
 @import url("./tokens/color.css");
+@import url("./tokens/semantic.css");
 @import url("./tokens/instrument.css");
 @import url("./tokens/task.css");
 @import url("./tokens/typography.css");

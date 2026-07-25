@@ -1,0 +1,62 @@
+<!-- @dsCard group="Base rung" viewport="820x720" name="Task chips — 4 codes × 6 states" subtitle="Matte, contained work-software primitive (do / report / timed / approval)" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;background:var(--task-bg);color:var(--task-text);font-family:var(--font-ui);}
+  .wrap{padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);}
+  .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--task-text-faint);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);}
+  .col{display:flex;flex-direction:column;gap:var(--sp-3);}
+</style>
+</head>
+<body>
+<div id="root" class="wrap"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { TaskChip } = window.DesignSystem_ad98cb;
+function Demo(){
+  const [rep,setRep] = React.useState("");
+  const [route,setRoute] = React.useState(undefined);
+  return (
+    <>
+      <span className="lbl">ארבעת הקודים · מצב זמין</span>
+      <div className="grid">
+        <TaskChip code="do" title="בצע TPR על צ'רלי" detail="דופק, נשימות, חום — קרא מהמוניטור" />
+        <TaskChip code="report" title="גלוקוז דם" detail="דווח קריאה במג׳/ד״ל" reportUnit="mg/dL" reportValue="82" onReportChange={()=>{}} />
+        <TaskChip code="timed" title="NIBP כל 15 דקות" detail="מדידה לא-פולשנית" window={{label:"חלון 15 דק׳",remaining:"נותרו 4:12",closing:true}} />
+        <TaskChip code="approval" title="מתן מורפיום 2 mg" detail="דורש אישור רופא בכיר" onCallDoctor={()=>{}} />
+      </div>
+
+      <span className="lbl">מתן תרופה — מנה + נתיב הם שני ממדים נבדדים</span>
+      <div className="grid">
+        <TaskChip code="report" title="Cefazolin · 250 mg" detail="חשב נפח, בחר מתן, ודווח"
+          reportUnit="ml" reportValue={rep} onReportChange={setRep}
+          routeOptions={["IV","IM","SC","PO"]} route={route} onRouteChange={setRoute} />
+        <TaskChip code="report" title="Diphenhydramine · 20 mg" detail="נפח נכון (100 mg/ml) — אך נתיב פסול (SC בלבד)"
+          reportUnit="ml" reportValue="0.2"
+          routeOptions={["IV","IM","SC","PO"]} route="IV" routeError />
+      </div>
+
+      <span className="lbl">שישה מצבי מחזור-חיים</span>
+      <div className="grid">
+        <TaskChip code="do" state="in_progress" title="החדרת צנתר ורידי" detail="בתהליך ביצוע" />
+        <TaskChip code="timed" state="done" title="NIBP · 10:15" detail="בוצע בחלון הזמן" />
+        <TaskChip code="report" state="error" title="Augmentin · 200 mg" detail="נפח שגוי הוזן — נרשם" />
+        <TaskChip code="do" state="locked" title="החלפת שקית עירוי" holder="דנה כ." />
+        <TaskChip code="do" state="released" title="ניקוז שתן" detail="שוחרר לאחר נטישה — זמין שוב" />
+        <TaskChip code="approval" title="מתן דיגוקסין" detail="דורש אישור רופא" onCallDoctor={()=>{}} />
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VetCrew · מערכת עיצוב ופורטל רכיבים</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-canvas);
+      color: var(--text);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+    }
+    
+    @media (max-width: 1024px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-card);
+      border-inline-end: 1px solid var(--border-subtle);
+      padding: var(--sp-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-6);
+      box-shadow: var(--elevation-sm);
+    }
+    
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding-bottom: var(--sp-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .logo-icon {
+      background: var(--action-fill);
+      color: var(--action-text);
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo-text h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: var(--fw-bold);
+      letter-spacing: -0.02em;
+    }
+    
+    .logo-text p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+    
+    .theme-toggle {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+    }
+    
+    .toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-canvas);
+      padding: var(--sp-1);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+    
+    .toggle-btn {
+      padding: var(--sp-2) var(--sp-3);
+      font-size: 13px;
+      font-weight: var(--fw-semibold);
+      background: transparent;
+      color: var(--text-dim);
+      border: none;
+      border-radius: var(--radius-xs);
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    
+    .toggle-btn.active {
+      background: var(--bg-card);
+      color: var(--text);
+      box-shadow: var(--elevation-xs);
+    }
+    
+    .truth-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+    
+    .truth-card {
+      background: var(--bg-canvas);
+      padding: var(--sp-3);
+      border-radius: var(--radius-sm);
+      border-inline-start: 4px solid var(--action);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    
+    .truth-card h3 {
+      margin: 0 0 var(--sp-1) 0;
+      font-size: 13px;
+      font-weight: var(--fw-bold);
+      color: var(--text);
+    }
+    
+    .truth-card p {
+      margin: 0;
+      color: var(--text-dim);
+    }
+    
+    /* Main Content */
+    .content {
+      padding: var(--sp-8);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-8);
+    }
+    
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--sp-4);
+    }
+    
+    .title-banner h2 {
+      margin: 0 0 var(--sp-2) 0;
+      font-size: 28px;
+      font-weight: var(--fw-bold);
+    }
+    
+    .title-banner p {
+      margin: 0;
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 720px;
+      line-height: 1.5;
+    }
+    
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--sp-4);
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: var(--fw-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-caps);
+      color: var(--text-faint);
+      margin-bottom: var(--sp-3);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+    
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      background: var(--action);
+      border-radius: var(--radius-pill);
+    }
+    
+    /* Card design */
+    .portal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .portal-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--action);
+      box-shadow: var(--elevation-sm);
+    }
+    
+    .portal-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .portal-card-title {
+      font-size: 16px;
+      font-weight: var(--fw-semibold);
+      color: var(--text);
+      margin: 0;
+    }
+    
+    .portal-card-tag {
+      font-size: 11px;
+      font-weight: var(--fw-bold);
+      font-family: var(--font-mono);
+      background: var(--bg-canvas);
+      padding: 3px 8px;
+      border-radius: var(--radius-xs);
+      color: var(--text-dim);
+    }
+    
+    .portal-card-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.45;
+      margin: 0;
+      flex-grow: 1;
+    }
+    
+    .portal-card-footer {
+      font-size: 12px;
+      color: var(--action-text);
+      font-weight: var(--fw-semibold);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-1);
+      margin-top: var(--sp-1);
+    }
+    
+    .portal-card-footer svg {
+      transition: transform 0.2s ease;
+    }
+    
+    .portal-card:hover .portal-card-footer svg {
+      transform: translateX(-4px); /* RTL moves left */
+    }
+    
+    /* Live Playground Container */
+    .playground-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+    }
+    
+    .playground-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+    }
+    
+    @media (max-width: 768px) {
+      .playground-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .playground-canvas-area {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+    
+    .playground-demo-area {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+    }
+    
+    .playground-demo-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      padding: var(--sp-3);
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+    
+    .playground-lbl {
+      font-size: 11px;
+      font-weight: var(--fw-semibold);
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-caps);
+      width: 100%;
+      margin-bottom: var(--sp-1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- Sidebar with Core Principles -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>VetCrew</h1>
+        <p>מערכת אימון צוות ומוכנות</p>
+      </div>
+    </div>
+    
+    <!-- Theme Switcher -->
+    <div class="theme-toggle">
+      <span class="playground-lbl">בחר ערכת נושא</span>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-dark" onclick="setTheme('dark')">קליניקה (Dark)</button>
+        <button class="toggle-btn" id="btn-light" onclick="setTheme('light')">תחקיר (Light)</button>
+      </div>
+    </div>
+    
+    <!-- Product Truths -->
+    <div class="theme-toggle">
+      <span class="playground-lbl">עקרונות עיצוב VetCrew</span>
+      <div class="truth-cards">
+        <div class="truth-card">
+          <h3>RTL-Native, Hebrew-First</h3>
+          <p>תכנון בעברית באמצעות מאפיינים לוגיים (inset-inline-*, margin-inline). מראה אייקונים כיווניים בהתאם.</p>
+        </div>
+        <div class="truth-card">
+          <h3>Severity is never hue-only</h3>
+          <p>חומרת המצב אינה מקודדת על ידי צבע בלבד. כל רמה מלווה בצורה (SeverityGlyph) ייחודית ותווית טקסט.</p>
+        </div>
+        <div class="truth-card">
+          <h3>Teal is for Action ONLY</h3>
+          <p>צבע הטורקיז משמש אך ורק לפקודות ואינטראקציות. לעולם לא לחומרה או סטטוס.</p>
+        </div>
+        <div class="truth-card">
+          <h3>Tabular metrics & AA</h3>
+          <p>מספרים וערכים קליניים משתמשים בפונט condensed בעל רוחב ספרות קבוע למניעת רעידות וג'יטר (IBM Plex Sans Condensed).</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+  
+  <!-- Main Content area -->
+  <main class="content">
+    <div class="content-header">
+      <div class="title-banner">
+        <h2>פורטל מערכת העיצוב VetCrew</h2>
+        <p>ברוכים הבאים לפורטל האינטראקטיבי המאגד את כל חוקי העיצוב, המרחב, הצבעים, רכיבי ה-React והמסכים המדומים של מוצר VetCrew. כל הרכיבים נבנו באופן התואם לשימוש בטאבלט, נגישות WCAG 2.1 AA, ותמיכה מלאה ב-RTL.</p>
+      </div>
+    </div>
+    
+    <!-- Row 1: Guidelines -->
+    <div>
+      <div class="section-title">הנחיות עיצוב וטוקנים (Guidelines & Tokens)</div>
+      <div class="grid-container">
+        <!-- Color neutrals -->
+        <a class="portal-card" href="guidelines/color-neutrals.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">צבעים ניטרליים (Neutrals)</h4>
+            <span class="portal-card-tag">Color</span>
+          </div>
+          <p class="portal-card-desc">סקאלת צבעים ניטרליים קליניים: Cool Matte Clinical Neutrals וסקאלת desaturated "monitor dark".</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+        
+        <!-- Color surfaces -->
+        <a class="portal-card" href="guidelines/color-surfaces.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">צבעי משטחים (Surfaces)</h4>
+            <span class="portal-card-tag">Color</span>
+          </div>
+          <p class="portal-card-desc">חלוקת משטחים, פנלים, כרטיסים, ורכיבים קליניים. הגדרת חפיפת צבעי מכשור מול צבעי תוכנה מטים.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+        
+        <!-- Color action -->
+        <a class="portal-card" href="guidelines/color-action.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">צבעי אינטראקציה (Action & Teal)</h4>
+            <span class="portal-card-tag">Color</span>
+          </div>
+          <p class="portal-card-desc">הגדרת שימוש ייעודי בטורקיז (Teal) לאלמנטים פעיליים ומקשי אינטראקציה בלבד.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Severity Ramp -->
+        <a class="portal-card" href="guidelines/severity-ramp.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">רמפת חומרה ואזעקה (Severity)</h4>
+            <span class="portal-card-tag">Severity</span>
+          </div>
+          <p class="portal-card-desc">הגדרת 4 רמות החומרה הקליניות (normal, watch, elevated, critical) והתאמתן לתקינה הקלינית.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Space Scale -->
+        <a class="portal-card" href="guidelines/space-scale.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">סקאלת מרווחים (Space Scale)</h4>
+            <span class="portal-card-tag">Layout</span>
+          </div>
+          <p class="portal-card-desc">סקאלת מרווחים המבוססת על כפולות של 4px. טוקני space-1 עד space-16 עבור פריסות מהודקות.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Space radii -->
+        <a class="portal-card" href="guidelines/space-radii.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">רדיוסי פינות (Corner Radii)</h4>
+            <span class="portal-card-tag">Layout</span>
+          </div>
+          <p class="portal-card-desc">חוקי רדיוס קונצנטריים למניעת התנגשויות ויזואליות: xs, sm, md, lg, pill.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Typography -->
+        <a class="portal-card" href="guidelines/type-families.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">טיפוגרפיה ופונטים</h4>
+            <span class="portal-card-tag">Fonts</span>
+          </div>
+          <p class="portal-card-desc">חלוקת משפחות הפונטים: IBM Plex Sans Hebrew לממשק, ו-IBM Plex Sans Condensed לערכים קליניים.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- CVD Simulation -->
+        <a class="portal-card" href="guidelines/severity-cvd.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">סימולציית עיוורון צבעים (CVD)</h4>
+            <span class="portal-card-tag">Accessibility</span>
+          </div>
+          <p class="portal-card-desc">מבדק עיוורון צבעים (פרוטנופיה/דאוטרנופיה) לרמפת החומרה והוכחת עמידה ב-Redundancy.</p>
+          <div class="portal-card-footer">פתח הנחיה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Row 2: Component Cards -->
+    <div>
+      <div class="section-title">כרטיסי רכיבי React (Component Cards)</div>
+      <div class="grid-container">
+        <!-- Controls -->
+        <a class="portal-card" href="components/controls/controls.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">מקשים ובקרים (Controls)</h4>
+            <span class="portal-card-tag">React</span>
+          </div>
+          <p class="portal-card-desc">צפייה ברכיבי Button, IconButton, AntsRating ו-InjectionTrigger בפעולה.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+        
+        <!-- Status chips -->
+        <a class="portal-card" href="components/status/status.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">אינדיקציות וסטטוס (Status)</h4>
+            <span class="portal-card-tag">React</span>
+          </div>
+          <p class="portal-card-desc">צפייה ברכיבי SeverityChip, ConnectionPill, וסמן שלבי הסימולציה במחזור החיים.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Vital Cards -->
+        <a class="portal-card" href="components/vitals/vitals.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">כרטיסי מדדים (Vital Cards)</h4>
+            <span class="portal-card-tag">React</span>
+          </div>
+          <p class="portal-card-desc">רכיב VitalCard קומפקטי קשיח, הכולל אינדיקציית הבזק שינוי ערך, מצב stale, ונגישות מלאה.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Task Chips -->
+        <a class="portal-card" href="components/controls/task.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">כרטיסי משימות (Task Chips)</h4>
+            <span class="portal-card-tag">React</span>
+          </div>
+          <p class="portal-card-desc">רכיב TaskChip המיועד לדרג הבסיס, תומך בקידוד צבעי משימה, מצבי ביצוע, נעילה, ודיווח ערכים.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Timeline Scrubber -->
+        <a class="portal-card" href="components/timeline/timeline.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">ציר תחקיר (Timeline Scrubber)</h4>
+            <span class="portal-card-tag">React</span>
+          </div>
+          <p class="portal-card-desc">רכיב TimelineScrubber לצפייה אסינכרונית בתחקיר (AAR) - ציר זמן מבוסס תפקידים וציונים.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Patient Monitor -->
+        <a class="portal-card" href="components/monitor/monitor.card.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">מוניטור החולה (Patient Monitor)</h4>
+            <span class="portal-card-tag">React Canvas</span>
+          </div>
+          <p class="portal-card-desc">רכיב PatientMonitor המדמה את מוניטור uMEC12, תומך ב-5 ערוצי גלי sweep מהירים ועמודת ערכים.</p>
+          <div class="portal-card-footer">פתח כרטיס רכיב <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Row 3: UI Kits / Screen Prototypes -->
+    <div>
+      <div class="section-title">תחנות עבודה ומסכי סימולציה (UI Kits)</div>
+      <div class="grid-container">
+        <!-- Trainee Station -->
+        <a class="portal-card" href="ui_kits/trainee/index.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">תחנת המתאמן (Trainee Station)</h4>
+            <span class="portal-card-tag">Full Screen</span>
+          </div>
+          <p class="portal-card-desc">תצוגת המתאמן המציגה את מצב החולה הנוכחי, המדדים שלו, ופנל משימות מבוסס דרג בסיס.</p>
+          <div class="portal-card-footer">פתח סימולציה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+        
+        <!-- Instructor Console -->
+        <a class="portal-card" href="ui_kits/instructor/index.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">קונסולת המדריך (Instructor Console)</h4>
+            <span class="portal-card-tag">Full Screen</span>
+          </div>
+          <p class="portal-card-desc">קונסולת בקרה צפופה המיועדת להזרקת אירועים בזמן אמת, מעקב אחר שלבי סשן ואינטגרציית ציוני ANTS.</p>
+          <div class="portal-card-footer">פתח סימולציה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- AAR Viewer -->
+        <a class="portal-card" href="ui_kits/aar/index.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">צופה תחקיר (AAR Replay Viewer)</h4>
+            <span class="portal-card-tag">Full Screen</span>
+          </div>
+          <p class="portal-card-desc">כלי תחקור אסינכרוני מבוסס ערכת נושא בהירה, המציג סקראבר אינטראקטיבי המקושר לאירועי ביצוע ודירוגים.</p>
+          <div class="portal-card-footer">פתח סימולציה <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+
+        <!-- Split Screen prototype -->
+        <a class="portal-card" href="../deck/split-screen.html" target="_blank">
+          <div class="portal-card-header">
+            <h4 class="portal-card-title">מסך חצוי - דרג בסיס (Split Screen)</h4>
+            <span class="portal-card-tag">Prototypes</span>
+          </div>
+          <p class="portal-card-desc">פרוטוטייפ ההחלטה המציג פנל משימות עבודה מטים ומסך מוניטור קורן במקביל עם Seam דק ביניהם.</p>
+          <div class="portal-card-footer">פתח פרוטוטייפ <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Row 4: Live Interactive Playground -->
+    <div class="playground-section">
+      <div class="section-title">ארגז חול לרכיבים חיים (Live Component Playground)</div>
+      
+      <div class="playground-grid">
+        <!-- Left: Patient Monitor live canvas render -->
+        <div class="playground-canvas-area">
+          <span class="playground-lbl">מוניטור אינטראקטיבי מהיר (PatientMonitor Canvas)</span>
+          <canvas id="playground-mon-canvas" style="width:100%; height:260px; background:#05070c; border-radius:var(--radius-md); border:1px solid var(--border-subtle); display:block;"></canvas>
+          <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-top:var(--sp-2);">
+            <button class="toggle-btn active" id="p-mon-normal" onclick="setPlaygroundAlarm('normal')">תקין (Normal)</button>
+            <button class="toggle-btn" id="p-mon-caution" onclick="setPlaygroundAlarm('caution')">אזהרה (Caution)</button>
+            <button class="toggle-btn" id="p-mon-critical" onclick="setPlaygroundAlarm('critical')">קריטי (Critical)</button>
+          </div>
+        </div>
+        
+        <!-- Right: React component container mounted dynamically -->
+        <div class="playground-demo-area" id="playground-react-root">
+          <!-- React mounts here -->
+          <div style="padding:40px; text-align:center; color:var(--text-faint);">טוען סביבת React אינטראקטיבית...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Scripts needed for interactive dashboard -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="assets/icons.js"></script>
+<script src="_ds_bundle.js"></script>
+<script src="../deck/monitor.js"></script>
+
+<script>
+  // Global theme switcher helper
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+  }
+  
+  // Interactive Live Canvas Monitor Setup
+  let playMon = null;
+  if (window.MonitorRenderer) {
+    const canvas = document.getElementById('playground-mon-canvas');
+    playMon = new MonitorRenderer(canvas)
+      .setPatient({ species: 'Canine', weight: '18-30 kg' })
+      .setVitals({ hr: 88, spo2: 98, rr: 18, etco2: 36, temp: 38.2, temp2: 38.3, sys: 120, dia: 75, map: 90 })
+      .setAlarm('normal')
+      .start();
+  }
+  
+  function setPlaygroundAlarm(level) {
+    if (!playMon) return;
+    playMon.setAlarm(level);
+    document.getElementById('p-mon-normal').classList.toggle('active', level === 'normal');
+    document.getElementById('p-mon-caution').classList.toggle('active', level === 'caution');
+    document.getElementById('p-mon-critical').classList.toggle('active', level === 'critical');
+  }
+</script>
+
+<script type="text/babel">
+  // Interactive React mounting via Babel Standalone
+  const { Button, SeverityChip, ConnectionPill, AntsRating, VitalCard } = window.DesignSystem_ad98cb;
+  const Icon = window.VC.Icon;
+  
+  function Playground() {
+    const [rating, setRating] = React.useState(4);
+    const [conn, setConn] = React.useState('live');
+    const [hr, setHr] = React.useState(112);
+    
+    React.useEffect(() => {
+      const interval = setInterval(() => {
+        setHr(prev => prev + (Math.random() > 0.5 ? 1 : -1));
+      }, 1500);
+      return () => clearInterval(interval);
+    }, []);
+    
+    return (
+      <div className="playground-demo-area">
+        <div className="playground-demo-row">
+          <span className="playground-lbl">מקשים (Action Buttons & Icons)</span>
+          <Button variant="primary" onClick={() => alert('נלחץ: שמור')}>שמור (Primary)</Button>
+          <Button variant="secondary" iconStart={<Icon name="play" size={16}/>}>המשך</Button>
+          <Button variant="ghost">ביטול</Button>
+          
+          <div style={{display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)', width: '100%'}}>
+            <span style={{fontSize: '12px', color: 'var(--text-dim)', alignSelf: 'center'}}>כפתורי אייקון:</span>
+            <IconButton label="הפעל" variant="solid" icon={<Icon name="play" size={18}/>} />
+            <IconButton label="השהה" icon={<Icon name="pause" size={18}/>} />
+            <IconButton label="רענן" icon={<Icon name="rotate-cw" size={18}/>} />
+          </div>
+        </div>
+        
+        <div className="playground-demo-row" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)'}}>
+          <div>
+            <span className="playground-lbl">דירוג קבוצתי (ANTS Star rating)</span>
+            <AntsRating value={rating} onChange={setRating} />
+            <div style={{fontSize: '12px', color: 'var(--text-dim)', marginTop: 'var(--sp-1)'}}>ציון נוכחי: {rating} / 5</div>
+          </div>
+          
+          <div>
+            <span className="playground-lbl">חיבור רשת (Connection State)</span>
+            <div style={{display: 'flex', gap: 'var(--sp-1)', flexWrap: 'wrap'}}>
+              <ConnectionPill status={conn} />
+            </div>
+            <div style={{display: 'flex', gap: '4px', marginTop: 'var(--sp-2)'}}>
+              <button className={`toggle-btn ${conn === 'live' ? 'active' : ''}`} style={{padding: '3px 8px', fontSize: '11px'}} onClick={() => setConn('live')}>חי</button>
+              <button className={`toggle-btn ${conn === 'reconnecting' ? 'active' : ''}`} style={{padding: '3px 8px', fontSize: '11px'}} onClick={() => setConn('reconnecting')}>מתחבר</button>
+              <button className={`toggle-btn ${conn === 'offline' ? 'active' : ''}`} style={{padding: '3px 8px', fontSize: '11px'}} onClick={() => setConn('offline')}>מנותק</button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="playground-demo-row">
+          <span className="playground-lbl">חומרה (Severity Chips) & כרטיס מדד (VitalCard)</span>
+          <div style={{display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', width: '100%', marginBottom: 'var(--sp-3)'}}>
+            <SeverityChip level="normal" />
+            <SeverityChip level="watch" />
+            <SeverityChip level="elevated" />
+            <SeverityChip level="critical" />
+          </div>
+          
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)', width: '100%'}}>
+            <VitalCard 
+              label="HR" 
+              unit="bpm" 
+              value={hr} 
+              level={hr > 120 ? "elevated" : "normal"} 
+              alarming={hr > 120} 
+            />
+            <VitalCard 
+              label="SpO₂" 
+              unit="%" 
+              value={conn === 'reconnecting' ? null : 97} 
+              level="normal" 
+              status={conn} 
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  ReactDOM.createRoot(document.getElementById('playground-react-root')).render(<Playground />);
+</script>
+
+</body>
+</html>

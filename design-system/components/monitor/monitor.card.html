@@ -1,0 +1,68 @@
+<!-- @dsCard group="Instrument" viewport="980x800" name="Patient monitor (uMEC12-Vet-style)" subtitle="Sweep-rendered waveforms · channel-identity colour · redundant alarm states" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;background:var(--inst-room);color:var(--inst-text);font-family:var(--font-ui);}
+  .wrap{padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);height:100vh;box-sizing:border-box;}
+  .stage{flex:1;min-height:0;}
+  .bar{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;}
+  .bar .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--inst-text-faint);margin-inline-end:var(--sp-1);}
+  button.demo{min-height:38px;padding:0 14px;border-radius:8px;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:600;
+    background:var(--inst-rail);border:1px solid var(--inst-hair);color:var(--inst-text-dim);}
+  button.demo[aria-pressed="true"]{background:var(--inst-action-fill);border-color:var(--inst-action);color:var(--inst-action-hover);}
+  button.demo:focus-visible{outline:2px solid var(--inst-focus);outline-offset:2px;}
+</style>
+</head>
+<body>
+<div id="root" class="wrap"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { PatientMonitor } = window.DesignSystem_ad98cb;
+function Demo(){
+  const [alarm,setAlarm] = React.useState("normal");
+  const [muted,setMuted] = React.useState(false);
+  const [hr,setHr] = React.useState(148);
+  const [spo2,setSpo2] = React.useState(96);
+  React.useEffect(()=>{ const id=setInterval(()=>{
+    setHr(v=>Math.max(40,Math.min(210, v + (Math.random()>.5?1:-1))));
+    setSpo2(v=>Math.max(80,Math.min(100, v + (Math.random()>.6?0:(Math.random()>.5?1:-1)))));
+  },1000); return ()=>clearInterval(id); },[]);
+  const alarming = alarm==="critical" ? ["hr","spo2"] : alarm==="caution" ? ["spo2"] : [];
+  return (
+    <>
+      <div className="stage">
+        <PatientMonitor
+          patient={{species:"dog",breed:"Canine",weightKg:32,weightRange:"10–23 kg"}}
+          channels={{hr,spo2,art:{sys:120,dia:75,map:90},etco2:30,resp:22}}
+          sub={{pvcs:0,st:"OFF",pi:12.0,pr:hr,awrr:22,fi:2}}
+          alarm={alarm} alarming={alarming} muted={muted}
+          onToggleMute={()=>setMuted(m=>!m)} onNibp={()=>{}} onFreeze={()=>{}} onMenu={()=>{}} onAlarmSetup={()=>{}}
+          style={{height:"100%"}}
+        />
+      </div>
+      <div className="bar">
+        <span className="lbl">מצב התרעה</span>
+        {["normal","caution","critical"].map(a=>(
+          <button key={a} className="demo" aria-pressed={alarm===a} onClick={()=>setAlarm(a)}>
+            {a==="normal"?"תקין":a==="caution"?"אזהרה":"קריטי"}
+          </button>
+        ))}
+        <button className="demo" aria-pressed={muted} onClick={()=>setMuted(m=>!m)} style={{marginInlineStart:"auto"}}>
+          {muted?"מושתק":"השתקה"}
+        </button>
+        <button className="demo" onClick={()=>setHr(190)}>קפיצת דופק ↑</button>
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

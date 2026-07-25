@@ -1,5 +1,6 @@
-/* VetCrew webfonts — IBM Plex Sans Hebrew (UI) + IBM Plex Mono (vitals/numbers).
+/* VetCrew webfonts — IBM Plex Sans Hebrew (UI) + IBM Plex Sans Condensed
+   (device/vital metrics, --font-metric) + IBM Plex Mono (timestamps, T+ offsets, code).
    Real choice, not a substitution. Served from Google Fonts CDN; the @font-face
    rules they resolve to are what ship to consumers. Standalone cards/kits also
    <link> these in <head> for load reliability. */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');

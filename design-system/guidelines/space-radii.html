@@ -1,0 +1,21 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Radii" subtitle="Calm, moderate rounding — clinical, not toy-like" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>.rad{display:flex;gap:var(--sp-4);flex-wrap:wrap}
+.r{width:96px;height:70px;background:var(--surface);border:var(--border-w-strong) solid var(--border-strong)}
+.rc{display:flex;flex-direction:column;gap:var(--sp-1);align-items:center}
+.rc span{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted)}</style></head>
+<body>
+<div class="spec">
+  <div class="rad">
+    <div class="rc"><div class="r" style="border-radius:var(--radius-xs)"></div><span>xs · 4</span></div>
+    <div class="rc"><div class="r" style="border-radius:var(--radius-sm)"></div><span>sm · 6</span></div>
+    <div class="rc"><div class="r" style="border-radius:var(--radius-md)"></div><span>md · 10</span></div>
+    <div class="rc"><div class="r" style="border-radius:var(--radius-lg)"></div><span>lg · 14 (cards)</span></div>
+    <div class="rc"><div class="r" style="border-radius:var(--radius-xl)"></div><span>xl · 20</span></div>
+    <div class="rc"><div class="r" style="border-radius:var(--radius-pill)"></div><span>pill</span></div>
+  </div>
+</div>
+</body>
+</html>

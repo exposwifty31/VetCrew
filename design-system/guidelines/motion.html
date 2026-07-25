@@ -1,0 +1,24 @@
+<!-- @dsCard group="Motion" viewport="700x230" name="Motion — informs, never decorates" subtitle="Durations, easings, and the vital-tick highlight" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>
+  .demo{display:flex;align-items:center;gap:var(--sp-6);flex-wrap:wrap}
+  .tickbox{font-family:var(--font-mono);font-size:var(--fs-vital);font-weight:var(--fw-medium);color:var(--text-strong);padding:var(--sp-1) var(--sp-2);border-radius:var(--radius-sm);animation:vc-tick-up var(--dur-tick) var(--ease-standard) infinite alternate}
+  .dots{display:flex;gap:var(--sp-2);align-items:center}
+  .live{width:12px;height:12px;border-radius:50%;background:var(--status-running-dot);animation:vc-live-dot 1.8s var(--ease-standard) infinite}
+  .keys{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted);line-height:1.8}
+</style></head>
+<body>
+<div class="spec">
+  <div class="demo">
+    <div class="grp"><p class="lbl">Vital tick (recolor, no reflow)</p><div class="tickbox">148</div></div>
+    <div class="grp"><p class="lbl">Running heartbeat</p><div class="dots"><span class="live"></span><span class="mono">live</span></div></div>
+    <div class="grp"><p class="lbl">Tokens</p>
+      <div class="keys">--dur-fast 130 · --dur-base 200 · --dur-slow 320 · --dur-tick 260<br>--ease-standard cubic-bezier(.2,0,0,1) — decisive, no overshoot</div>
+    </div>
+  </div>
+  <p class="note">No bounce, no springs. Value changes animate their meaning (rising = amber flash, falling = blue) without moving neighbours. All durations collapse to 0 under prefers-reduced-motion.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!-- @dsCard group="Components" viewport="700x470" name="Controls — buttons, injection, ANTS rating" subtitle="Action buttons, fast-fire injection trigger, and event-linked ANTS 1–5 rating" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;background:var(--bg-canvas);color:var(--text);font-family:var(--font-ui);}
+  .wrap{padding:var(--sp-6);display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-6) var(--sp-8);align-items:start;}
+  .grp{display:flex;flex-direction:column;gap:var(--sp-3);min-width:0;}
+  .span2{grid-column:1 / -1;}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3);}
+  .lbl{font-size:var(--fs-xs);font-weight:var(--fw-semibold);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--text-faint);}
+</style>
+</head>
+<body>
+<div id="root" class="wrap"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="../../assets/icons.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Button, IconButton, InjectionTrigger, AntsRating } = window.DesignSystem_ad98cb;
+const Icon = window.VC.Icon;
+function Demo(){
+  const [rating,setRating] = React.useState(3);
+  return (
+    <>
+      <div className="grp">
+        <span className="lbl">Buttons — teal = action only</span>
+        <div className="row">
+          <Button variant="primary">שמור דירוג</Button>
+          <Button variant="secondary" iconStart={<Icon name="play" size={18}/>}>המשך</Button>
+          <Button variant="ghost">בטל</Button>
+          <Button variant="danger" iconStart={<Icon name="square" size={16}/>}>סיים סשן</Button>
+        </div>
+        <div className="row">
+          <Button size="lg" variant="primary">גדול · 56px</Button>
+          <Button size="sm" variant="secondary">קטן · 40px</Button>
+          <Button variant="primary" disabled>מושבת</Button>
+        </div>
+      </div>
+      <div className="grp">
+        <span className="lbl">Icon buttons (≥44px)</span>
+        <div className="row">
+          <IconButton label="השהה" variant="solid" size="lg" icon={<Icon name="pause" size={22}/>} />
+          <IconButton label="נגן" icon={<Icon name="play" size={22}/>} />
+          <IconButton label="סנן" icon={<Icon name="filter" size={20}/>} />
+          <IconButton label="הקודם" icon={<Icon name="chevron-right" size={22}/>} />
+        </div>
+      </div>
+      <div className="grp span2">
+        <span className="lbl">Injection triggers — armed & fired (fast-fire, no confirm)</span>
+        <div className="row" style={{alignItems:"stretch"}}>
+          <div style={{flex:"1 1 260px"}}>
+            <InjectionTrigger title="בעל הבית נכנס נסער" description="מסיח את דעת הצוות במהלך הטיפול" kind="מידע" icon={<Icon name="user-round" size={22}/>} />
+          </div>
+          <div style={{flex:"1 1 260px"}}>
+            <InjectionTrigger title="החמרה למצב הלם" kind="סיבוך" icon={<Icon name="activity" size={22}/>} fired firedAt="T+04:12" />
+          </div>
+        </div>
+      </div>
+      <div className="grp span2">
+        <span className="lbl">ANTS rating 1–5 — every score links to its evidence</span>
+        <div style={{maxWidth:420}}>
+          <AntsRating category="תקשורת" value={rating} onChange={setRating}
+            anchors={["חסרה","מוגבלת","מספקת","טובה","מצוינת"]} evidenceCount={4}
+            onJumpToEvidence={()=>{}} />
+        </div>
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script>
+</body>
+</html>

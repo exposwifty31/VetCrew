@@ -1,0 +1,62 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Status — severity, connection, session" subtitle="The color-blind-safe severity chip, connection pill, and session FSM indicator" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  html,body{margin:0;background:var(--bg-canvas);color:var(--text);font-family:var(--font-ui);}
+  .wrap{padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-5);}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3);}
+  .grp{display:flex;flex-direction:column;gap:var(--sp-2);}
+  .lbl{font-size:var(--fs-xs);font-weight:var(--fw-semibold);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--text-faint);}
+</style>
+</head>
+<body>
+<div id="root" class="wrap"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { SeverityChip, ConnectionPill, SessionState } = window.DesignSystem_ad98cb;
+const LEVELS = ["normal","watch","elevated","critical"];
+function Card(){
+  return (
+    <>
+      <div className="grp">
+        <span className="lbl">Severity · solid (redundant: color + shape + label)</span>
+        <div className="row">{LEVELS.map(l => <SeverityChip key={l} level={l} size="lg" />)}</div>
+      </div>
+      <div className="grp">
+        <span className="lbl">Severity · outline · bare · with value</span>
+        <div className="row">
+          <SeverityChip level="watch" appearance="outline" />
+          <SeverityChip level="elevated" appearance="outline" />
+          <SeverityChip level="critical" appearance="bare" />
+          <SeverityChip level="elevated" value="168" />
+        </div>
+      </div>
+      <div className="grp">
+        <span className="lbl">Connection / data-freshness</span>
+        <div className="row">
+          <ConnectionPill state="live" />
+          <ConnectionPill state="paused" />
+          <ConnectionPill state="offline" />
+          <ConnectionPill state="reconnecting" />
+        </div>
+      </div>
+      <div className="grp">
+        <span className="lbl">Session state — badge & lifecycle stepper</span>
+        <div className="row"><SessionState state="running" elapsed="07:42" /></div>
+        <div className="row"><SessionState state="paused" variant="stepper" elapsed="12:05" /></div>
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Card/>);
+</script>
+</body>
+</html>

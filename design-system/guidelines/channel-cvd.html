@@ -1,0 +1,48 @@
+<!-- @dsCard group="Instrument" viewport="820x460" name="Channel identity under colour-blindness" subtitle="Channel hue is an accelerator, never the mechanism — identity survives via label + fixed lane position" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0;background:#000;color:var(--inst-text);font-family:var(--font-ui);}
+  .spec{padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);}
+  .col h3{margin:0 0 var(--sp-2);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--inst-text-dim);font-weight:600;}
+  .lane{display:flex;align-items:center;gap:10px;height:40px;border-bottom:1px solid rgba(120,140,160,.1);}
+  .pos{font-family:var(--font-mono);font-size:11px;color:var(--inst-text-faint);width:14px;text-align:center;}
+  .swatch{width:52px;height:22px;border-radius:3px;flex:0 0 auto;}
+  .clabel{font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:.03em;}
+  .deut svg,.prot svg{display:block}
+  .note{font-size:var(--fs-sm);color:var(--inst-text-dim);line-height:var(--lh-normal);max-width:78ch;margin:0;}
+  .note b{color:var(--inst-text);}
+  /* CVD simulation filters (Machado-style approximations) */
+  svg.f{position:absolute;width:0;height:0;}
+</style></head>
+<body>
+<svg class="f"><defs>
+  <filter id="deuter"><feColorMatrix type="matrix" values="0.367 0.861 -0.228 0 0  0.280 0.673 0.047 0 0  -0.012 0.043 0.969 0 0  0 0 0 1 0"/></filter>
+  <filter id="protan"><feColorMatrix type="matrix" values="0.152 1.053 -0.205 0 0  0.115 0.786 0.099 0 0  -0.004 -0.048 1.052 0 0  0 0 0 1 0"/></filter>
+</defs></svg>
+<div class="spec">
+  <div class="cols">
+    <div class="col" id="normal"><h3>ראייה תקינה</h3></div>
+    <div class="col deut" id="deuter"><h3>דויטרנופיה</h3></div>
+    <div class="col prot" id="protan"><h3>פרוטנופיה</h3></div>
+  </div>
+  <p class="note"><b>הזהות לעולם אינה נשענת על גוון בלבד.</b> תחת דויטרנופיה, ירוק ה-ECG וצהוב ה-CO₂/Resp מתכנסים ונבדלים רק בבהירות; ציאן ולבן נשארים מובחנים. לכן כל ערוץ נושא <b>תווית טקסט קבועה ומיקום נתיב קבוע</b> בכל תצוגה ובכל גודל; אין וריאנט שמשמיט את התווית. בטיחות עיוורון-צבעים ל<b>חומרה</b> מגיעה משכבת ההתרעה (הבהוב, מסגרת, נורית, צורה, טקסט); ל<b>זהות ערוץ</b> — מתווית + מיקום. הגוון מאיץ זיהוי עבור הרוב, אך לעולם אינו המנגנון.</p>
+  <p class="note">הערה: אין ערוץ <b>Art</b> (לחץ דם פולשני) בתצורת רגל-הבסיס — למטופל אין קו עורקי, הערכים שכפלו את ה-NIBP, והאדום התנגש עם צבע ההתרעה הקריטית. <b>NIBP הוא מדד לחץ הדם היחיד.</b></p>
+</div>
+<script>
+  // Base-rung channel set — five lanes, no invasive arterial ("Art").
+  const CH=[["ECG","var(--ch-hr)"],["Pleth","var(--ch-spo2)"],["CO₂","var(--ch-etco2)"],["Resp","var(--ch-rr)"],["NIBP","var(--ch-nibp)"]];
+  const filt={normal:"",deuter:"url(#deuter)",protan:"url(#protan)"};
+  for(const id of ["normal","deuter","protan"]){
+    const col=document.getElementById(id);
+    CH.forEach(([name,c],i)=>{
+      const lane=document.createElement("div");lane.className="lane";
+      lane.innerHTML=`<span class="pos">${i+1}</span><span class="swatch" style="background:${c};filter:${filt[id]}"></span><span class="clabel" style="color:${c};filter:${filt[id]}">${name}</span>`;
+      col.appendChild(lane);
+    });
+  }
+</script>
+</body>
+</html>

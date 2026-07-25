@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VetCrew · תחנת מתאמן — דרג בסיס</title>
+<title>VetCrew · תחנת מתאמן - דרג בסיס</title>
 <link rel="stylesheet" href="styles.css">
 <style>
   html,body{margin:0;height:100%;background:var(--inst-room);font-family:var(--font-ui);}
@@ -16,7 +16,7 @@
   .taskzone__head{padding:18px 20px 14px;border-bottom:1px solid var(--task-hair);display:flex;align-items:center;gap:12px;}
   .taskzone__head h1{margin:0;font-size:19px;font-weight:700;color:var(--task-text);}
   .taskzone__head .who{font-size:13px;color:var(--task-text-dim);}
-  .taskzone__prog{margin-inline-start:auto;font-family:var(--font-mono);font-size:12px;color:var(--task-text-dim);letter-spacing:.04em;}
+  .taskzone__prog{margin-inline-start:auto;font-family:var(--font-metric);font-weight:700;font-size:12px;color:var(--task-text-dim);letter-spacing:.04em;}
   .taskzone__list{flex:1;min-height:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
   .taskzone__foot{padding:12px 20px;border-top:1px solid var(--task-hair);font-size:12px;color:var(--task-text-faint);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;}
@@ -24,22 +24,22 @@
   /* ZONE B — instrument: black glass */
   .instzone{background:var(--inst-room);display:flex;flex-direction:column;min-width:0;padding:18px;gap:14px;overflow:hidden;}
   .instzone__patient{display:flex;align-items:center;gap:14px;color:var(--inst-text);}
-  .instzone__patient .avatar{width:52px;height:52px;border-radius:12px;background:var(--inst-rail);border:1px solid var(--inst-hair);display:flex;align-items:center;justify-content:center;color:var(--inst-text-dim);}
+  .instzone__patient .avatar{width:52px;height:52px;border-radius:var(--radius-lg);background:var(--inst-rail);border:1px solid var(--inst-hair);display:flex;align-items:center;justify-content:center;color:var(--inst-text-dim);}
   .instzone__patient h2{margin:0;font-size:19px;font-weight:700;}
   .instzone__patient .sub{font-size:13px;color:var(--inst-text-dim);}
-  .instzone__mon{flex:1;min-height:0;border-radius:14px;overflow:hidden;border:1px solid var(--inst-bezel-edge);
+  .instzone__mon{flex:1;min-height:0;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--inst-bezel-edge);
     background:#05070c;box-shadow:var(--inst-recess);display:flex;}
   .instzone__mon canvas{width:100%;height:100%;display:block;}
 
   .zonetag{position:absolute;top:12px;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--task-text-faint);background:rgba(0,0,0,.35);padding:3px 8px;border-radius:4px;z-index:6;}
+    color:var(--task-text-faint);background:rgba(0,0,0,.35);padding:3px 8px;border-radius:var(--radius-xs);z-index:6;}
   .zonetag--a{inset-inline-start:14px;}
   .zonetag--b{inset-inline-end:14px;color:var(--inst-text-faint);}
 
   /* ── TaskChip (inlined; matte + contained — never a monitor channel colour) ── */
   .vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;min-height:var(--touch-min);padding:12px;
-    background:var(--task-surface);border:1px solid var(--task-edge);border-radius:8px;color:var(--task-text);}
-  .vc-task__badge{flex:0 0 auto;width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;align-self:flex-start;}
+    background:var(--task-surface);border:1px solid var(--task-edge);border-radius:var(--radius-md);color:var(--task-text);}
+  .vc-task__badge{flex:0 0 auto;width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;align-self:flex-start;}
   .vc-task__badge svg{width:22px;height:22px;}
   .vc-task--do .vc-task__badge{background:var(--task-do);color:var(--task-do-fg);}
   .vc-task--report .vc-task__badge{background:var(--task-report);color:var(--task-report-fg);}
@@ -57,14 +57,14 @@
   .vc-task__win b{color:var(--task-do);font-weight:600;}
   .vc-task__win::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--task-do);}
   .vc-task__report{display:inline-flex;align-items:center;gap:8px;margin-top:6px;}
-  .vc-task__field{width:92px;height:38px;border-radius:6px;background:var(--task-bg);border:1px solid var(--task-edge);
-    color:var(--task-text);font-family:var(--font-mono);font-size:16px;text-align:center;}
+  .vc-task__field{width:92px;height:38px;border-radius:var(--radius-sm);background:var(--task-bg);border:1px solid var(--task-edge);
+    color:var(--task-text);font-family:var(--font-metric);font-weight:700;font-size:16px;text-align:center;}
   .vc-task__funit{font-family:var(--font-mono);font-size:13px;color:var(--task-text-dim);}
   /* route — a SEPARATE scored dimension. Never pre-filled, never hinted. */
   .vc-task__route{display:flex;flex-direction:column;gap:6px;margin-top:9px;}
   .vc-task__route-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--task-text-faint);}
   .vc-task__routes{display:inline-flex;gap:6px;flex-wrap:wrap;}
-  .vc-task__route-opt{min-height:44px;min-width:54px;padding:0 12px;border-radius:6px;background:var(--task-bg);
+  .vc-task__route-opt{min-height:44px;min-width:54px;padding:0 12px;border-radius:var(--radius-sm);background:var(--task-bg);
     border:1px solid var(--task-edge);color:var(--task-text-dim);font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;}
   /* focus is never invisible — these were lost when the component CSS was inlined */
   .vc-task__route-opt:focus-visible,.vc-task__call:focus-visible,.vc-task__field:focus-visible{
@@ -72,7 +72,7 @@
   .vc-task__tail{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px;}
   .vc-task__state{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
   .vc-task__state svg{width:16px;height:16px;}
-  .vc-task__call{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px;border-radius:7px;
+  .vc-task__call{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px;border-radius:var(--radius-sm);
     background:var(--task-approval);color:var(--task-approval-fg);border:none;font-size:14px;font-weight:700;}
   .vc-task__call svg{width:17px;height:17px;}
   .vc-task[data-state="in_progress"]{border-color:var(--task-action);background:var(--task-surface-2);}
@@ -147,7 +147,7 @@
       צבעי משימה: <span class="swatch" style="background:var(--task-do)"></span>בצע
       <span class="swatch" style="background:var(--task-report)"></span>דווח
       <span class="swatch" style="background:var(--task-timed)"></span>מתוזמן
-      <span class="swatch" style="background:var(--task-approval)"></span>אישור — מוכלים באזור זה בלבד
+      <span class="swatch" style="background:var(--task-approval)"></span>אישור - מוכלים באזור זה בלבד
     </div>
   </section>
 
@@ -171,7 +171,7 @@
 <script src="monitor.js"></script>
 <script>
   new MonitorRenderer(document.getElementById('mon'))
-    .setPatient({ species: 'Canine', weight: '18–30 kg' })
+    .setPatient({ species: 'Canine', weight: '18-30 kg' })
     .setVitals({ hr: 92, spo2: 97, rr: 22, etco2: 34, temp: 38.4, temp2: 38.5, sys: 122, dia: 78, map: 93 })
     .setAlarm('normal')
     .start();

@@ -1,0 +1,40 @@
+<!-- @dsCard group="Severity" viewport="700x220" name="Severity under color-blind simulation" subtitle="Why shape carries the signal — the alarm levels stay distinct with no hue" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5)}
+  .strip{display:flex;gap:var(--sp-2)}
+  .p{flex:1;min-height:56px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:#fff}
+  .p svg{width:24px;height:24px}
+  .p--quiet{opacity:.9}
+  .p--quiet .qmark{font-family:var(--font-mono);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);color:#fff}
+  .gray .p{filter:grayscale(1)}
+  .cap{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-faint);text-transform:uppercase;letter-spacing:var(--ls-caps);margin-bottom:var(--sp-2)}
+</style></head>
+<body>
+<div class="spec">
+  <div class="cols">
+    <div>
+      <p class="cap">As designed</p>
+      <div class="strip">
+        <div class="p p--quiet" style="background:var(--sev-normal-edge)"><span class="qmark">quiet</span></div>
+        <div class="p" style="background:var(--sev-watch-edge)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="#fff"/></svg></div>
+        <div class="p" style="background:var(--sev-elevated-edge)"><svg viewBox="0 0 24 24"><path d="M12 4.2 L20.2 19 H3.8 Z" fill="#fff"/></svg></div>
+        <div class="p" style="background:var(--sev-critical-edge)"><svg viewBox="0 0 24 24"><path d="M8.3 3.5 h7.4 L20.5 8.3 v7.4 L15.7 20.5 h-7.4 L3.5 15.7 v-7.4 Z" fill="#fff"/></svg></div>
+      </div>
+    </div>
+    <div class="gray">
+      <p class="cap">Greyscale (worst case)</p>
+      <div class="strip">
+        <div class="p p--quiet" style="background:var(--sev-normal-edge)"><span class="qmark">quiet</span></div>
+        <div class="p" style="background:var(--sev-watch-edge)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="#fff"/></svg></div>
+        <div class="p" style="background:var(--sev-elevated-edge)"><svg viewBox="0 0 24 24"><path d="M12 4.2 L20.2 19 H3.8 Z" fill="#fff"/></svg></div>
+        <div class="p" style="background:var(--sev-critical-edge)"><svg viewBox="0 0 24 24"><path d="M8.3 3.5 h7.4 L20.5 8.3 v7.4 L15.7 20.5 h-7.4 L3.5 15.7 v-7.4 Z" fill="#fff"/></svg></div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>Normal is quiet — no shape, no alarm.</b> The three ALARM levels each own a silhouette (dot → triangle → octagon) and a fixed left-to-right rank. Strip the hue entirely and they stay unambiguous: presence-of-shape means something is wrong, and the silhouette escalates with severity. That is the validation test — if it reads in greyscale, it reads for every form of color vision deficiency.</p>
+</div>
+</body>
+</html>

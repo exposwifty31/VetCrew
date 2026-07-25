@@ -1,0 +1,26 @@
+<!-- @dsCard group="Type" viewport="700x330" name="Typefaces" subtitle="Hebrew UI · device-metric sans for vitals · mono for timestamps & code" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css"></head>
+<body>
+<div class="spec">
+  <div class="grp">
+    <p class="lbl">UI · IBM Plex Sans Hebrew (--font-ui)</p>
+    <div style="font-family:var(--font-ui)">
+      <div style="font-size:var(--fs-h1);font-weight:var(--fw-bold);line-height:var(--lh-snug)">צוות מוכן להחייאה</div>
+      <div style="font-size:var(--fs-body-lg);font-weight:var(--fw-regular);color:var(--text-muted)">Readable at arm's length · Hebrew-first · 300 / 400 / 500 / 600 / 700</div>
+    </div>
+  </div>
+  <div class="grp">
+    <p class="lbl">Vitals / device metrics · --font-metric (bold, condensed, tabular)</p>
+    <div style="font-family:var(--font-metric);font-size:var(--fs-vital);font-weight:700;line-height:1;letter-spacing:-0.01em">168 · 94 · 38.4</div>
+    <p class="note"><b>Matches the real device's numerals</b> — a bold, condensed, neutral tabular sans. Explicitly <b>not</b> a stylised tech/sci-fi mono: that reads as a game, which is the failure mode for a clinical instrument. Used by <span class="mono">PatientMonitor</span> and <span class="mono">VitalCard</span>.</p>
+  </div>
+  <div class="grp">
+    <p class="lbl">Timestamps / T+ offsets / code · IBM Plex Mono (--font-mono)</p>
+    <div class="mono" style="font-size:var(--fs-h2);font-weight:var(--fw-medium)">12:04:38 · T+04:12 · v1.0</div>
+    <p class="note">Mono is still correct <b>here</b> — clock time, session offsets, versions and code. Tabular, lining figures keep every digit the same width, so a ticking value never shifts the layout.</p>
+  </div>
+</div>
+</body>
+</html>

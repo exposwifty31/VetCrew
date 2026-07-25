@@ -1,0 +1,38 @@
+<!-- @dsCard group="Severity" viewport="700x330" name="Severity ramp (color-blind-safe)" subtitle="Normal is quiet; color + shape appear only when wrong — always paired with a text label" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>
+  .sev{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3)}
+  .cell{border:var(--border-w) solid;border-radius:var(--radius-lg);padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-2);min-height:132px}
+  .cell .top{display:flex;align-items:center;gap:var(--sp-2);min-height:26px}
+  .cell .he{font-size:var(--fs-h3);font-weight:var(--fw-bold)}
+  .cell .en{font-family:var(--font-mono);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);opacity:.75}
+  .cell .rank{font-family:var(--font-mono);font-size:var(--fs-xs);margin-top:auto;opacity:.7}
+  .glyph{width:26px;height:26px}
+  .quiet-mark{font-family:var(--font-mono);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);opacity:.55}
+</style></head>
+<body>
+<div class="spec">
+  <div class="sev">
+    <div class="cell" style="color:var(--sev-normal-fg);background:var(--sev-normal-fill);border-color:var(--sev-normal-edge)">
+      <div class="top"><span class="quiet-mark">— quiet</span><span class="en">Normal</span></div>
+      <div class="he">תקין</div><div class="rank mono">rank 0 · no shape · neutral</div>
+    </div>
+    <div class="cell" style="color:var(--sev-watch-fg);background:var(--sev-watch-fill);border-color:var(--sev-watch-edge)">
+      <div class="top"><svg class="glyph" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/></svg><span class="en">Watch</span></div>
+      <div class="he">מעקב</div><div class="rank mono">rank 1 · dot · blue advisory</div>
+    </div>
+    <div class="cell" style="color:var(--sev-elevated-fg);background:var(--sev-elevated-fill);border-color:var(--sev-elevated-edge)">
+      <div class="top"><svg class="glyph" viewBox="0 0 24 24"><path d="M12 4.2 L20.2 19 H3.8 Z" fill="currentColor"/></svg><span class="en">Elevated</span></div>
+      <div class="he">מוחמר</div><div class="rank mono">rank 2 · triangle · amber</div>
+    </div>
+    <div class="cell" style="color:var(--sev-critical-fg);background:var(--sev-critical-fill);border-color:var(--sev-critical-edge)">
+      <div class="top"><svg class="glyph" viewBox="0 0 24 24"><path d="M8.3 3.5 h7.4 L20.5 8.3 v7.4 L15.7 20.5 h-7.4 L3.5 15.7 v-7.4 Z" fill="currentColor"/></svg><span class="en">Critical</span></div>
+      <div class="he">קריטי</div><div class="rank mono">rank 3 · octagon · vermilion</div>
+    </div>
+  </div>
+  <p class="note"><b>Redundantly coded — never hue alone.</b> Normal is quiet (no shape). The three alarm levels each carry a distinct silhouette (dot → triangle → octagon), a text label, and a fixed rank, so criticality survives deuteranopia, protanopia, tritanopia, and greyscale printing. Hues are tuned from the IEC-60601 monitor convention (blue advisory → amber warning → vermilion critical) but shape does the real work.</p>
+</div>
+</body>
+</html>

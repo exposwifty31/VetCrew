@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VetCrew · מדידת NIBP - גוף החלטה</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  html,body{margin:0;min-height:100%;background:var(--task-bg);font-family:var(--font-ui);color:var(--task-text);}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 24px 48px;}
+
+  /* ── stage rail: where am I in the decision ────────────────────────────── */
+  .rail{display:flex;align-items:center;gap:0;margin-bottom:22px;}
+  .rail__s{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--task-text-faint);}
+  .rail__n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    border:1.5px solid var(--task-edge);font-family:var(--font-mono);font-size:11px;
+    background:var(--task-bg);color:var(--task-text-faint);flex:0 0 auto;}
+  .rail__s[data-on="1"]{color:var(--task-text);}
+  .rail__s[data-on="1"] .rail__n{border-color:var(--task-action);color:var(--task-action);}
+  .rail__s[data-done="1"] .rail__n{background:var(--task-action);border-color:var(--task-action);color:var(--task-action-fg);}
+  .rail__gap{flex:1;height:1px;background:var(--task-hair);margin:0 12px;}
+
+  /* ── the task, expanded into a decision body ───────────────────────────── */
+  .task{background:var(--task-surface);border:1px solid var(--task-edge);border-radius:var(--radius-md);overflow:hidden;}
+  .task__hd{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;}
+  .task__badge{flex:0 0 auto;width:40px;height:40px;border-radius:var(--radius-sm);display:grid;place-items:center;
+    background:var(--task-timed);color:var(--task-timed-fg);}
+  .task__badge svg{width:22px;height:22px;}
+  .task__t{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .task__code{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--task-timed);}
+  .task__title{font-size:17px;font-weight:600;line-height:1.25;}
+  .task__meta{font-size:13.5px;color:var(--task-text-dim);}
+  .task__meta b{font-family:var(--font-metric);font-weight:700;}
+
+  /* sections are separated by space + a hairline — never nested cards */
+  .sec{padding:16px 18px;border-top:1px solid var(--task-hair);}
+  .sec__h{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;}
+  .sec__h b{font-size:14px;font-weight:600;color:var(--task-text);}
+  .sec__h span{font-size:12.5px;color:var(--task-text-faint);}
+
+  /* choice rows — the wrong options are always present and selectable */
+  .opts{display:flex;gap:8px;flex-wrap:wrap;}
+  .opt{min-height:44px;padding:0 14px;border-radius:var(--radius-sm);background:var(--task-bg);
+    border:1px solid var(--task-edge);color:var(--task-text-dim);
+    font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:border-color 180ms var(--ease-standard),background 180ms var(--ease-standard),color 180ms var(--ease-standard);}
+  .opt:hover:not(:disabled){border-color:var(--task-action);color:var(--task-text);}
+  .opt:focus-visible{outline:2px solid var(--task-focus);outline-offset:2px;}
+  .opt[aria-pressed="true"]{border-color:var(--task-action);border-width:1.5px;background:var(--task-surface-2);color:var(--task-text);}
+  .opt:disabled{opacity:.45;cursor:not-allowed;}
+  .opt small{font-family:var(--font-mono);font-size:11.5px;font-weight:500;color:var(--task-text-faint);}
+  .opt[aria-pressed="true"] small{color:var(--task-text-dim);}
+
+  .check{display:inline-flex;align-items:center;gap:9px;min-height:44px;margin-top:6px;
+    font-size:13.5px;color:var(--task-text-dim);cursor:pointer;}
+  .check input{width:18px;height:18px;accent-color:var(--task-action);}
+
+  /* cuff fit — the signature control. The information is visible; the JUDGEMENT is theirs. */
+  .fit{margin-top:13px;display:none;}
+  .fit[data-show="1"]{display:block;}
+  .fit__lbl{font-size:12.5px;color:var(--task-text-faint);margin-bottom:7px;}
+  .fit__track{position:relative;height:30px;border-radius:var(--radius-xs);background:var(--task-bg);
+    border:1px solid var(--task-edge);overflow:hidden;}
+  .fit__band{position:absolute;inset-block:0;background:color-mix(in srgb,var(--task-action) 22%,transparent);
+    border-inline:1.5px solid var(--task-action);}
+  .fit__mark{position:absolute;inset-block:-2px;width:2.5px;background:var(--task-text);transform:translateX(50%);}
+  .fit__mark::after{content:"";position:absolute;inset-inline-start:-4px;top:-5px;
+    border-inline:5px solid transparent;border-top:6px solid var(--task-text);}
+  .fit__scale{display:flex;justify-content:space-between;font-family:var(--font-mono);
+    font-size:11px;color:var(--task-text-faint);margin-top:5px;}
+  .fit__verdict{margin-top:8px;font-size:13px;display:flex;align-items:center;gap:7px;}
+  .fit__verdict svg{width:15px;height:15px;flex:0 0 auto;}
+  .fit__verdict[data-in="1"]{color:var(--task-done);}
+  .fit__verdict[data-in="0"]{color:var(--task-error);}
+
+  /* measuring */
+  .meas{display:flex;align-items:baseline;gap:12px;}
+  .meas__n{font-family:var(--font-metric);font-variant-numeric:tabular-nums;font-size:52px;font-weight:700;line-height:1;color:var(--task-text);}
+  .meas__u{font-family:var(--font-mono);font-size:13px;color:var(--task-text-dim);}
+  .meas__st{margin-inline-start:auto;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--task-text-faint);}
+  .bar{margin-top:12px;height:6px;border-radius:var(--radius-pill);background:var(--task-bg);overflow:hidden;}
+  .bar__f{height:100%;background:var(--task-action);width:0%;transition:width 200ms linear;}
+
+  /* device error — names the problem AND the recovery */
+  .err__t{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:var(--task-error);}
+  .err__t svg{width:19px;height:19px;flex:0 0 auto;}
+  .err__d{margin:7px 0 0;font-size:13.5px;color:var(--task-text-dim);line-height:1.5;}
+  .err__q{margin-top:14px;font-size:13.5px;color:var(--task-text);font-weight:600;}
+
+  /* reading */
+  .read{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;}
+  .read__v{display:flex;flex-direction:column;gap:2px;}
+  .read__k{font-family:var(--font-mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--task-text-faint);}
+  .read__n{font-family:var(--font-metric);font-variant-numeric:tabular-nums;font-weight:700;line-height:1;color:var(--task-text);}
+  .read__n.big{font-size:44px;}
+  .read__n.sm{font-size:28px;}
+
+  .acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;}
+  .btn{min-height:44px;padding:0 16px;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-ui);
+    font-size:14px;font-weight:700;border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;
+    transition:filter 180ms var(--ease-standard);}
+  .btn:focus-visible{outline:2px solid var(--task-focus);outline-offset:2px;}
+  .btn--go{background:var(--task-action);color:var(--task-action-fg);}
+  .btn--go:hover{filter:brightness(1.12);}
+  .btn--go:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+  .btn--ghost{background:transparent;border-color:var(--task-edge);color:var(--task-text-dim);}
+  .btn--ghost:hover{border-color:var(--task-action);color:var(--task-text);}
+
+  .log{margin-top:20px;border-top:1px solid var(--task-hair);padding-top:14px;}
+  .log__h{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--task-text-faint);margin-bottom:9px;}
+  .log__r{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--task-text-dim);
+    padding:5px 0;line-height:1.45;}
+  .log__r svg{width:15px;height:15px;flex:0 0 auto;margin-top:2px;}
+  .log__r[data-v="ok"] svg{color:var(--task-done);}
+  .log__r[data-v="bad"] svg{color:var(--task-error);}
+  .log__r b{color:var(--task-text);font-weight:600;}
+  .log__empty{font-size:13px;color:var(--task-text-faint);}
+
+  .note{margin-top:22px;font-size:12.5px;color:var(--task-text-faint);line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- stage rail -->
+  <div class="rail" id="rail">
+    <div class="rail__s" data-s="setup"><span class="rail__n">1</span>הכנה</div>
+    <div class="rail__gap"></div>
+    <div class="rail__s" data-s="measuring"><span class="rail__n">2</span>מדידה</div>
+    <div class="rail__gap"></div>
+    <div class="rail__s" data-s="error"><span class="rail__n">3</span>אבחון תקלה</div>
+    <div class="rail__gap"></div>
+    <div class="rail__s" data-s="reading"><span class="rail__n">4</span>פענוח</div>
+  </div>
+
+  <div class="task">
+    <div class="task__hd">
+      <span class="task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
+      <span class="task__t">
+        <span class="task__code">מתוזמן</span>
+        <span class="task__title">מדידת לחץ דם NIBP</span>
+        <span class="task__meta">צ'רלי · לברדור · 22 ק״ג · היקף גפה קדמית <b id="limb">13</b> ס״מ</span>
+      </span>
+    </div>
+
+    <!-- STAGE 1 — SETUP -->
+    <div id="setup">
+      <div class="sec">
+        <div class="sec__h"><b>תנוחת המטופל</b><span>השרוול חייב להיות בגובה הלב</span></div>
+        <div class="opts" id="pos"></div>
+        <label class="check" id="holdWrap" hidden>
+          <input type="checkbox" id="hold"> מחזיק את הגפה בגובה הלב
+        </label>
+      </div>
+
+      <div class="sec">
+        <div class="sec__h"><b>מיקום השרוול</b></div>
+        <div class="opts" id="site"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec__h"><b>מידת שרוול</b><span>סימן המדד חייב ליפול בתוך תחום השרוול</span></div>
+        <div class="opts" id="cuff"></div>
+        <div class="fit" id="fit">
+          <div class="fit__lbl">התאמה - היקף הגפה מול תחום השרוול</div>
+          <div class="fit__track" id="track">
+            <div class="fit__band" id="band"></div>
+            <div class="fit__mark" id="mark"></div>
+          </div>
+          <div class="fit__scale"><span>4 ס״מ</span><span>24 ס״מ</span></div>
+          <div class="fit__verdict" id="verdict"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec__h"><b>מצב חיה</b><span>נגזר ממידת השרוול</span></div>
+        <div class="opts" id="mode"></div>
+      </div>
+
+      <div class="sec">
+        <button class="btn btn--go" id="start" disabled>התחל מדידה</button>
+      </div>
+    </div>
+
+    <!-- STAGE 2 — MEASURING -->
+    <div id="measuring" hidden>
+      <div class="sec">
+        <div class="meas">
+          <span class="meas__n" id="cuffP">0</span><span class="meas__u">mmHg</span>
+          <span class="meas__st" id="measSt">ניפוח</span>
+        </div>
+        <div class="bar"><div class="bar__f" id="barf"></div></div>
+        <div class="acts"><button class="btn btn--ghost" id="stop">עצור מדידה</button></div>
+      </div>
+    </div>
+
+    <!-- STAGE 3 — DEVICE ERROR -->
+    <div id="error" hidden>
+      <div class="sec">
+        <div class="err__t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.5 21h21Z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg><span id="errName">Cuff Overpressure</span></div>
+        <p class="err__d" id="errDesc">לחץ השרוול עבר 300 mmHg. המכשיר הפסיק את המדידה ולא הפיק ערך.</p>
+        <div class="err__q">מה גרם לתקלה?</div>
+        <div class="opts" style="margin-top:10px" id="causes"></div>
+      </div>
+    </div>
+
+    <!-- STAGE 4 — READING -->
+    <div id="reading" hidden>
+      <div class="sec">
+        <div class="read">
+          <span class="read__v"><span class="read__k">SYS / DIA</span><span class="read__n big" id="rSys">--</span></span>
+          <span class="read__v"><span class="read__k">MAP</span><span class="read__n sm" id="rMap">--</span></span>
+          <span class="read__v"><span class="read__k">PR</span><span class="read__n sm" id="rPr">--</span></span>
+        </div>
+        <div class="acts">
+          <button class="btn btn--go" id="accept">קבל ודווח</button>
+          <button class="btn btn--ghost" id="again">מדוד שוב</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- decision log -->
+    <div class="sec">
+      <div class="log">
+        <div class="log__h">תיעוד החלטות</div>
+        <div id="log"><div class="log__empty">טרם נרשמו החלטות.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    כל בחירה נרשמת בנפרד - תנוחה · מיקום · מידת שרוול · מצב חיה · אבחון תקלה · פענוח.
+    האפשרויות השגויות תמיד זמינות לבחירה: הטעות היא המדידה. המערכת לעולם אינה חוסמת ואינה מתקנת.
+    <br>ערכים קליניים להמחשה בלבד - טעונים אישור קליני מול תקן לפני שהם מנקדים אדם.
+  </p>
+</div>
+
+<script>
+/* Illustrative only — every clinical value here is sign-off gated (§2.5). */
+const LIMB = 13;                                   // cm, front limb circumference
+const CUFFS = [
+  {n:'#2', lo:6,  hi:11, mode:'small'},
+  {n:'#3', lo:9,  hi:13, mode:'small'},            // fits at the very top of its band
+  {n:'#4', lo:12, hi:17, mode:'large'},            // also fits — the LARGER is correct
+  {n:'#5', lo:16, hi:22, mode:'large'},
+];
+const SCALE_LO = 4, SCALE_HI = 24;
+
+const S = { pos:null, hold:false, site:null, cuff:null, mode:null, cause:null, attempts:0 };
+const el = id => document.getElementById(id);
+const log = [];
+
+function chip(host, items, key, onPick){
+  host.innerHTML = '';
+  items.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.type='button';
+    b.setAttribute('aria-pressed', String(S[key]===o.v));
+    b.innerHTML = o.sub ? `${o.t} <small>${o.sub}</small>` : o.t;
+    b.onclick=()=>{ S[key]=o.v; onPick&&onPick(o); render(); };
+    host.appendChild(b);
+  });
+}
+
+function render(){
+  chip(el('pos'), [
+    {t:'שכיבה על הצד', v:'lateral'},
+    {t:'ישיבה',        v:'seated'},
+    {t:'עמידה',        v:'standing'},
+  ], 'pos');
+  el('holdWrap').hidden = S.pos!=='seated';
+  el('hold').checked = S.hold;
+
+  chip(el('site'), [
+    {t:'גפה קדמית, מעל כף הרגל', v:'paw'},
+    {t:'מעל מפרק',               v:'joint'},
+    {t:'בסיס הזנב',              v:'tail'},
+  ], 'site');
+
+  chip(el('cuff'), CUFFS.map(c=>({t:c.n, sub:`${c.lo}-${c.hi} ס״מ`, v:c.n})), 'cuff');
+
+  // fit visualisation — shows what the technician can physically see
+  const c = CUFFS.find(x=>x.n===S.cuff);
+  el('fit').dataset.show = c ? '1':'0';
+  if(c){
+    const pct = v => ((v-SCALE_LO)/(SCALE_HI-SCALE_LO))*100;
+    el('band').style.insetInlineStart = pct(c.lo)+'%';
+    el('band').style.width = (pct(c.hi)-pct(c.lo))+'%';
+    el('mark').style.insetInlineStart = pct(LIMB)+'%';
+    const inside = LIMB>=c.lo && LIMB<=c.hi;
+    const v=el('verdict'); v.dataset.in = inside?'1':'0';
+    v.innerHTML = inside
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>סימן המדד בתוך התחום`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>סימן המדד מחוץ לתחום - השרוול אינו מתאים`;
+  }
+
+  chip(el('mode'), [{t:'קטן', v:'small'},{t:'גדול', v:'large'}], 'mode');
+
+  el('start').disabled = !(S.pos && S.site && S.cuff && S.mode);
+  paintRail('setup');
+  paintLog();
+}
+
+function paintRail(active){
+  const order=['setup','measuring','error','reading'];
+  const ai=order.indexOf(active);
+  document.querySelectorAll('.rail__s').forEach(s=>{
+    const i=order.indexOf(s.dataset.s);
+    s.dataset.on = i===ai ? '1':'0';
+    s.dataset.done = i<ai ? '1':'0';
+  });
+}
+
+function addLog(label, value, verdict, why){
+  log.push({label,value,verdict,why}); paintLog();
+}
+function paintLog(){
+  const host=el('log');
+  if(!log.length){ host.innerHTML='<div class="log__empty">טרם נרשמו החלטות.</div>'; return; }
+  host.innerHTML = log.map(r=>`
+    <div class="log__r" data-v="${r.verdict}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        ${r.verdict==='ok' ? '<path d="M4 12.5 9.5 18 20 6"/>' : '<path d="M6 6l12 12M18 6 6 18"/>'}
+      </svg>
+      <span>${r.label}: <b>${r.value}</b>${r.why?` - ${r.why}`:''}</span>
+    </div>`).join('');
+}
+
+function show(stage){
+  ['setup','measuring','error','reading'].forEach(s=> el(s).hidden = s!==stage);
+  paintRail(stage);
+}
+
+/* start → record the setup decisions, then inflate */
+el('start').onclick = ()=>{
+  const c = CUFFS.find(x=>x.n===S.cuff);
+  const fits = CUFFS.filter(x=> LIMB>=x.lo && LIMB<=x.hi);
+  const largestFitting = fits[fits.length-1];
+  const inside = LIMB>=c.lo && LIMB<=c.hi;
+
+  addLog('תנוחה', {lateral:'שכיבה על הצד',seated:'ישיבה',standing:'עמידה'}[S.pos],
+    S.pos==='lateral' || (S.pos==='seated'&&S.hold) ? 'ok':'bad',
+    S.pos==='standing' ? 'השרוול אינו בגובה הלב' : (S.pos==='seated'&&!S.hold ? 'לא הוחזקה הגפה בגובה הלב':''));
+  addLog('מיקום', {paw:'גפה קדמית מעל כף הרגל',joint:'מעל מפרק',tail:'בסיס הזנב'}[S.site],
+    S.site==='paw' || (S.site==='tail' && S.pos==='standing') ? 'ok':'bad',
+    S.site==='joint' ? 'אין למקם מעל מפרק':'');
+  addLog('מידת שרוול', S.cuff + ` (${c.lo}-${c.hi})`,
+    inside && c.n===largestFitting.n ? 'ok':'bad',
+    !inside ? 'מחוץ לתחום - מוביל להערכת יתר של הלחץ'
+            : (c.n!==largestFitting.n ? `שתי מידות התאימו - יש לבחור את הגדולה (${largestFitting.n})` : ''));
+  addLog('מצב חיה', S.mode==='small'?'קטן':'גדול',
+    S.mode===c.mode ? 'ok':'bad', S.mode!==c.mode ? `אינו תואם לשרוול ${c.n}`:'');
+
+  S.attempts++;
+  show('measuring'); inflate(!inside);   // an undersized cuff drives overpressure
+};
+
+/* inflation → either an error or a reading */
+function inflate(willFail){
+  let p=0; const target=willFail?300:157;
+  el('measSt').textContent='ניפוח'; el('barf').style.width='0%';
+  const t=setInterval(()=>{
+    p+=14; el('cuffP').textContent=Math.min(p,target);
+    el('barf').style.width = Math.min(100, (p/target)*100)+'%';
+    if(p>=target){
+      clearInterval(t);
+      if(willFail){ setTimeout(()=>toError(),450); }
+      else { deflate(); }
+    }
+  },60);
+}
+function deflate(){
+  el('measSt').textContent='שחרור';
+  let p=157;
+  const t=setInterval(()=>{
+    p-=6; el('cuffP').textContent=Math.max(p,58);
+    el('barf').style.width = Math.max(0,((p-58)/(157-58))*100)+'%';
+    if(p<=58){ clearInterval(t); toReading(); }
+  },55);
+}
+
+function toError(){
+  show('error');
+  chip(el('causes'), [
+    {t:'שרוול קטן מדי',            v:'cuff'},
+    {t:'תנועה של המטופל',          v:'motion'},
+    {t:'צינור מקופל',              v:'hose'},
+    {t:'המטופל שוכב על השרוול',    v:'lying'},
+  ], 'cause', (o)=>{
+    const correct = o.v==='cuff';   // this scenario's true cause
+    addLog('אבחון תקלה', o.t, correct?'ok':'bad',
+      correct ? '' : 'הסיבה בפועל: השרוול היה קטן מדי');
+    setTimeout(()=>{ S.cuff=null; S.mode=null; show('setup'); render(); }, 700);
+  });
+}
+
+function toReading(){
+  show('reading');
+  el('rSys').textContent='134/86'; el('rMap').textContent='102'; el('rPr').textContent='94';
+  el('accept').onclick=()=>{ addLog('פענוח', '134/86 · התקבל', 'ok', 'בטווח התקין לכלב'); };
+  el('again').onclick=()=>{ show('setup'); render(); };
+}
+
+el('stop').onclick=()=>{ show('setup'); render(); };
+el('hold').onchange=e=>{ S.hold=e.target.checked; };
+
+render();
+</script>
+</body>
+</html>

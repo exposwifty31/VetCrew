@@ -1,0 +1,19 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Elevation" subtitle="Restrained, matte shadows; dark leans on borders not black boxes" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="spec.css">
+<style>.el{display:flex;gap:var(--sp-6);flex-wrap:wrap}
+.e{width:120px;height:76px;background:var(--surface);border-radius:var(--radius-lg);border:var(--border-w) solid var(--border);display:flex;align-items:flex-end;padding:var(--sp-2)}
+.e span{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted)}</style></head>
+<body>
+<div class="spec">
+  <div class="el">
+    <div class="e" style="box-shadow:var(--elev-1)"><span>elev-1</span></div>
+    <div class="e" style="box-shadow:var(--elev-2)"><span>elev-2</span></div>
+    <div class="e" style="box-shadow:var(--elev-3)"><span>elev-3</span></div>
+    <div class="e" style="box-shadow:var(--elev-4)"><span>elev-4</span></div>
+  </div>
+  <p class="note">elev-1/2 for cards and pinned bars, elev-3 for popovers, elev-4 for modals only. Shadow tint follows --shadow-color per theme.</p>
+</div>
+</body>
+</html>

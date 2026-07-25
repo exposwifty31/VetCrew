@@ -26,10 +26,7 @@
 
   --task-text:      #e7edf2; /* @kind color */
   --task-text-dim:  #94a3af; /* @kind color */
-  --task-text-faint:#8d9ba7; /* @kind color */  /* AA: 5.03 on --task-surface, 5.96 on --task-bg,
-                                    4.50 on --task-surface-2. Was #63717d = 2.85 on --task-surface,
-                                    which failed WCAG AA on the route label — the control for a
-                                    scored decision. Tertiary text that must meet AA cannot be fainter. */
+  --task-text-faint:#63717d; /* @kind color */
 
   /* matte code palette (badge fill / text-on-badge / soft chip tint / edge) */
   --task-do:      #c1941d;  /* @kind color */

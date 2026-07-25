@@ -71,7 +71,7 @@ class MonitorRenderer {
     this.alarm = 'normal';          // normal | caution | critical
     this.alarming = [];             // e.g. ['hr','spo2']
     this.species = 'Canine';
-    this.weight = '18–30 kg';
+    this.weight = '18-30 kg';
     this.clock = '2026-07-25 10:15:04';
     this.traces = LANES.map((l) => ({ ...l, buf: new Float32Array(Math.ceil(W * 0.60)), phase: 0 }));
     this.cursor = 0;
@@ -162,7 +162,7 @@ class MonitorRenderer {
     /* ── header strip: weight / species / clock ── */
     c.fillStyle = '#0b1219';
     c.fillRect(0, 11, W, 40);
-    c.font = '17px ui-sans-serif, system-ui, sans-serif';
+    c.font = '17px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.textAlign = 'left';
     c.fillStyle = '#8a97a1'; c.fillText('Weight', 18, 38);
     c.fillStyle = '#c7d0d6'; c.fillText(this.weight, 84, 38);
@@ -211,12 +211,12 @@ class MonitorRenderer {
       c.stroke();
       c.shadowBlur = 0;
 
-      c.font = '700 15px ui-sans-serif, system-ui, sans-serif';
+      c.font = '700 15px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
       c.fillStyle = ch.color;
       c.textAlign = 'left';
       c.fillText(t.label, 12, y + 20);
       if (t.tag) {
-        c.font = '12px ui-sans-serif, system-ui, sans-serif';
+        c.font = '12px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
         c.fillStyle = 'rgba(255,255,255,.34)';
         c.fillText(t.tag, 12, y + laneH - 10);
       }
@@ -228,16 +228,16 @@ class MonitorRenderer {
     c.textAlign = 'left';
     const v = this.vitals;
     const block = (label, unit, value, color, scale, subs, yy, big) => {
-      c.font = '700 17px ui-sans-serif, system-ui, sans-serif';
+      c.font = '700 17px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
       c.fillStyle = color;
       c.fillText(label, nx, yy);
       if (unit) {
-        c.font = '13px ui-sans-serif, system-ui, sans-serif';
+        c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
         c.fillStyle = '#8a97a1';
         c.fillText(unit, nx + c.measureText(label).width + 34, yy);
       }
       if (scale) {
-        c.font = '13px ui-sans-serif, system-ui, sans-serif';
+        c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
         c.fillStyle = '#71808b';
         c.textAlign = 'right';
         c.fillText(scale[0], W - 16, yy);
@@ -245,11 +245,11 @@ class MonitorRenderer {
         c.textAlign = 'left';
       }
       const dim = this.alarming.includes(big) && (crit || caution) && !flashOn;
-      c.font = `800 ${big === 'hr' ? 68 : 50}px ui-sans-serif, system-ui, sans-serif`;
+      c.font = `800 ${big === 'hr' ? 68 : 50}px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif`;
       c.fillStyle = dim ? '#3c4a55' : color;
       c.fillText(String(value), nx, yy + (big === 'hr' ? 62 : 50));
       if (subs) {
-        c.font = '13px ui-sans-serif, system-ui, sans-serif';
+        c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
         c.fillStyle = '#93a0aa';
         c.fillText(subs, nx, yy + (big === 'hr' ? 84 : 70));
       }
@@ -271,41 +271,41 @@ class MonitorRenderer {
     c.beginPath(); c.moveTo(0, bandY); c.lineTo(W, bandY); c.stroke();
 
     c.textAlign = 'left';
-    c.font = '700 15px ui-sans-serif, system-ui, sans-serif';
+    c.font = '700 15px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#dfe6eb'; c.fillText('Temp', 18, bandY + 30);
-    c.font = '13px ui-sans-serif, system-ui, sans-serif';
+    c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#8a97a1'; c.fillText('°C', 68, bandY + 30);
-    c.font = '800 40px ui-sans-serif, system-ui, sans-serif';
+    c.font = '800 40px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#FFFFFF'; c.fillText(v.temp.toFixed(1), 18, bandY + 74);
-    c.font = '800 26px ui-sans-serif, system-ui, sans-serif';
+    c.font = '800 26px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillText(v.temp2.toFixed(1), 18, bandY + 108);
-    c.font = '13px ui-sans-serif, system-ui, sans-serif';
+    c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#8a97a1';
     c.fillText(`TD ${Math.abs(v.temp - v.temp2).toFixed(1)}`, 78, bandY + 108);
 
-    c.font = '700 15px ui-sans-serif, system-ui, sans-serif';
+    c.font = '700 15px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#dfe6eb'; c.fillText('C.O.', 300, bandY + 30);
-    c.font = '800 40px ui-sans-serif, system-ui, sans-serif';
+    c.font = '800 40px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#FFFFFF'; c.fillText(v.co.toFixed(1), 300, bandY + 74);
-    c.font = '13px ui-sans-serif, system-ui, sans-serif';
+    c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#8a97a1';
     c.fillText(`C.I. ---  ·  TB ${v.temp2.toFixed(1)}`, 300, bandY + 100);
 
-    c.font = '700 15px ui-sans-serif, system-ui, sans-serif';
+    c.font = '700 15px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#FFFFFF'; c.fillText('NIBP', nx, bandY + 30);
-    c.font = '13px ui-sans-serif, system-ui, sans-serif';
+    c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#8a97a1'; c.fillText('mmHg', nx + 52, bandY + 30);
-    c.font = '800 46px ui-sans-serif, system-ui, sans-serif';
+    c.font = '800 46px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#FFFFFF';
     const bpText = `${v.sys}/${v.dia}`;
     // measure while the 46px font is still active — measuring after the switch
     // to 26px under-reports the width and overlaps the MAP onto the reading.
     const bpW = c.measureText(bpText).width;
     c.fillText(bpText, nx, bandY + 78);
-    c.font = '800 26px ui-sans-serif, system-ui, sans-serif';
+    c.font = '800 26px "IBM Plex Sans Condensed", "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#c3ccd3';
     c.fillText(`(${v.map})`, nx + bpW + 12, bandY + 78);
-    c.font = '13px ui-sans-serif, system-ui, sans-serif';
+    c.font = '13px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.fillStyle = '#8a97a1';
     c.fillText('10:15', nx, bandY + 104);
     c.textAlign = 'right';
@@ -314,7 +314,7 @@ class MonitorRenderer {
 
     /* ── bottom control bar ── */
     c.fillStyle = '#7d94a4';
-    c.font = '14px ui-sans-serif, system-ui, sans-serif';
+    c.font = '14px "IBM Plex Sans Hebrew", ui-sans-serif, system-ui, sans-serif';
     c.textAlign = 'center';
     c.fillText('Current Configuration: Defaults', W / 2, H - 16);
     c.textAlign = 'right';

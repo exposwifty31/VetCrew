@@ -1,0 +1,314 @@
+<!-- @dsCard group="Screens" viewport="1120x900" name="AAR — base-rung scored record" subtitle="Manager-facing evidence: expected-vs-actual per task, score→event, formative ANTS" -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  /* AAR record — the manager-facing surface. LIGHT theme on purpose:
+     a department manager reads this in a lit office; its job is trust. */
+  html,body{margin:0;background:var(--bg-canvas);color:var(--text);font-family:var(--font-ui);}
+  .page{max-width:1080px;margin:0 auto;padding:var(--sp-8) var(--sp-6) var(--sp-10);display:flex;flex-direction:column;gap:var(--sp-6);}
+
+  /* ── header ── */
+  .rpt-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-4);
+    padding-bottom:var(--sp-4);border-bottom:var(--border-w) solid var(--border);}
+  .rpt-brand{display:flex;flex-direction:column;gap:var(--sp-1);}
+  .rpt-brand .mk{display:inline-flex;align-items:center;gap:var(--sp-2);font-weight:var(--fw-bold);
+    font-size:var(--fs-h3);color:var(--text-strong);letter-spacing:-0.01em;}
+  .rpt-brand .mk .dot{width:12px;height:12px;border-radius:3px;background:var(--action);}
+  .rpt-brand h1{margin:0;font-size:var(--fs-h1);font-weight:var(--fw-bold);color:var(--text-strong);letter-spacing:-0.01em;}
+  .rpt-brand .sub{font-size:var(--fs-sm);color:var(--text-muted);}
+  .rpt-meta{display:flex;flex-direction:column;gap:var(--sp-1);text-align:start;align-items:flex-end;}
+  .rpt-meta .row{font-size:var(--fs-sm);color:var(--text-muted);}
+  .rpt-meta .row b{color:var(--text);font-weight:var(--fw-semibold);}
+  .rpt-meta .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+  /* ── summary stat band ── */
+  .rpt-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);}
+  .tile{padding:var(--sp-4) var(--sp-5);border:var(--border-w) solid var(--border);border-radius:var(--radius-lg);
+    background:var(--surface);display:flex;flex-direction:column;gap:var(--sp-1);box-shadow:var(--elev-1);}
+  .tile .k{font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);color:var(--text-faint);font-weight:var(--fw-semibold);}
+  .tile .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--fs-display);font-weight:var(--fw-bold);color:var(--text-strong);line-height:1;}
+  .tile .v small{font-size:var(--fs-body);color:var(--text-muted);font-weight:var(--fw-regular);}
+  .tile .note{font-size:var(--fs-xs);color:var(--text-muted);}
+  .tile--warn{border-inline-start:3px solid var(--sev-critical-edge);}
+  .tile--warn .v{color:var(--sev-critical-fg);}
+  .tile--watch{border-inline-start:3px solid var(--sev-elevated-edge);}
+
+  .rpt-sec-h{display:flex;align-items:baseline;gap:var(--sp-3);margin-bottom:calc(-1 * var(--sp-2));}
+  .rpt-sec-h h2{margin:0;font-size:var(--fs-h3);font-weight:var(--fw-bold);color:var(--text-strong);}
+  .rpt-sec-h .hint{font-size:var(--fs-sm);color:var(--text-faint);}
+
+  .card{border:var(--border-w) solid var(--border);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--elev-1);}
+  .card--pad{padding:var(--sp-5);}
+
+  /* ── task record (expected-vs-actual) — the heart ── */
+  .rec{display:flex;flex-direction:column;}
+  .rec__h,.rec__row{display:grid;grid-template-columns:26px 1.6fr 1fr 1fr 104px 76px;align-items:center;gap:var(--sp-3);
+    padding:var(--sp-3) var(--sp-5);}
+  .rec__h{font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:var(--ls-caps);color:var(--text-faint);
+    font-weight:var(--fw-semibold);border-bottom:var(--border-w) solid var(--border);}
+  .rec__row{border-bottom:var(--border-w) solid var(--hairline);}
+  .rec__row:last-child{border-bottom:none;}
+  .rec__row--fail{background:color-mix(in srgb,var(--sev-critical-fill) 55%,transparent);}
+  .rec__g{display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;}
+  .rec__g svg{width:20px;height:20px;}
+  .g-pass{color:var(--status-running-fg);}
+  .g-fail{color:var(--sev-critical-fg);}
+  .g-watch{color:var(--sev-elevated-fg);}
+  .rec__task{display:flex;flex-direction:column;gap:2px;}
+  .rec__task .nm{font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--text-strong);}
+  .rec__task .cd{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-faint);}
+  .rec__val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--fs-sm);color:var(--text);}
+  .rec__val .lbl{display:block;font-family:var(--font-ui);font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-caps);color:var(--text-faint);margin-bottom:1px;}
+  .rec__val--bad{color:var(--sev-critical-fg);font-weight:var(--fw-semibold);}
+  .verdict{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-sm);font-weight:var(--fw-semibold);
+    padding:3px 10px;border-radius:var(--radius-pill);border:var(--border-w) solid;white-space:nowrap;}
+  .verdict svg{width:13px;height:13px;}
+  .verdict--pass{color:var(--status-running-fg);background:var(--status-running-fill);border-color:color-mix(in srgb,var(--status-running-dot) 40%,transparent);}
+  .verdict--fail{color:var(--sev-critical-fg);background:var(--sev-critical-fill);border-color:var(--sev-critical-edge);}
+  .verdict--watch{color:var(--sev-elevated-fg);background:var(--sev-elevated-fill);border-color:var(--sev-elevated-edge);}
+  .jump{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:var(--fs-xs);
+    color:var(--action-quiet);background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:var(--radius-xs);white-space:nowrap;}
+  .jump:hover{background:var(--action-fill);text-decoration:underline;}
+  .jump svg{width:12px;height:12px;}
+  .rec__reason{grid-column:2 / -1;margin-top:2px;font-size:var(--fs-sm);color:var(--sev-critical-fg);display:flex;align-items:center;gap:var(--sp-2);}
+  .rec__reason svg{width:15px;height:15px;flex:0 0 auto;}
+  .rec__reason--watch{color:var(--sev-elevated-fg);}
+
+  /* ── timeline (static render of the TimelineScrubber vocabulary) ── */
+  .vc-scrub{display:flex;flex-direction:column;gap:var(--sp-3);}
+  .vc-scrub__head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);}
+  .vc-scrub__time{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--fs-body-lg);color:var(--text-strong);}
+  .vc-scrub__time small{color:var(--text-faint);font-size:var(--fs-sm);}
+  .vc-scrub__legend{display:flex;flex-wrap:wrap;gap:var(--sp-3);}
+  .vc-scrub__lg{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-xs);color:var(--text-muted);}
+  .vc-scrub__lg svg{width:12px;height:12px;}
+  .vc-scrub__main{position:relative;height:44px;border-radius:var(--radius-sm);background:var(--bg-sunken);border:var(--border-w) solid var(--border);}
+  .vc-scrub__fill{position:absolute;inset-block:0;inset-inline-start:0;background:var(--action-fill);border-start-start-radius:var(--radius-sm);border-end-start-radius:var(--radius-sm);}
+  .vc-scrub__marker{position:absolute;top:50%;transform:translate(50%,-50%);display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;background:var(--surface-raised);border:var(--border-w) solid var(--border);color:var(--text-muted);z-index:2;}
+  .vc-scrub__marker svg{width:13px;height:13px;}
+  .vc-scrub__playhead{position:absolute;inset-block:-4px;width:3px;background:var(--action);border-radius:var(--radius-pill);transform:translateX(50%);}
+  .vc-scrub__playhead::before{content:"";position:absolute;inset-inline-start:-6px;top:-6px;width:15px;height:15px;border-radius:50%;background:var(--action);border:2px solid var(--surface-raised);}
+
+  /* ── ANTS (static render of AntsRating) ── */
+  .ants-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);}
+  .vc-ants{display:flex;flex-direction:column;gap:var(--sp-2);}
+  .vc-ants__head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3);}
+  .vc-ants__cat{font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--text-strong);}
+  .vc-ants__val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:var(--fs-sm);color:var(--text-muted);}
+  .vc-ants__scale{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-1);}
+  .vc-ants__seg{position:relative;min-height:var(--touch-min);display:flex;align-items:flex-end;justify-content:center;padding-bottom:var(--sp-1);
+    border:var(--border-w) solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);font-family:var(--font-mono);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-muted);overflow:hidden;}
+  .vc-ants__seg::before{content:"";position:absolute;inset-inline:0;bottom:0;height:var(--_fill,0);background:var(--action-fill);z-index:0;}
+  .vc-ants__seg>span{position:relative;z-index:1;}
+  .vc-ants__seg[aria-checked="true"]{border-color:var(--action);color:var(--on-action);border-width:var(--border-w-strong);}
+  .vc-ants__seg[aria-checked="true"]::before{background:var(--action);}
+  .vc-ants__anchor{min-height:1.4em;font-size:var(--fs-sm);color:var(--text-muted);}
+  .vc-ants__evidence{align-self:flex-start;display:inline-flex;align-items:center;gap:var(--sp-1);background:none;border:none;padding:var(--sp-1) 0;cursor:pointer;font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--action-quiet);}
+  .vc-ants__evidence svg{width:14px;height:14px;}
+
+  /* ── footer stamp ── */
+  .stamp{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;
+    padding:var(--sp-4) var(--sp-5);border:var(--border-w) solid var(--border);border-radius:var(--radius-lg);background:var(--surface-2);}
+  .stamp .l{display:flex;flex-direction:column;gap:2px;}
+  .stamp .sig{display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--status-running-fg);}
+  .stamp .sig svg{width:16px;height:16px;}
+  .stamp .meta{font-size:var(--fs-xs);color:var(--text-muted);}
+  .stamp .meta .num{font-family:var(--font-mono);}
+  .stamp .note{max-width:46ch;font-size:var(--fs-xs);color:var(--text-muted);line-height:var(--lh-normal);text-align:start;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="rpt-top">
+    <div class="rpt-brand">
+      <span class="mk"><span class="dot"></span>VetCrew</span>
+      <h1>דוח הערכה — רגל הבסיס</h1>
+      <span class="sub">רצף מטלות טכניות, מטופל יחיד · תיעוד מלא הניתן להשמעה חוזרת</span>
+    </div>
+    <div class="rpt-meta">
+      <span class="row">נבחן/ת: <b>אלון לוי</b></span>
+      <span class="row">תרחיש: <b>כלב מאושפז · 22 ק״ג — מטלות משמרת</b> <span class="num">v1.0</span></span>
+      <span class="row">ותק בהכשרה: <b class="num">3 חודשים</b></span>
+      <span class="row">תאריך: <span class="num">24.07.2026</span> · משך: <span class="num">06:00</span></span>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="rpt-summary">
+    <div class="tile">
+      <span class="k">מטלות טכניות</span>
+      <span class="v">5<small> / 7 תקינות</small></span>
+      <span class="note">שתי שגיאות — נתיב מתן וקצב טפטוף</span>
+    </div>
+    <div class="tile tile--warn">
+      <span class="k">שגיאות קריטיות</span>
+      <span class="v">1</span>
+      <span class="note">נתיב מתן שגוי — סיכון קטלני</span>
+    </div>
+    <div class="tile tile--watch">
+      <span class="k">זמן לזיהוי החמרה</span>
+      <span class="v">0:18</span>
+      <span class="note">יעד &lt; 0:15 · על הגבול</span>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="rpt-sec-h"><h2>ציר הסשן</h2><span class="hint">כל ציון מקושר לרגע שיצר אותו — לחיצה קופצת לאירוע</span></div>
+  <div class="card card--pad">
+    <div class="vc-scrub">
+      <div class="vc-scrub__head">
+        <span class="vc-scrub__time">06:00 <small>/ 06:00</small></span>
+        <span class="vc-scrub__legend">
+          <span class="vc-scrub__lg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg> פעולה</span>
+          <span class="vc-scrub__lg"><svg viewBox="0 0 24 24"><path d="M12 3 l9 9 -9 9 -9 -9 z" fill="currentColor"/></svg> הזרקת מדריך</span>
+          <span class="vc-scrub__lg"><svg viewBox="0 0 24 24"><path d="M12 5 L20 19 H4 Z" fill="currentColor"/></svg> שינוי מדד</span>
+        </span>
+      </div>
+      <div class="vc-scrub__main">
+        <div class="vc-scrub__fill" style="inline-size:100%"></div>
+        <!-- markers positioned along the (RTL) track: inset-inline-start % -->
+        <span class="vc-scrub__marker" style="inset-inline-start:8%"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:22%"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:38%;color:var(--sev-critical-fg);border-color:var(--sev-critical-edge)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:54%"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:66%;color:var(--sev-elevated-fg);border-color:var(--sev-elevated-edge)"><svg viewBox="0 0 24 24"><path d="M12 5 L20 19 H4 Z" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:74%;color:var(--sev-critical-fg);border-color:var(--sev-critical-edge)"><svg viewBox="0 0 24 24"><path d="M12 3 l9 9 -9 9 -9 -9 z" fill="currentColor"/></svg></span>
+        <span class="vc-scrub__marker" style="inset-inline-start:88%"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></span>
+        <div class="vc-scrub__playhead" style="inset-inline-start:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASK RECORD -->
+  <div class="rpt-sec-h"><h2>מטלות — מצופה מול בוצע</h2><span class="hint">7 מטלות · כל שורה מגובה באירועים מתועדים</span></div>
+  <div class="card">
+    <div class="rec">
+      <div class="rec__h">
+        <span></span><span>מטלה</span><span>מצופה</span><span>בוצע</span><span>תוצאה</span><span>אירוע</span>
+      </div>
+
+      <!-- T1 TPR pass -->
+      <div class="rec__row">
+        <span class="rec__g g-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
+        <span class="rec__task"><span class="nm">מדדי TPR</span><span class="cd">בצע · קריאה מהמוניטור</span></span>
+        <span class="rec__val"><span class="lbl">טווח תקין</span>דופק 70–120</span>
+        <span class="rec__val"><span class="lbl">הוזן</span>88 · 24 · 38.4</span>
+        <span><span class="verdict verdict--pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>תקין</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>00:29</button></span>
+      </div>
+
+      <!-- T2 NIBP pass -->
+      <div class="rec__row">
+        <span class="rec__g g-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
+        <span class="rec__task"><span class="nm">מדידת לחץ דם NIBP</span><span class="cd">מתוזמן · SYS/DIA בטווח</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>SYS/DIA בטווח · בחלון</span>
+        <span class="rec__val"><span class="lbl">בוצע</span>128/82 · 01:40</span>
+        <span><span class="verdict verdict--pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>תקין</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>01:40</button></span>
+      </div>
+
+      <!-- T3a Cefazolin pass (dose + route) -->
+      <div class="rec__row">
+        <span class="rec__g g-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
+        <span class="rec__task"><span class="nm">Cefazolin · 250 mg</span><span class="cd">בצע ודווח · מנה + נתיב</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>2.5 ml · IV</span>
+        <span class="rec__val"><span class="lbl">בוצע</span>2.5 ml · IV</span>
+        <span><span class="verdict verdict--pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>תקין</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>02:12</button></span>
+      </div>
+
+      <!-- T3b Diphenhydramine wrong route FAIL -->
+      <div class="rec__row rec__row--fail">
+        <span class="rec__g g-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+        <span class="rec__task"><span class="nm">Diphenhydramine · 20 mg</span><span class="cd">בצע ודווח · מנה + נתיב</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>0.2 ml · <b>SC</b></span>
+        <span class="rec__val rec__val--bad"><span class="lbl">בוצע</span>0.2 ml · IV</span>
+        <span><span class="verdict verdict--fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>נכשל</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>02:41</button></span>
+        <span class="rec__reason"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.5 21h21Z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>נפח מדויק — אך נתיב שגוי. התרופה SC בלבד; מתן IV מסכן חיים. נתיב נכשל בנפרד מהמנה.</span>
+      </div>
+
+      <!-- T4 blood tubes pass -->
+      <div class="rec__row">
+        <span class="rec__g g-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
+        <span class="rec__task"><span class="nm">דגימת דם · ספירה + כימיה</span><span class="cd">בצע ודווח · בחירת מבחנות</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>EDTA + Serum</span>
+        <span class="rec__val"><span class="lbl">בוצע</span>EDTA + Serum</span>
+        <span><span class="verdict verdict--pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>תקין</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>03:20</button></span>
+      </div>
+
+      <!-- T6 fluids drops/min FAIL -->
+      <div class="rec__row rec__row--fail">
+        <span class="rec__g g-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+        <span class="rec__task"><span class="nm">עירוי לפי הוראת רופא · ללא משאבה</span><span class="cd">בחירת סט + חישוב טיפות/דק'</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>סט רגיל · 50 טיפות/דק'</span>
+        <span class="rec__val rec__val--bad"><span class="lbl">בוצע</span>סט רגיל · 150 טיפות/דק'</span>
+        <span><span class="verdict verdict--fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>נכשל</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>04:05</button></span>
+        <span class="rec__reason"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.5 21h21Z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>בחר סט רגיל נכון (22 ק״ג, מעל 15). אך לא חילק ב-3: 150 מ״ל/ש ← 50 טיפות/דק', לא 150. פי 3 מהר מדי — סיכון לעומס נוזלים.</span>
+      </div>
+
+      <!-- T7 escalation watch/pass -->
+      <div class="rec__row">
+        <span class="rec__g g-watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
+        <span class="rec__task"><span class="nm">זיהוי החמרה + הסלמה</span><span class="cd">אישור נדרש · דופק נמוך + ל״ד גבוה</span></span>
+        <span class="rec__val"><span class="lbl">מצופה</span>קרא לרופא</span>
+        <span class="rec__val"><span class="lbl">בוצע</span>הסלים · 0:18</span>
+        <span><span class="verdict verdict--watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>על הגבול</span></span>
+        <span><button class="jump"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>05:12</button></span>
+        <span class="rec__reason rec__reason--watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.5 21h21Z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>זיהה את ההחמרה והסלים נכון — לא ניסה לטפל בעצמו. זמן זיהוי 0:18 (יעד &lt; 0:15).</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANTS FORMATIVE -->
+  <div class="rpt-sec-h"><h2>מיומנויות לא-טכניות (ANTS) — היווצרותי</h2><span class="hint">רגל הבסיס: רק מודעות למצב וקבלת החלטות · דירוג מהשמעה חוזרת</span></div>
+  <div class="card card--pad">
+    <div class="ants-grid">
+      <div class="vc-ants">
+        <div class="vc-ants__head"><span class="vc-ants__cat">מודעות למצב</span><span class="vc-ants__val">4 מתוך 5</span></div>
+        <div class="vc-ants__scale">
+          <span class="vc-ants__seg" style="--_fill:42%"><span>1</span></span>
+          <span class="vc-ants__seg" style="--_fill:42%"><span>2</span></span>
+          <span class="vc-ants__seg" style="--_fill:42%"><span>3</span></span>
+          <span class="vc-ants__seg" aria-checked="true" style="--_fill:42%"><span>4</span></span>
+          <span class="vc-ants__seg"><span>5</span></span>
+        </div>
+        <div class="vc-ants__anchor">טובה — זיהה את ההחמרה, פספס את התוויית-הנגד בנתיב</div>
+        <button class="vc-ants__evidence"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>3 אירועים מקושרים</button>
+      </div>
+      <div class="vc-ants">
+        <div class="vc-ants__head"><span class="vc-ants__cat">קבלת החלטות</span><span class="vc-ants__val">3 מתוך 5</span></div>
+        <div class="vc-ants__scale">
+          <span class="vc-ants__seg" style="--_fill:42%"><span>1</span></span>
+          <span class="vc-ants__seg" style="--_fill:42%"><span>2</span></span>
+          <span class="vc-ants__seg" aria-checked="true" style="--_fill:42%"><span>3</span></span>
+          <span class="vc-ants__seg"><span>4</span></span>
+          <span class="vc-ants__seg"><span>5</span></span>
+        </div>
+        <div class="vc-ants__anchor">מספקת — הסלמה נכונה, אך נתיב המתן היה כשל החלטה</div>
+        <button class="vc-ants__evidence"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>2 אירועים מקושרים</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER STAMP -->
+  <div class="stamp">
+    <div class="l">
+      <span class="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>אושר קלינית</span>
+      <span class="meta">תקן: RECOVER · CVTEA · תווית תרופה &nbsp;·&nbsp; גרסת תרחיש <span class="num">v1.0</span></span>
+    </div>
+    <p class="note">היווצרותי בלבד — עדוּת לשיחת מוכנות, לא פסק דין. הערכה מכריעה (החלטת העסקה) מחייבת שלושה מעריכים או ביקורת מוקלטת רב-משתתפים.</p>
+  </div>
+
+</div>
+</body>
+</html>
