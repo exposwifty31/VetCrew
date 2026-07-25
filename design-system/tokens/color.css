@@ -69,6 +69,7 @@
   --verm-fill-d: #46160e;
 
   /* ---- PRIMITIVE · status · RUNNING (green, NOT teal) ------------------- */
+  --green-700: #1f6b45;   /* AA text on light fills (>=4.5:1 on green-fill-l) */
   --green-600: #2b8757;
   --green-500: #329a63;
   --green-400: #46b57e;
@@ -137,7 +138,7 @@
   --sev-critical-edge: var(--verm-500);
 
   /* STATUS — session + connection channels (independent of severity) */
-  --status-running-fg:   var(--green-600);
+  --status-running-fg:   var(--green-700);
   --status-running-fill: var(--green-fill-l);
   --status-running-dot:  var(--green-500);
 

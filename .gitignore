@@ -5,6 +5,10 @@ node_modules/
 # local QA screenshots
 .qa/
 
+# playwright artifacts
+test-results/
+playwright-report/
+
 # build output
 dist/
 build/
