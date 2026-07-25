@@ -36,10 +36,16 @@
   .zonetag--a{inset-inline-start:14px;}
   .zonetag--b{inset-inline-end:14px;color:var(--inst-text-faint);}
 
-  /* ── TaskChip (inlined; matte + contained — never a monitor channel colour) ── */
+  /* ── TaskChip (inlined; mirrors components/controls/TaskChip.jsx — shipped
+     double-bezel: surface-base shell + surface-card core, concentric radii) ── */
   /* flex-shrink:0 — chips must never compress to fit the column; the list scrolls */
-  .vc-task{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;min-height:var(--touch-min);flex-shrink:0;padding:12px;
-    background:var(--task-surface);border:1px solid var(--task-edge);border-radius:var(--radius-md);color:var(--task-text);}
+  .vc-task{position:relative;box-sizing:border-box;display:block;width:100%;flex-shrink:0;padding:6px;
+    background:var(--surface-base);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);
+    box-shadow:var(--shadow-card);color:var(--text-primary);}
+  .vc-task__inner{position:relative;box-sizing:border-box;display:flex;align-items:stretch;gap:12px;width:100%;
+    min-height:calc(var(--touch-min) - 12px);padding:12px;text-align:start;
+    background:var(--surface-card);border:1px solid var(--border-default);
+    border-radius:calc(var(--radius-xl) - 6px);box-shadow:inset 0 1px 1px rgba(255,255,255,.05);}
   .vc-task__badge{flex:0 0 auto;width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;align-self:flex-start;}
   .vc-task__badge svg{width:22px;height:22px;}
   .vc-task--do .vc-task__badge{background:var(--task-do);color:var(--task-do-fg);}
@@ -48,14 +54,14 @@
   .vc-task--approval .vc-task__badge{background:var(--task-approval);color:var(--task-approval-fg);}
   .vc-task__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
   .vc-task__code{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
-  .vc-task--do .vc-task__code{color:var(--task-do);}
-  .vc-task--report .vc-task__code{color:var(--task-report);}
+  .vc-task--do .vc-task__code{color:var(--task-do-text);}
+  .vc-task--report .vc-task__code{color:var(--task-report-text);}
   .vc-task--timed .vc-task__code{color:var(--task-timed-text);}
-  .vc-task--approval .vc-task__code{color:var(--task-approval);}
-  .vc-task__title{font-size:var(--fs-body);font-weight:600;color:var(--task-text);line-height:1.25;}
-  .vc-task__detail{font-size:var(--fs-sm);color:var(--task-text-dim);line-height:1.35;}
-  .vc-task__win{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-family:var(--font-mono);font-size:12px;color:var(--task-text-dim);}
-  .vc-task__win b{color:var(--task-do);font-weight:600;}
+  .vc-task--approval .vc-task__code{color:var(--task-approval-text);}
+  .vc-task__title{font-size:var(--fs-body);font-weight:600;color:var(--text-primary);line-height:1.25;}
+  .vc-task__detail{font-size:var(--fs-sm);color:var(--text-secondary);line-height:1.35;}
+  .vc-task__win{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);}
+  .vc-task__win b{color:var(--task-do-text);font-weight:600;}
   .vc-task__win::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--task-do);}
   .vc-task__report{display:inline-flex;align-items:center;gap:8px;margin-top:6px;}
   .vc-task__field{width:92px;height:38px;border-radius:var(--radius-sm);background:var(--task-bg);border:1px solid var(--task-edge);
@@ -76,10 +82,11 @@
   .vc-task__call{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px;border-radius:var(--radius-sm);
     background:var(--task-approval);color:var(--task-approval-fg);border:none;font-size:14px;font-weight:700;}
   .vc-task__call svg{width:17px;height:17px;}
-  .vc-task[data-state="in_progress"]{border-color:var(--task-action);background:var(--task-surface-2);}
-  .vc-task[data-state="done"]{opacity:.7;}
-  .vc-task[data-state="done"] .vc-task__title{color:var(--task-text-dim);}
-  .vc-task[data-state="done"] .vc-task__state{color:var(--task-done);}
+  .vc-task[data-state="in_progress"]{border-color:var(--action);box-shadow:var(--shadow-glow-watch);}
+  .vc-task[data-state="in_progress"] .vc-task__inner{border-color:var(--task-action,var(--action));background:var(--surface-card-hover);}
+  .vc-task[data-state="done"]{opacity:.72;}
+  .vc-task[data-state="done"] .vc-task__title{color:var(--text-muted);}
+  .vc-task[data-state="done"] .vc-task__state{color:var(--text-running);}
 </style>
 </head>
 <body>
@@ -95,20 +102,25 @@
     <div class="taskzone__list">
 
       <div class="vc-task vc-task--do" data-state="done">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
         <span class="vc-task__body"><span class="vc-task__code">בצע</span><span class="vc-task__title">בצע TPR על צ'רלי</span><span class="vc-task__detail">דופק · נשימות · חום</span></span>
         <span class="vc-task__tail"><span class="vc-task__state"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>הושלם</span></span>
+        </span>
       </div>
 
       <div class="vc-task vc-task--timed" data-state="done">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></span>
         <span class="vc-task__body"><span class="vc-task__code">מתוזמן</span><span class="vc-task__title">NIBP · 10:15</span><span class="vc-task__detail">בוצע בחלון הזמן</span></span>
         <span class="vc-task__tail"><span class="vc-task__state"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>הושלם</span></span>
+        </span>
       </div>
 
       <!-- ACTIVE — the decision layer, in view. Title states drug + mg ONLY;
            the route is a separately scored decision, never hinted. -->
       <div class="vc-task vc-task--report" data-state="in_progress">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
         <span class="vc-task__body">
           <span class="vc-task__code">בצע ודווח</span>
@@ -125,22 +137,29 @@
             </span>
           </span>
         </span>
+        </span>
       </div>
 
       <div class="vc-task vc-task--timed">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
         <span class="vc-task__body"><span class="vc-task__code">מתוזמן</span><span class="vc-task__title">NIBP כל 15 דקות</span><span class="vc-task__win">חלון 15 דק׳ · <b>נותרו 4:12</b></span></span>
+        </span>
       </div>
 
       <div class="vc-task vc-task--do">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
         <span class="vc-task__body"><span class="vc-task__code">בצע</span><span class="vc-task__title">עירוי לפי הוראת רופא</span><span class="vc-task__detail">בחירת סט (משקל) + חישוב טיפות/דק׳</span></span>
+        </span>
       </div>
 
       <div class="vc-task vc-task--approval">
+        <span class="vc-task__inner">
         <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
         <span class="vc-task__body"><span class="vc-task__code">אישור נדרש</span><span class="vc-task__title">מתן מורפיום 2 mg</span><span class="vc-task__detail">דורש אישור רופא בכיר</span></span>
         <span class="vc-task__tail"><button class="vc-task__call"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 8 7 15 15 15l0-3.5-4-1.5-2 2a12 12 0 0 1-5-5l2-2L8.5 5Z"/></svg>קרא לרופא</button></span>
+        </span>
       </div>
 
     </div>

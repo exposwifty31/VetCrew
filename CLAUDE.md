@@ -1,7 +1,9 @@
 # VetCrew — Project Context for Claude Code
 
-**Status:** pre-v1, no code written. Solo build (Dan), AI-agent-driven.
-**Last updated:** 2026-07-24 (deep-research findings + ADR-001 architecture decision)
+**Status:** pre-v1, no engine code written; design system + pitch deck assets exist. Solo build (Dan), AI-agent-driven.
+**Last updated:** 2026-07-25 (Reviewer identified; rating-infrastructure ground truth; pitch milestone set)
+
+**Current milestone (2026-07-25):** a pitch-ready package — concept and research solid end-to-end, UI/UX visible enough that the Reviewer (see §6) can physically see the product and judge the problem/solution fit. Execution beyond phases 1–2 waits on her approval. This is the agreed stopping point for the current work phase.
 
 Read this file before writing any code. It encodes decisions that are expensive to reverse and marks the ones that are cheap. Do not silently re-litigate anything under "Frozen for v1"; do raise it explicitly if you think it's wrong.
 
@@ -165,6 +167,10 @@ Ask the department manager, before more code:
 > *"If I showed you a scored session for a new hire, what would make you trust it enough to act on it — and what would make you dismiss it?"*
 
 Free, and it determines whether the hiring gate is viable at all.
+
+**Partial answer (2026-07-25, Dan's ground truth — the manager himself has not yet been asked):** the hospital has NO rating infrastructure for new technicians beyond a written exam that is outdated, does not reflect the actual floor work, and covers only part of the required theory. Dan's assessment: the manager will welcome any credible infrastructure for this, especially one that costs him zero work. Still put the question to the manager verbatim — but the incumbent VetCrew competes against is "nothing," and the bar is correspondingly low.
+
+**The Reviewer exists and is singular (2026-07-25).** Exactly one technician in the hospital holds a US veterinary-technician degree (not recognized as a degree title in Israel). She is the only viable Reviewer, and that will not change while she holds the credential. Consequences: (a) she is the pitch audience — the product must be presentable end-to-end, UI/UX included, for her to evaluate the concept; (b) a one-Reviewer reality reinforces §2.2 — a second live rater does not exist, so anything consequential rests on recorded, replayable sessions reviewed asynchronously, exactly what the event-sourced record provides.
 
 ---
 
