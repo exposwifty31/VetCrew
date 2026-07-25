@@ -79,6 +79,21 @@ export const authoredScenarioSchema = z
     }
     const vitalNames = new Set(Object.keys(scenario.engine.vitals));
     const actionIds = new Set(scenario.actions.map((a) => a.id));
+    const injectionIds = new Set(scenario.injections.map((i) => i.id));
+    const roleNames = new Set(scenario.roles);
+    for (const [collection, ids] of [
+      ["action", scenario.actions.map((a) => a.id)],
+      ["injection", scenario.injections.map((i) => i.id)],
+      ["checklist item", scenario.checklist.map((c) => c.id)],
+    ] as const) {
+      const seen = new Set<string>();
+      for (const id of ids) {
+        if (seen.has(id)) {
+          ctx.addIssue({ code: "custom", message: `duplicate ${collection} id: ${id}` });
+        }
+        seen.add(id);
+      }
+    }
     const triggerIds = new Set<string>();
     for (const trigger of scenario.engine.triggers) {
       if (triggerIds.has(trigger.id)) {
@@ -99,8 +114,20 @@ export const authoredScenarioSchema = z
           message: `trigger "${trigger.id}" keys off unknown action "${trigger.on.action}"`,
         });
       }
+      if (trigger.on.kind === "injection" && !injectionIds.has(trigger.on.injection)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `trigger "${trigger.id}" keys off unknown injection "${trigger.on.injection}"`,
+        });
+      }
     }
     for (const item of scenario.checklist) {
+      if (item.role !== undefined && !roleNames.has(item.role)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `checklist item "${item.id}" scopes to unknown role "${item.role}"`,
+        });
+      }
       const referenced =
         item.rule.kind === "action_before"
           ? [item.rule.action, item.rule.before]

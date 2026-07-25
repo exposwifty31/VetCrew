@@ -125,6 +125,11 @@ export function reduce(state: EngineState, event: EngineEvent): EngineState {
       };
     }
     case "action": {
+      // Like ticks, actions only affect the sim while running; a callout
+      // logged during pause/debrief stays in the record but moves nothing.
+      if (state.phase !== "running") {
+        return { ...state, appliedSeq: event.seq };
+      }
       const result = fireTriggers(
         state,
         (trigger) => trigger.on.kind === "action" && trigger.on.action === event.action,
@@ -138,6 +143,9 @@ export function reduce(state: EngineState, event: EngineEvent): EngineState {
       };
     }
     case "injection": {
+      if (state.phase !== "running") {
+        return { ...state, appliedSeq: event.seq };
+      }
       const result = fireTriggers(
         state,
         (trigger) => trigger.on.kind === "injection" && trigger.on.injection === event.injection,

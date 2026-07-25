@@ -32,7 +32,7 @@ const HYPOXIA: ScenarioDef = {
     {
       id: "decompensation-at-60s",
       on: { kind: "time", atMs: 60_000 },
-      effects: [{ vital: "spo2", ratePerSec: 2 }],
+      effects: [{ vital: "spo2", target: 60, ratePerSec: 2 }],
     },
     {
       id: "nibp-artifact",
@@ -75,7 +75,8 @@ describe("deterioration model", () => {
   });
 
   test("vital clamps at target instead of overshooting", () => {
-    const state = ticks(start(), 120);
+    // 50 ticks: past the 34s needed to reach target 78, before the 60s trigger.
+    const state = ticks(start(), 50);
     expect(state.vitals["spo2"]?.value).toBe(78);
   });
 
@@ -108,14 +109,16 @@ describe("deterioration model", () => {
   });
 
   test("timed trigger fires once when session time crosses its boundary", () => {
-    let state = ticks(start(), 59); // 59s: not yet fired
+    let state = ticks(start(), 59); // 59s: not yet fired; spo2 clamped at 78
     expect(state.firedTriggerIds).not.toContain("decompensation-at-60s");
-    state = ticks(state, 1); // crosses 60s
+    expect(state.vitals["spo2"]?.value).toBe(78);
+    state = ticks(state, 1); // crosses 60s: target drops to 60, rate 2/s
     expect(state.firedTriggerIds).toContain("decompensation-at-60s");
-    // rate now 2/s: two more ticks drop spo2 by 4
-    const before = state.vitals["spo2"]?.value ?? NaN;
+    // The crossing tick already integrates at the new rate (78 -> 76),
+    // and each following tick drops another 2/s.
+    expect(state.vitals["spo2"]?.value).toBeCloseTo(76, 5);
     state = ticks(state, 2);
-    expect(state.vitals["spo2"]?.value).toBeCloseTo(Math.max(before - 4, 78), 5);
+    expect(state.vitals["spo2"]?.value).toBeCloseTo(72, 5);
   });
 
   test("injection trigger applies its effects", () => {

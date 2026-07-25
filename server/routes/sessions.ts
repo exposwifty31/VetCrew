@@ -41,9 +41,10 @@ const submitRatingsSchema = z.object({
     .min(1),
 });
 
-function paramId(req: Request): string {
+/** Validated UUID path param, or null — a malformed id must 404, not 500 on a pg cast. */
+function paramId(req: Request): string | null {
   const value = req.params["id"];
-  return typeof value === "string" ? value : "";
+  return typeof value === "string" && z.uuid().safeParse(value).success ? value : null;
 }
 
 async function loadSession(db: Db, tenantId: string, id: string) {
@@ -124,7 +125,8 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(400).json({ error: parsed.error.issues });
       return;
     }
-    const session = await loadSession(db, tenantId, paramId(req));
+    const id = paramId(req);
+    const session = id === null ? undefined : await loadSession(db, tenantId, id);
     if (session === undefined) {
       res.status(404).json({ error: "session not found" });
       return;
@@ -153,7 +155,8 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
   });
 
   router.get("/:id/aar", async (req: Request, res: Response) => {
-    const session = await loadSession(db, tenantId, paramId(req));
+    const id = paramId(req);
+    const session = id === null ? undefined : await loadSession(db, tenantId, id);
     if (session === undefined) {
       res.status(404).json({ error: "session not found" });
       return;
@@ -210,7 +213,8 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(400).json({ error: parsed.error.issues });
       return;
     }
-    const session = await loadSession(db, tenantId, paramId(req));
+    const id = paramId(req);
+    const session = id === null ? undefined : await loadSession(db, tenantId, id);
     if (session === undefined) {
       res.status(404).json({ error: "session not found" });
       return;

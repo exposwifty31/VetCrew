@@ -48,9 +48,11 @@ interface TimedAction {
 
 /** Session time of each action = accumulated tick time before it. */
 function collectActions(events: readonly EngineEvent[]): TimedAction[] {
+  // seq is the authoritative replay order; do not trust array order.
+  const ordered = [...events].sort((a, b) => a.seq - b.seq);
   const actions: TimedAction[] = [];
   let timeMs = 0;
-  for (const event of events) {
+  for (const event of ordered) {
     if (event.type === "tick") {
       timeMs += event.dtMs;
     } else if (event.type === "action") {
