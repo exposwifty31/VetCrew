@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 
-import { buildAar, evaluateChecklist, type EngineEvent } from "@vetcrew/engine";
+import { buildAar, canTransition, evaluateChecklist, type EngineEvent, type SessionPhase } from "@vetcrew/engine";
 import {
   antsDomainSchema,
   engineEventSchema,
@@ -53,6 +53,27 @@ async function loadSession(db: Db, tenantId: string, id: string) {
     .from(simSessions)
     .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)));
   return rows[0];
+}
+
+async function maxSeq(db: Db, sessionId: string): Promise<number> {
+  const rows = await db
+    .select({ seq: sessionEvents.seq })
+    .from(sessionEvents)
+    .where(eq(sessionEvents.sessionId, sessionId))
+    .orderBy(desc(sessionEvents.seq))
+    .limit(1);
+  return rows[0]?.seq ?? 0;
+}
+
+/** Walk phase_change events through the FSM from a starting phase. */
+function projectPhase(from: SessionPhase, events: readonly EngineEvent[]): SessionPhase {
+  let phase = from;
+  for (const event of events) {
+    if (event.type === "phase_change" && canTransition(phase, event.phase)) {
+      phase = event.phase;
+    }
+  }
+  return phase;
 }
 
 async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
@@ -132,25 +153,37 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const events = parsed.data.events;
-    await db.insert(sessionEvents).values(
-      events.map((event) => ({
-        tenantId,
-        sessionId: session.id,
-        seq: event.seq,
-        type: event.type,
-        role: event.type === "action" ? event.role : null,
-        actorId: event.type === "action" ? event.actorId : null,
-        payload: event,
-      })),
-    );
-    // Denormalized phase for listings; the log stays authoritative.
-    const lastPhase = [...events].reverse().find((e) => e.type === "phase_change");
-    if (lastPhase !== undefined && lastPhase.type === "phase_change") {
-      await db
-        .update(simSessions)
-        .set({ phase: lastPhase.phase })
-        .where(eq(simSessions.id, session.id));
+    // Seq authority (audit R1): the log is the evidence record — a batch must
+    // continue the sequence contiguously; retroactive or gapped seqs are
+    // rejected here and by the DB trigger (migration 0004).
+    const currentMax = await maxSeq(db, session.id);
+    const contiguous = events.every((event, i) => event.seq === currentMax + 1 + i);
+    if (!contiguous) {
+      res.status(409).json({
+        error: `events must continue the log contiguously from seq ${currentMax + 1}`,
+      });
+      return;
     }
+    // Append + projection in one transaction (audit R4): a failure between
+    // them must not leave the listing column out of sync with the log.
+    const nextPhase = projectPhase(session.phase as SessionPhase, events);
+    await db.transaction(async (tx) => {
+      await tx.insert(sessionEvents).values(
+        events.map((event) => ({
+          tenantId,
+          sessionId: session.id,
+          seq: event.seq,
+          type: event.type,
+          role: event.type === "action" ? event.role : null,
+          actorId: event.type === "action" ? event.actorId : null,
+          payload: event,
+        })),
+      );
+      if (nextPhase !== session.phase) {
+        // Denormalized phase for listings; the log stays authoritative.
+        await tx.update(simSessions).set({ phase: nextPhase }).where(eq(simSessions.id, session.id));
+      }
+    });
     res.status(201).json({ appended: events.length });
   });
 
@@ -219,6 +252,14 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(404).json({ error: "session not found" });
       return;
     }
+    // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
+    // session in any other phase cannot be rated.
+    if (session.phase !== "debrief") {
+      res.status(409).json({
+        error: `session is in phase "${session.phase}"; ratings are submitted from debrief`,
+      });
+      return;
+    }
     // Scoring gate: time-in-training must exist before a session can be scored —
     // it is the progression axis and cannot be backfilled (CLAUDE.md §4).
     if (session.traineeTimeInTrainingDays === null) {
@@ -241,17 +282,35 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       });
       return;
     }
-    await db.insert(antsRatings).values(
-      parsed.data.ratings.map((rating) => ({
+    // The scored transition goes THROUGH the log (audit F-b): replaying the
+    // events must yield the same phase the projection column reports.
+    const scoredEvent: EngineEvent = {
+      seq: Math.max(...existingSeqs, 0) + 1,
+      type: "phase_change",
+      phase: "scored",
+    };
+    await db.transaction(async (tx) => {
+      await tx.insert(antsRatings).values(
+        parsed.data.ratings.map((rating) => ({
+          tenantId,
+          sessionId: session.id,
+          raterId: parsed.data.raterId,
+          domain: rating.domain,
+          score: rating.score,
+          evidenceEventSeqs: rating.evidenceEventSeqs,
+        })),
+      );
+      await tx.insert(sessionEvents).values({
         tenantId,
         sessionId: session.id,
-        raterId: parsed.data.raterId,
-        domain: rating.domain,
-        score: rating.score,
-        evidenceEventSeqs: rating.evidenceEventSeqs,
-      })),
-    );
-    await db.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
+        seq: scoredEvent.seq,
+        type: scoredEvent.type,
+        role: null,
+        actorId: null,
+        payload: scoredEvent,
+      });
+      await tx.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
+    });
     res.status(201).json({ rated: parsed.data.ratings.length });
   });
 

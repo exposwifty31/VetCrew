@@ -50,6 +50,7 @@ function seq(): number {
 function start(): EngineState {
   nextSeq = 0;
   let state = createInitialState(42, HYPOXIA);
+  state = reduce(state, { seq: seq(), type: "phase_change", phase: "briefing" });
   state = reduce(state, { seq: seq(), type: "phase_change", phase: "running" });
   return state;
 }
@@ -156,8 +157,11 @@ describe("deterioration model", () => {
   });
 
   test("determinism holds over the full scenario with mixed events", () => {
-    const events: EngineEvent[] = [{ seq: 1, type: "phase_change", phase: "running" }];
-    let s = 1;
+    const events: EngineEvent[] = [
+      { seq: 1, type: "phase_change", phase: "briefing" },
+      { seq: 2, type: "phase_change", phase: "running" },
+    ];
+    let s = 2;
     for (let i = 0; i < 90; i++) {
       events.push({ seq: ++s, type: "tick", dtMs: 1000 });
       if (i === 20) {
