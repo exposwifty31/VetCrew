@@ -1,9 +1,9 @@
 # VetCrew — Project Context for Claude Code
 
-**Status:** pre-v1, no engine code written; design system + pitch deck assets exist. Solo build (Dan), AI-agent-driven.
-**Last updated:** 2026-07-25 (Reviewer identified; rating-infrastructure ground truth; pitch milestone set)
+**Status:** pre-v1 pitch package — deterministic engine, live station + instructor console, AAR/ANTS, manager evidence desk, Clerk + Railway wired. Solo build (Dan), AI-agent-driven.
+**Last updated:** 2026-07-25 (Sprint 5a + Clerk/Railway live; Reviewer is the pitch audience)
 
-**Current milestone (2026-07-25):** a pitch-ready package — concept and research solid end-to-end, UI/UX visible enough that the Reviewer (see §6) can physically see the product and judge the problem/solution fit. Execution beyond phases 1–2 waits on her approval. This is the agreed stopping point for the current work phase.
+**Current milestone (2026-07-25):** pitch-ready package for the Reviewer (§6) — concept end-to-end and UI visible enough to judge problem/solution fit. Standing open: Clerk→`role_stations` binding, clinical review stamps, scenario Option (a) countersign. No hiring verdicts until N + three raters.
 
 Read this file before writing any code. It encodes decisions that are expensive to reverse and marks the ones that are cheap. Do not silently re-litigate anything under "Frozen for v1"; do raise it explicitly if you think it's wrong.
 
