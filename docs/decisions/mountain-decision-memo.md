@@ -71,11 +71,11 @@
 **Decision: split-engine, single-backbone.** Two execution modes over one shared telemetry ledger:
 - **Engine Alpha — procedural/base:** a deterministic finite-state machine, **clock-agnostic / stepped** (time freezes between inputs). Discrete sequential actions, localized binary validation. This is the base of the mountain.
 - **Engine Beta — team/summit:** a **real-time event-loop ticker**; time is an active parameter, clinical params decay per tick, asynchronous concurrent inputs. This is the summit.
-- **Shared backbone:** one monolithic state + progress-telemetry schema (append-only event ledger) under both engines. Alpha's per-action error telemetry (e.g. a repeating decimal-shift or line-validation habit) becomes an **initialization payload** for Beta, which raises the volatility of the matching failure mode in the live scenario. *"The base directly controls the physics of the summit"* — without merging two contradictory loops in code.
+- **Shared backbone:** one monolithic state + progress-telemetry schema (append-only event ledger) under both engines. Alpha's per-action error telemetry (e.g. a repeating decimal-shift or line-validation habit) is **recorded in that shared ledger**. A future roadmap option may use it as an initialization payload for Beta (raising the volatility of the matching failure mode in the live scenario) — *"the base directly controls the physics of the summit"* — without merging two contradictory loops in code. That coupling is **not** current shared-backbone behavior and is not required for the MVP.
 
 **Status:** originally a **design decision** (Dan, 2026-07-23) because the first deep-research Run C failed adversarial verification (infrastructure/rate-limit collapse; only aviation-regulation claims reached a verdict). On 2026-07-25 a **user-supplied C synthesis** was folded in. That synthesis was **not** 3-vote adversarially verified — treat C tags as synthesis-confidence, not as A/B-grade confirmed claims. It does **not** replace the design decision; it **corroborates** it and sharpens the pedagogy around it.
 
-### What the C synthesis corroborates
+### What the C synthesis contributes
 
 | Tag | Syn. conf. | Load-bearing point | Implication for VetCrew |
 |---|---|---|---|
@@ -87,6 +87,11 @@
 | **C5** | medium | Durable progression needs a shared learning record across modalities (xAPI→LRS; SimCapture-style AV+checklist+LMS). | Same idea as the frozen event log. Do **not** adopt xAPI/SimCapture as stack for v1 — the pattern is the corroboration. |
 | **C6** | high | MSR's working answer to A4-style abandonment: **mandate** (NITE licensing) + in-situ delivery + academic embedding; pedagogically hardware + SPs in one scenario. | Confirms A4 consequence: base rung must be near-zero-friction **or** leadership-mandated. Mandate is institutional, not a product feature VetCrew ships alone. |
 | **C7** | medium | Local vet path: Koret skills lab (part-task + timed CPR + live stable patients); RECOVER TFCPR treats NTS as first-class in resuscitation. | Grounds summit content in RECOVER-aligned crew scenarios already in CLAUDE.md frozen list. |
+
+**Recommendation (not a corroborating finding):**
+
+| Tag | Syn. conf. | Load-bearing point | Implication for VetCrew |
+|---|---|---|---|
 | **C8** | low | *Recommendation* (not finding): map interventions + closed-loop events into a multidimensional record without replacing CVTEA/AVECCTN skill definitions. | Already aligned with B6 + evidence-not-verdict posture. |
 
 ### How to read "unified architecture" vs split-engine (do not smooth)
@@ -108,7 +113,7 @@ Engine Alpha = the pure deterministic reducer already frozen in CLAUDE.md §3/§
 ## Explicitly NOT decided (honest gaps)
 
 - **The acute pain itself** (attrition/burnout causes) [B9], **daily working-task inventories** from live ER/ICU hospitals [B9], and **nursing/EMS onboarding comparison** [B9] — all unanswered by A/B. If the base rung's content needs grounding, these are the next search.
-- **Adversarial re-verification of C** — optional. The modality *decision* no longer depends on it; a 3-vote pass on C0–C5 would raise synthesis tags to confirmed claims, not change Alpha/Beta/backbone.
+- **Adversarial re-verification of C** — optional. It does **not** block the current modality decision; a 3-vote pass on C0–C5 would raise synthesis tags to confirmed claims, not change Alpha/Beta/backbone. Future verified C evidence may still revise the decision (see Reversal conditions).
 
 ## Reversal conditions
 
