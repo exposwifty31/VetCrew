@@ -37,7 +37,10 @@ app.get("/api/health", (_req, res) => {
 
 // Production: single Railway service serves the built SPA too.
 const distDir = join(dirname(fileURLToPath(import.meta.url)), "..", "dist");
-if (env.NODE_ENV === "production" && existsSync(distDir)) {
+if (env.NODE_ENV === "production") {
+  if (!existsSync(distDir)) {
+    throw new Error("production boot without dist/ — client build missing");
+  }
   app.use(express.static(distDir));
   app.get("{*splat}", (_req, res) => {
     res.sendFile(join(distDir, "index.html"));
@@ -64,4 +67,7 @@ async function boot() {
   });
 }
 
-void boot();
+boot().catch((error: unknown) => {
+  console.error("boot failed:", error);
+  process.exit(1);
+});

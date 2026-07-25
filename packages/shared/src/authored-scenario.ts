@@ -71,6 +71,12 @@ export const authoredScenarioSchema = z
     scoringDimensions: z.array(antsDomainSchema).min(1),
   })
   .superRefine((scenario, ctx) => {
+    if (scenario.clinicallyReviewed && (scenario.clinicalReviewer ?? "").trim() === "") {
+      ctx.addIssue({
+        code: "custom",
+        message: "clinically reviewed scenarios must name their reviewer (CLAUDE.md §2.5)",
+      });
+    }
     const vitalNames = new Set(Object.keys(scenario.engine.vitals));
     const actionIds = new Set(scenario.actions.map((a) => a.id));
     const triggerIds = new Set<string>();

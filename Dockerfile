@@ -12,7 +12,10 @@ RUN pnpm build
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-RUN corepack enable
+RUN corepack enable && apk add --no-cache curl
 COPY --from=build /app /app
+USER node
 EXPOSE 3001
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -fsS "http://localhost:${PORT:-3001}/api/health" || exit 1
 CMD ["pnpm", "exec", "tsx", "server/index.ts"]

@@ -17,7 +17,8 @@ import { compileScenario } from "../scenarios.js";
 const createSessionSchema = z.object({
   scenarioSlug: z.string().min(1),
   scenarioVersion: z.string().min(1).optional(),
-  seed: z.number().int().optional(),
+  /** u32 — matches the engine PRNG and the DB check constraint. */
+  seed: z.number().int().nonnegative().max(4294967295).optional(),
   traineeId: z.string().min(1).optional(),
   /** The progression axis — cannot be backfilled (CLAUDE.md §4). */
   traineeTimeInTrainingDays: z.number().int().nonnegative().optional(),
@@ -218,6 +219,22 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
     // it is the progression axis and cannot be backfilled (CLAUDE.md §4).
     if (session.traineeTimeInTrainingDays === null) {
       res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
+      return;
+    }
+    // Evidence must point at events that actually exist in THIS session —
+    // a rating with fabricated evidence is worse than no rating (§2.3).
+    const existingSeqRows = await db
+      .select({ seq: sessionEvents.seq })
+      .from(sessionEvents)
+      .where(eq(sessionEvents.sessionId, session.id));
+    const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
+    const unknownSeqs = parsed.data.ratings
+      .flatMap((rating) => rating.evidenceEventSeqs)
+      .filter((seq) => !existingSeqs.has(seq));
+    if (unknownSeqs.length > 0) {
+      res.status(422).json({
+        error: `evidence references events not in this session: ${[...new Set(unknownSeqs)].join(", ")}`,
+      });
       return;
     }
     await db.insert(antsRatings).values(

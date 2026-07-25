@@ -88,8 +88,11 @@ function HomePage() {
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/health", { signal: controller.signal })
-      .then((res) => res.json() as Promise<Health>)
-      .then(setHealth)
+      .then((res) => {
+        if (!res.ok) throw new Error(`health: ${res.status}`);
+        return res.json() as Promise<Health>;
+      })
+      .then((body) => setHealth(body.ok ? body : "down"))
       .catch(() => setHealth("down"));
     fetchSessions()
       .then(setSessions)

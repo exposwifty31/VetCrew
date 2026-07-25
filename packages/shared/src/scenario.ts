@@ -13,12 +13,18 @@ export const vitalParamsSchema = z.object({
   jitter: z.number().nonnegative(),
 });
 
-export const vitalEffectSchema = z.object({
-  vital: z.string().min(1),
-  target: z.number().optional(),
-  ratePerSec: z.number().nonnegative().optional(),
-  jitter: z.number().nonnegative().optional(),
-});
+export const vitalEffectSchema = z
+  .object({
+    vital: z.string().min(1),
+    target: z.number().optional(),
+    ratePerSec: z.number().nonnegative().optional(),
+    jitter: z.number().nonnegative().optional(),
+  })
+  .refine(
+    (effect) =>
+      effect.target !== undefined || effect.ratePerSec !== undefined || effect.jitter !== undefined,
+    { message: "a trigger effect must change at least one of target/ratePerSec/jitter" },
+  );
 
 export const triggerConditionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("time"), atMs: z.number().int().nonnegative() }),

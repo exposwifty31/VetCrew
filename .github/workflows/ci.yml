@@ -5,6 +5,13 @@ on:
     branches: [master, main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -20,4 +27,5 @@ jobs:
       - run: pnpm test
       - run: pnpm i18n:check
       - run: pnpm guard:deps
+      - run: pnpm guard:dead
       - run: pnpm build

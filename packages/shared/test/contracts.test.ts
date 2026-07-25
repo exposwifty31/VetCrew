@@ -1,3 +1,4 @@
+import { SESSION_PHASES } from "@vetcrew/engine";
 import { describe, expect, test } from "vitest";
 
 import { engineEventSchema, sessionPhaseSchema } from "../src/index.js";
@@ -22,15 +23,7 @@ describe("wire contracts stay in sync with the engine", () => {
     expect(engineEventSchema.safeParse({ seq: 1, type: "phase_change", phase: "exploded" }).success).toBe(false);
   });
 
-  test("phase enum matches the engine FSM", () => {
-    expect(sessionPhaseSchema.options).toEqual([
-      "draft",
-      "briefing",
-      "running",
-      "paused",
-      "debrief",
-      "scored",
-      "archived",
-    ]);
+  test("phase enum matches the engine FSM (imported, not hardcoded)", () => {
+    expect(sessionPhaseSchema.options).toEqual([...SESSION_PHASES]);
   });
 });
