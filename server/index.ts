@@ -70,9 +70,12 @@ async function boot() {
     const tenantId = await ensurePilotTenant(db);
     await syncScenarios(db, tenantId, loadScenarioFiles());
     // API routers MUST mount before the SPA catch-all (tech-debt #1).
-    app.use("/api/sessions", createSessionRouter(db, tenantId));
+    // Session REST is hiring-evidence surface — signed-in when Clerk is on.
+    // E2E/integration leave Clerk keys unset so requireSignedIn is a no-op.
+    const signedIn = requireSignedIn(clerkEnabled);
+    app.use("/api/sessions", signedIn, createSessionRouter(db, tenantId));
     // Manager evidence is employee-performance PII — signed-in when Clerk is on.
-    app.use("/api", createManagerRouter(db, tenantId, requireSignedIn(clerkEnabled)));
+    app.use("/api", createManagerRouter(db, tenantId, signedIn));
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {

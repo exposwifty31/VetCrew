@@ -11,6 +11,9 @@ playwright-report/
 
 # build output
 dist/
+dist-server/
+packages/*/dist/
+*.tsbuildinfo
 build/
 .vite/
 

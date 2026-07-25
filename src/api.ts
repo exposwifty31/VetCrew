@@ -58,22 +58,37 @@ export interface AarResponse {
   }[];
 }
 
-export async function fetchSessions(): Promise<SessionSummary[]> {
-  const res = await fetch("/api/sessions");
+function authHeaders(token: string | null | undefined): HeadersInit {
+  if (token === null || token === undefined || token.length === 0) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+function jsonHeaders(token: string | null | undefined): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    ...authHeaders(token),
+  };
+}
+
+export async function fetchSessions(token?: string | null): Promise<SessionSummary[]> {
+  const res = await fetch("/api/sessions", { headers: authHeaders(token) });
   if (!res.ok) throw new Error(`sessions: ${res.status}`);
   const body = (await res.json()) as { sessions: SessionSummary[] };
   return body.sessions;
 }
 
-export async function createSession(input: {
-  scenarioSlug: string;
-  traineeId?: string;
-  traineeTimeInTrainingDays?: number;
-  seed?: number;
-}): Promise<{ id: string }> {
+export async function createSession(
+  input: {
+    scenarioSlug: string;
+    traineeId?: string;
+    traineeTimeInTrainingDays?: number;
+    seed?: number;
+  },
+  token?: string | null,
+): Promise<{ id: string }> {
   const res = await fetch("/api/sessions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(token),
     body: JSON.stringify(input),
   });
   if (!res.ok) throw new Error(`create session: ${res.status}`);
@@ -81,15 +96,15 @@ export async function createSession(input: {
   return body.session;
 }
 
-export async function fetchAar(sessionId: string): Promise<AarResponse> {
-  const res = await fetch(`/api/sessions/${sessionId}/aar`);
+export async function fetchAar(
+  sessionId: string,
+  token?: string | null,
+): Promise<AarResponse> {
+  const res = await fetch(`/api/sessions/${sessionId}/aar`, {
+    headers: authHeaders(token),
+  });
   if (!res.ok) throw new Error(`aar: ${res.status}`);
   return (await res.json()) as AarResponse;
-}
-
-function authHeaders(token: string | null | undefined): HeadersInit {
-  if (token === null || token === undefined || token.length === 0) return {};
-  return { Authorization: `Bearer ${token}` };
 }
 
 export async function fetchTraineeEvidence(
@@ -122,10 +137,11 @@ export async function submitRatings(
   sessionId: string,
   raterId: string,
   ratings: { domain: AntsDomain; score: number; evidenceEventSeqs: number[] }[],
+  token?: string | null,
 ): Promise<void> {
   const res = await fetch(`/api/sessions/${sessionId}/ratings`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(token),
     body: JSON.stringify({ raterId, ratings }),
   });
   if (!res.ok) throw new Error(`ratings: ${res.status}`);

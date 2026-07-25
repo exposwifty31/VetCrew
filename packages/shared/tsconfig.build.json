@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false
+  },
+  "include": ["src"],
+  "exclude": ["test", "dist"],
+  "references": [{ "path": "../engine/tsconfig.build.json" }]
+}
