@@ -28,7 +28,8 @@ export interface EngineState {
   readonly vitals: Readonly<Record<string, VitalState>>;
   readonly firedTriggerIds: readonly string[];
   readonly actionCount: number;
-  readonly activeInjections: readonly string[];
+  /** Fired injection ids with sim clock at fire — instructor projection only. */
+  readonly activeInjections: readonly { readonly id: string; readonly atMs: number }[];
   /** Lifecycle + verbatim submissions per task — never correctness (SRS §5). */
   readonly tasks: Readonly<Record<string, TaskRuntimeState>>;
 }
@@ -159,7 +160,10 @@ export function reduce(state: EngineState, event: EngineEvent): EngineState {
         ...state,
         vitals: result.vitals,
         firedTriggerIds: result.firedTriggerIds,
-        activeInjections: [...state.activeInjections, event.injection],
+        activeInjections: [
+          ...state.activeInjections,
+          { id: event.injection, atMs: state.timeMs },
+        ],
         appliedSeq: event.seq,
       };
     }

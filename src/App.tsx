@@ -5,6 +5,7 @@ import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 import { createSession, fetchSessions, type SessionSummary } from "./api.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
+import InstructorConsolePage from "./pages/InstructorConsolePage.js";
 import StationPage from "./pages/StationPage.js";
 
 interface Health {
@@ -85,6 +86,10 @@ export default function App() {
   if (stationMatch?.[1] !== undefined) {
     return <StationPage sessionId={stationMatch[1]} />;
   }
+  const instructorMatch = /^#\/instructor\/(.+)$/.exec(route);
+  if (instructorMatch?.[1] !== undefined) {
+    return <InstructorConsolePage sessionId={instructorMatch[1]} />;
+  }
   return <HomePage />;
 }
 
@@ -92,6 +97,7 @@ function HomePage() {
   const [health, setHealth] = useState<Health | null | "down">(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [startingStation, setStartingStation] = useState(false);
+  const [startingInstructor, setStartingInstructor] = useState(false);
   const engine = useMemo(engineSmoke, []);
 
   useEffect(() => {
@@ -120,6 +126,20 @@ function HomePage() {
       window.location.hash = `#/station/${session.id}`;
     } catch {
       setStartingStation(false);
+    }
+  }
+
+  async function startInstructorDemo() {
+    setStartingInstructor(true);
+    try {
+      const session = await createSession({
+        scenarioSlug: "base-rung-resp-distress",
+        traineeId: "pitch-trainee",
+        traineeTimeInTrainingDays: 90,
+      });
+      window.location.hash = `#/instructor/${session.id}`;
+    } catch {
+      setStartingInstructor(false);
     }
   }
 
@@ -171,23 +191,42 @@ function HomePage() {
       <section style={{ marginBlockStart: 32 }}>
         <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("home.station.heading")}</h2>
         <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.station.blurb")}</p>
-        <button
-          type="button"
-          disabled={startingStation || health === "down" || health === null}
-          onClick={() => void startStation()}
-          style={{
-            minHeight: 48,
-            paddingInline: 16,
-            background: "var(--action-accent, #008080)",
-            color: "#fff",
-            border: 0,
-            borderRadius: 8,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          {startingStation ? t("home.station.starting") : t("home.station.start")}
-        </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          <button
+            type="button"
+            disabled={startingStation || health === "down" || health === null}
+            onClick={() => void startStation()}
+            style={{
+              minHeight: 48,
+              paddingInline: 16,
+              background: "var(--action-accent, #008080)",
+              color: "#fff",
+              border: 0,
+              borderRadius: 8,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {startingStation ? t("home.station.starting") : t("home.station.start")}
+          </button>
+          <button
+            type="button"
+            disabled={startingInstructor || health === "down" || health === null}
+            onClick={() => void startInstructorDemo()}
+            style={{
+              minHeight: 48,
+              paddingInline: 16,
+              background: "transparent",
+              color: "var(--action-accent, #008080)",
+              border: "2px solid var(--action-accent, #008080)",
+              borderRadius: 8,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {startingInstructor ? t("home.instructor.starting") : t("home.instructor.start")}
+          </button>
+        </div>
       </section>
 
       <section style={{ marginBlockStart: 32 }}>
@@ -209,9 +248,15 @@ function HomePage() {
                 }}
               >
                 <span style={{ flex: 1 }}>
-                  {session.traineeId ?? "—"} · v{session.scenarioVersion} ·{" "}
+                  {session.scenarioSlug} · {session.traineeId ?? "—"} · v{session.scenarioVersion} ·{" "}
                   {t(`phase.${session.phase}`)}
                 </span>
+                <a
+                  href={`#/instructor/${session.id}`}
+                  style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}
+                >
+                  {t("home.sessions.openInstructor")}
+                </a>
                 <a
                   href={`#/station/${session.id}`}
                   style={{ fontWeight: 700, minHeight: 44, display: "inline-flex", alignItems: "center" }}

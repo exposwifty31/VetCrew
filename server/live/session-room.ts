@@ -1,32 +1,40 @@
 import {
   createInitialState,
+  instructorView,
   reduce,
   replay,
   roleView,
   type EngineEvent,
   type EngineState,
+  type InstructorView,
   type RoleView,
   type ScenarioDef,
   type SessionPhase,
 } from "@vetcrew/engine";
-import type { EngineEventBody } from "@vetcrew/shared";
+import type { EngineEventBody, StationKind } from "@vetcrew/shared";
 
 import type { Db } from "../db/client.js";
 import { appendSessionEvents } from "./event-append.js";
 
 const TICK_MS = 1000;
 
-type SnapshotFrame = {
+export type PresenceMember = {
   readonly role: string;
-  readonly roleView: RoleView;
+  readonly stationKind: StationKind;
+  readonly actorId: string;
+  readonly status: "connected";
 };
+
+export type SnapshotFrame =
+  | { readonly kind: "trainee"; readonly role: string; readonly roleView: RoleView }
+  | { readonly kind: "instructor"; readonly instructorView: InstructorView };
 
 export type SnapshotListener = (frame: SnapshotFrame) => void;
+export type PresenceListener = (members: readonly PresenceMember[]) => void;
 
-type BoundListener = {
-  readonly role: string;
-  readonly listener: SnapshotListener;
-};
+type BoundListener =
+  | { readonly kind: "trainee"; readonly role: string; readonly listener: SnapshotListener }
+  | { readonly kind: "instructor"; readonly listener: SnapshotListener };
 
 /**
  * One in-memory authoritative engine per live session. The tick loop lives
@@ -37,6 +45,8 @@ export class SessionRoom {
   private state: EngineState;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private readonly listeners = new Set<BoundListener>();
+  private readonly presenceListeners = new Set<PresenceListener>();
+  private readonly presence = new Map<string, PresenceMember>();
   /** Serialize append+reduce so tick and trainee intents cannot interleave mid-batch. */
   private chain: Promise<unknown> = Promise.resolve();
 
@@ -86,6 +96,14 @@ export class SessionRoom {
     return this.scenario.slug;
   }
 
+  get scenarioRoles(): readonly string[] {
+    return this.scenario.roles ?? [];
+  }
+
+  injectionMenuIds(): readonly string[] {
+    return (this.scenario.injections ?? []).map((item) => item.id);
+  }
+
   getState(): EngineState {
     return this.state;
   }
@@ -94,12 +112,53 @@ export class SessionRoom {
     return roleView(this.state, role);
   }
 
-  onSnapshot(role: string, listener: SnapshotListener): () => void {
-    const bound: BoundListener = { role, listener };
+  projectInstructor(): InstructorView {
+    return instructorView(this.state);
+  }
+
+  onSnapshot(
+    stationKind: StationKind,
+    role: string,
+    listener: SnapshotListener,
+  ): () => void {
+    const bound: BoundListener =
+      stationKind === "instructor"
+        ? { kind: "instructor", listener }
+        : { kind: "trainee", role, listener };
     this.listeners.add(bound);
     return () => {
       this.listeners.delete(bound);
     };
+  }
+
+  onPresence(listener: PresenceListener): () => void {
+    this.presenceListeners.add(listener);
+    return () => {
+      this.presenceListeners.delete(listener);
+    };
+  }
+
+  registerPresence(args: {
+    readonly socketId: string;
+    readonly role: string;
+    readonly stationKind: StationKind;
+    readonly actorId: string;
+  }): () => void {
+    this.presence.set(args.socketId, {
+      role: args.role,
+      stationKind: args.stationKind,
+      actorId: args.actorId,
+      status: "connected",
+    });
+    this.emitPresence();
+    return () => {
+      this.presence.delete(args.socketId);
+      this.emitPresence();
+    };
+  }
+
+  listPresence(): PresenceMember[] {
+    return [...this.presence.values()];
   }
 
   /** Apply client/instructor intents (no seq). Persists then reduces. */
@@ -134,6 +193,15 @@ export class SessionRoom {
   dispose(): void {
     this.stopTick();
     this.listeners.clear();
+    this.presenceListeners.clear();
+    this.presence.clear();
+  }
+
+  private emitPresence(): void {
+    const members = this.listPresence();
+    for (const listener of this.presenceListeners) {
+      listener(members);
+    }
   }
 
   private syncTickLoop(): void {
@@ -161,8 +229,16 @@ export class SessionRoom {
   }
 
   private broadcast(): void {
-    for (const { role, listener } of this.listeners) {
-      listener({ role, roleView: this.project(role) });
+    for (const bound of this.listeners) {
+      if (bound.kind === "instructor") {
+        bound.listener({ kind: "instructor", instructorView: this.projectInstructor() });
+      } else {
+        bound.listener({
+          kind: "trainee",
+          role: bound.role,
+          roleView: this.project(bound.role),
+        });
+      }
     }
   }
 }

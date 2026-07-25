@@ -86,6 +86,8 @@ export const taskDefSchema = z.object({
   instructionHe: z.string().min(1),
   body: taskBodySchema,
   hidden: z.boolean().optional(),
+  /** Owning role; omitted = visible to all trainee roles (solo scenarios). */
+  role: z.string().min(1).optional(),
 });
 
 export const taskSubmissionSchema = z.discriminatedUnion("kind", [

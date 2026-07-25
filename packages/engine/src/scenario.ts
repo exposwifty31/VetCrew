@@ -41,6 +41,12 @@ export interface TriggerDef {
   readonly effects: readonly VitalEffect[];
 }
 
+export interface InjectionMenuItem {
+  readonly id: string;
+  readonly label: string;
+  readonly labelHe: string;
+}
+
 export interface ScenarioDef {
   readonly slug: string;
   readonly version: string;
@@ -50,4 +56,8 @@ export interface ScenarioDef {
   readonly tasks?: readonly TaskDef[] | undefined;
   /** Display parameter (SRS OD-2); ranges inside task defs follow it at compile time. */
   readonly species?: string | undefined;
+  /** Authored role slugs — join AuthZ + roleView filtering. */
+  readonly roles?: readonly string[] | undefined;
+  /** Instructor injection menu (available, never scheduled). */
+  readonly injections?: readonly InjectionMenuItem[] | undefined;
 }

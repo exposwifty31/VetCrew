@@ -32,6 +32,8 @@ export function compileScenario(authored: AuthoredScenario): ScenarioDef {
     slug: authored.slug,
     version: authored.version,
     species: authored.species,
+    roles: authored.roles,
+    injections: authored.injections,
     vitals: authored.engine.vitals,
     triggers: authored.engine.triggers,
     ...(authored.tasks.length > 0 ? { tasks: authored.tasks } : {}),

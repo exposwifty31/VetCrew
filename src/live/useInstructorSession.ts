@@ -2,42 +2,41 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   LIVE_EVENTS,
+  sessionPresenceSchema,
   sessionRejectSchema,
   sessionSnapshotSchema,
   type ClientIntent,
-  type RoleViewWire,
+  type InstructorViewWire,
+  type SessionPresence,
   type SessionReject,
 } from "@vetcrew/shared";
 import { io, type Socket } from "socket.io-client";
 
-export type ConnectionStatus = "connecting" | "connected" | "reconnecting" | "offline";
+import type { ConnectionStatus } from "./useSession.js";
 
-export type UseSessionResult = {
-  readonly roleView: RoleViewWire | null;
+export type UseInstructorSessionResult = {
+  readonly instructorView: InstructorViewWire | null;
+  readonly presence: SessionPresence["connected"];
   readonly connectionStatus: ConnectionStatus;
   readonly lastReject: SessionReject | null;
   readonly sendIntent: (intent: ClientIntent) => void;
 };
 
-/**
- * Thin trainee live client: connection FSM + RoleView from server snapshots only.
- * Never reduces engine state locally (CLAUDE.md §4 / architecture doctrine).
- * Lifecycle (briefing/running/pause/end) is instructor-owned in Sprint 4.
- */
-export function useSession(
+/** Thin instructor live client — renders instructorView only, never RoleView. */
+export function useInstructorSession(
   sessionId: string,
-  options: { readonly role?: string; readonly actorId?: string } = {},
-): UseSessionResult {
-  const role = options.role ?? "technician";
-  const actorId = options.actorId ?? "dev-trainee";
-  const [roleView, setRoleView] = useState<RoleViewWire | null>(null);
+  actorId = "dev-instructor",
+): UseInstructorSessionResult {
+  const [instructorView, setInstructorView] = useState<InstructorViewWire | null>(null);
+  const [presence, setPresence] = useState<SessionPresence["connected"]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
   const [lastReject, setLastReject] = useState<SessionReject | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const lastSeqRef = useRef(0);
 
   useEffect(() => {
-    setRoleView(null);
+    setInstructorView(null);
+    setPresence([]);
     setConnectionStatus("connecting");
     lastSeqRef.current = 0;
 
@@ -51,8 +50,8 @@ export function useSession(
     const join = () => {
       socket.emit(LIVE_EVENTS.join, {
         sessionId,
-        stationKind: "trainee",
-        role,
+        stationKind: "instructor",
+        role: "instructor",
         lastSeq: lastSeqRef.current,
         actorId,
       });
@@ -64,18 +63,22 @@ export function useSession(
     });
     socket.on("disconnect", () => {
       setConnectionStatus("reconnecting");
-      setRoleView(null);
+      setInstructorView(null);
     });
     socket.io.on("reconnect_attempt", () => {
       setConnectionStatus("reconnecting");
-      setRoleView(null);
+      setInstructorView(null);
     });
     socket.on(LIVE_EVENTS.snapshot, (raw: unknown) => {
       const parsed = sessionSnapshotSchema.safeParse(raw);
-      if (!parsed.success || parsed.data.kind !== "trainee") return;
+      if (!parsed.success || parsed.data.kind !== "instructor") return;
       lastSeqRef.current = parsed.data.seq;
-      setRoleView(parsed.data.roleView);
+      setInstructorView(parsed.data.instructorView);
       setConnectionStatus("connected");
+    });
+    socket.on(LIVE_EVENTS.presence, (raw: unknown) => {
+      const parsed = sessionPresenceSchema.safeParse(raw);
+      if (parsed.success) setPresence(parsed.data.connected);
     });
     socket.on(LIVE_EVENTS.reject, (raw: unknown) => {
       const parsed = sessionRejectSchema.safeParse(raw);
@@ -97,15 +100,17 @@ export function useSession(
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [sessionId, role, actorId]);
+  }, [sessionId, actorId]);
 
   const sendIntent = (intent: ClientIntent) => {
     const socket = socketRef.current;
     if (socket === null || !socket.connected) return;
     if (connectionStatus !== "connected") return;
-    if (intent.type === "phase_change" || intent.type === "injection") return;
+    if (intent.type === "task_start" || intent.type === "task_submit" || intent.type === "action") {
+      return;
+    }
     socket.emit(LIVE_EVENTS.intent, intent);
   };
 
-  return { roleView, connectionStatus, lastReject, sendIntent };
+  return { instructorView, presence, connectionStatus, lastReject, sendIntent };
 }

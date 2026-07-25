@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 
-import { replay, roleView } from "../src/index.js";
+import {
+  createInitialState,
+  instructorView,
+  reduce,
+  replay,
+  roleView,
+  type ScenarioDef,
+} from "../src/index.js";
 import { TASK_SCENARIO, fullRunEvents } from "./fixtures/task-scenario.js";
 
 /**
@@ -84,5 +91,54 @@ describe("roleView (technician partial view)", () => {
     expect(view.phase).toBe("debrief");
     expect(view.species).toBe("dog");
     expect(view.scenarioSlug).toBe("test-task-rung");
+  });
+});
+
+describe("roleView asymmetry", () => {
+  test("role A never sees tasks assigned only to role B", () => {
+    const tasks = TASK_SCENARIO.tasks ?? [];
+    const t1 = tasks[0];
+    const t2 = tasks[1];
+    if (t1 === undefined || t2 === undefined) throw new Error("fixture missing tasks");
+    const dual: ScenarioDef = {
+      ...TASK_SCENARIO,
+      roles: ["technician", "chart"],
+      tasks: [
+        { ...t1, role: "technician" },
+        { ...t2, role: "chart" },
+      ],
+    };
+    const state = createInitialState(42, dual);
+    const tech = roleView(state, "technician");
+    const chart = roleView(state, "chart");
+    expect(tech.tasks.map((t) => t.id)).toEqual(["t1"]);
+    expect(chart.tasks.map((t) => t.id)).toEqual(["t2"]);
+  });
+});
+
+describe("instructorView", () => {
+  test("includes injection menu + fired state without answer/trajectory leaks", () => {
+    const scenario: ScenarioDef = {
+      ...TASK_SCENARIO,
+      roles: ["technician"],
+      injections: [
+        { id: "monitor_artifact", label: "Monitor artifact", labelHe: "ארטיפקט" },
+      ],
+    };
+    let state = createInitialState(42, scenario);
+    state = reduce(state, { seq: 1, type: "phase_change", phase: "briefing" });
+    state = reduce(state, { seq: 2, type: "phase_change", phase: "running" });
+    state = reduce(state, { seq: 3, type: "injection", injection: "monitor_artifact" });
+
+    const view = instructorView(state);
+    const keys = new Set<string>();
+    collectKeys(JSON.parse(JSON.stringify(view)), keys);
+    for (const forbidden of FORBIDDEN_KEYS) {
+      expect(keys.has(forbidden), `instructor leaked key: ${forbidden}`).toBe(false);
+    }
+    expect(view.injections).toHaveLength(1);
+    expect(view.injections[0]?.fired).toBe(true);
+    expect(view.injections[0]?.firedAtMs).toBe(0);
+    expect(view.roles).toEqual(["technician"]);
   });
 });

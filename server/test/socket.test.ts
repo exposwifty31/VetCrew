@@ -11,7 +11,11 @@ import { createDb } from "../db/client.js";
 import { runMigrations } from "../db/migrate.js";
 import { scenarios, simSessions } from "../db/schema/index.js";
 import { RoomRegistry } from "../live/room-registry.js";
-import { attachLiveSocket, STATION_SCENARIO_SLUG } from "../live/socket.js";
+import {
+  attachLiveSocket,
+  INSTRUCTOR_DEMO_SCENARIO_SLUG,
+  STATION_SCENARIO_SLUG,
+} from "../live/socket.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
@@ -60,13 +64,13 @@ afterAll(async () => {
   await pool.end();
 });
 
-async function createSteppedSession(): Promise<string> {
+async function createSessionFor(slug: string): Promise<string> {
   const scenarioRows = await db
     .select({ id: scenarios.id, version: scenarios.version })
     .from(scenarios)
-    .where(and(eq(scenarios.tenantId, tenantId), eq(scenarios.slug, STATION_SCENARIO_SLUG)));
+    .where(and(eq(scenarios.tenantId, tenantId), eq(scenarios.slug, slug)));
   const scenario = scenarioRows[0];
-  if (scenario === undefined) throw new Error("stepped scenario missing");
+  if (scenario === undefined) throw new Error(`scenario missing: ${slug}`);
   const inserted = await db
     .insert(simSessions)
     .values({
@@ -96,50 +100,150 @@ function connectClient(): Promise<ClientSocket> {
 }
 
 describe("live socket", () => {
-  test("join → snapshot; intent without seq advances roleView.seq", async () => {
-    const sessionId = await createSteppedSession();
+  test("trainee join → trainee snapshot; phase_change from trainee is rejected", async () => {
+    const sessionId = await createSessionFor(STATION_SCENARIO_SLUG);
     const socket = await connectClient();
     try {
-      const snapshot = await new Promise<{ seq: number; roleView: { seq: number; phase: string } }>(
-        (resolve, reject) => {
-          const timer = setTimeout(() => reject(new Error("snapshot timeout")), 5000);
-          socket.on(LIVE_EVENTS.snapshot, (frame) => {
-            clearTimeout(timer);
-            resolve(frame as { seq: number; roleView: { seq: number; phase: string } });
-          });
-          socket.emit(LIVE_EVENTS.join, {
-            sessionId,
-            role: "technician",
-            actorId: "socket-trainee",
-          });
-        },
-      );
-      expect(snapshot.roleView.phase).toBe("draft");
+      const snapshot = await new Promise<{ kind: string; seq: number }>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("snapshot timeout")), 5000);
+        socket.on(LIVE_EVENTS.snapshot, (frame) => {
+          clearTimeout(timer);
+          resolve(frame as { kind: string; seq: number });
+        });
+        socket.emit(LIVE_EVENTS.join, {
+          sessionId,
+          stationKind: "trainee",
+          role: "technician",
+          actorId: "socket-trainee",
+        });
+      });
+      expect(snapshot.kind).toBe("trainee");
       expect(snapshot.seq).toBe(0);
 
-      const after = await new Promise<{ seq: number; roleView: { phase: string; seq: number } }>(
-        (resolve, reject) => {
-          const timer = setTimeout(() => reject(new Error("intent snapshot timeout")), 5000);
-          socket.on(LIVE_EVENTS.snapshot, (frame) => {
-            const typed = frame as { seq: number; roleView: { phase: string; seq: number } };
-            if (typed.roleView.phase === "briefing") {
-              clearTimeout(timer);
-              resolve(typed);
-            }
-          });
-          socket.emit(LIVE_EVENTS.intent, { type: "phase_change", phase: "briefing" });
-        },
-      );
-      expect(after.seq).toBe(1);
-      expect(after.roleView.seq).toBe(1);
+      const reject = await new Promise<{ code: string }>((resolve, rejectPromise) => {
+        const timer = setTimeout(() => rejectPromise(new Error("reject timeout")), 5000);
+        socket.on(LIVE_EVENTS.reject, (raw) => {
+          clearTimeout(timer);
+          resolve(raw as { code: string });
+        });
+        socket.emit(LIVE_EVENTS.intent, { type: "phase_change", phase: "briefing" });
+      });
+      expect(reject.code).toBe("role_bound");
     } finally {
       socket.disconnect();
       registry.dispose(sessionId);
     }
   });
 
+  test("instructor can pause and inject on resp-distress; trainee cannot inject", async () => {
+    const sessionId = await createSessionFor(INSTRUCTOR_DEMO_SCENARIO_SLUG);
+    const instructor = await connectClient();
+    const trainee = await connectClient();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("instructor join timeout")), 5000);
+        instructor.on(LIVE_EVENTS.snapshot, (frame) => {
+          if ((frame as { kind: string }).kind === "instructor") {
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+        instructor.emit(LIVE_EVENTS.join, {
+          sessionId,
+          stationKind: "instructor",
+          role: "instructor",
+        });
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("trainee join timeout")), 5000);
+        trainee.on(LIVE_EVENTS.snapshot, (frame) => {
+          if ((frame as { kind: string }).kind === "trainee") {
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+        trainee.emit(LIVE_EVENTS.join, {
+          sessionId,
+          stationKind: "trainee",
+          role: "technician",
+        });
+      });
+
+      const afterBriefing = await new Promise<{ instructorView: { phase: string } }>(
+        (resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error("briefing timeout")), 5000);
+          instructor.on(LIVE_EVENTS.snapshot, (frame) => {
+            const typed = frame as { kind: string; instructorView: { phase: string } };
+            if (typed.kind === "instructor" && typed.instructorView.phase === "briefing") {
+              clearTimeout(timer);
+              resolve(typed);
+            }
+          });
+          instructor.emit(LIVE_EVENTS.intent, { type: "phase_change", phase: "briefing" });
+        },
+      );
+      expect(afterBriefing.instructorView.phase).toBe("briefing");
+
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("running timeout")), 5000);
+        instructor.on(LIVE_EVENTS.snapshot, (frame) => {
+          const typed = frame as { kind: string; instructorView: { phase: string } };
+          if (typed.kind === "instructor" && typed.instructorView.phase === "running") {
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+        instructor.emit(LIVE_EVENTS.intent, { type: "phase_change", phase: "running" });
+      });
+
+      const fired = await new Promise<{
+        instructorView: { injections: { id: string; fired: boolean }[] };
+      }>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("inject timeout")), 5000);
+        instructor.on(LIVE_EVENTS.snapshot, (frame) => {
+          const typed = frame as {
+            kind: string;
+            instructorView: { injections: { id: string; fired: boolean }[] };
+          };
+          if (
+            typed.kind === "instructor" &&
+            typed.instructorView.injections.some((i) => i.id === "monitor_artifact" && i.fired)
+          ) {
+            clearTimeout(timer);
+            resolve(typed);
+          }
+        });
+        instructor.emit(LIVE_EVENTS.intent, {
+          type: "injection",
+          injection: "monitor_artifact",
+        });
+      });
+      expect(fired.instructorView.injections.find((i) => i.id === "monitor_artifact")?.fired).toBe(
+        true,
+      );
+
+      const traineeReject = await new Promise<{ code: string }>((resolve, rejectPromise) => {
+        const timer = setTimeout(() => rejectPromise(new Error("trainee inject reject timeout")), 5000);
+        trainee.on(LIVE_EVENTS.reject, (raw) => {
+          clearTimeout(timer);
+          resolve(raw as { code: string });
+        });
+        trainee.emit(LIVE_EVENTS.intent, {
+          type: "injection",
+          injection: "monitor_artifact",
+        });
+      });
+      expect(traineeReject.code).toBe("role_bound");
+    } finally {
+      instructor.disconnect();
+      trainee.disconnect();
+      registry.dispose(sessionId);
+    }
+  });
+
   test("intent with seq is rejected", async () => {
-    const sessionId = await createSteppedSession();
+    const sessionId = await createSessionFor(STATION_SCENARIO_SLUG);
     const socket = await connectClient();
     try {
       await new Promise<void>((resolve, reject) => {
@@ -148,7 +252,11 @@ describe("live socket", () => {
           clearTimeout(timer);
           resolve();
         });
-        socket.emit(LIVE_EVENTS.join, { sessionId, role: "technician" });
+        socket.emit(LIVE_EVENTS.join, {
+          sessionId,
+          stationKind: "trainee",
+          role: "technician",
+        });
       });
 
       const reject = await new Promise<{ code: string; message: string }>((resolve, rejectPromise) => {
@@ -157,49 +265,13 @@ describe("live socket", () => {
           clearTimeout(timer);
           resolve(raw as { code: string; message: string });
         });
-        socket.emit(LIVE_EVENTS.intent, { type: "phase_change", phase: "briefing", seq: 99 });
+        socket.emit(LIVE_EVENTS.intent, { type: "task_start", taskId: "t1", seq: 99 });
       });
       expect(reject.code).toBe("validation");
       expect(reject.message).toMatch(/seq/);
     } finally {
       socket.disconnect();
       registry.dispose(sessionId);
-    }
-  });
-
-  test("join on demo scenario is rejected", async () => {
-    const scenarioRows = await db
-      .select({ id: scenarios.id, version: scenarios.version })
-      .from(scenarios)
-      .where(and(eq(scenarios.tenantId, tenantId), eq(scenarios.slug, "base-rung-resp-distress")));
-    const scenario = scenarioRows[0];
-    if (scenario === undefined) throw new Error("demo scenario missing");
-    const inserted = await db
-      .insert(simSessions)
-      .values({
-        tenantId,
-        scenarioId: scenario.id,
-        scenarioVersion: scenario.version,
-        seed: 1,
-        traineeTimeInTrainingDays: 1,
-      })
-      .returning({ id: simSessions.id });
-    const sessionId = inserted[0]?.id;
-    if (sessionId === undefined) throw new Error("insert failed");
-
-    const socket = await connectClient();
-    try {
-      const reject = await new Promise<{ code: string }>((resolve, rejectPromise) => {
-        const timer = setTimeout(() => rejectPromise(new Error("reject timeout")), 5000);
-        socket.on(LIVE_EVENTS.reject, (raw) => {
-          clearTimeout(timer);
-          resolve(raw as { code: string });
-        });
-        socket.emit(LIVE_EVENTS.join, { sessionId, role: "technician" });
-      });
-      expect(reject.code).toBe("scenario");
-    } finally {
-      socket.disconnect();
     }
   });
 });

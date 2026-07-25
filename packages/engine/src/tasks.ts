@@ -114,6 +114,11 @@ export interface TaskDef {
    * standing control instead.
    */
   readonly hidden?: boolean | undefined;
+  /**
+   * Owning role slug. Absent = visible to every trainee role (legacy solo).
+   * When set, `roleView` only includes the task for that role.
+   */
+  readonly role?: string | undefined;
 }
 
 /** What the trainee entered — recorded verbatim, evaluated only post-hoc. */
