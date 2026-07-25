@@ -154,11 +154,13 @@
         </span>
       </div>
 
-      <div class="vc-task vc-task--approval">
+      <!-- Morphine renders as a PLAIN task on purpose: it requires senior-vet
+           approval, but in an assessment that must never be hinted. Knowing to
+           stop and call the doctor, unprompted, is the scored dimension. -->
+      <div class="vc-task vc-task--do">
         <span class="vc-task__inner">
-        <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
-        <span class="vc-task__body"><span class="vc-task__code">אישור נדרש</span><span class="vc-task__title">מתן מורפיום 2 mg</span><span class="vc-task__detail">דורש אישור רופא בכיר</span></span>
-        <span class="vc-task__tail"><button class="vc-task__call"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c0 8 7 15 15 15l0-3.5-4-1.5-2 2a12 12 0 0 1-5-5l2-2L8.5 5Z"/></svg>קרא לרופא</button></span>
+        <span class="vc-task__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="vc-task__body"><span class="vc-task__code">בצע</span><span class="vc-task__title">מתן מורפיום · 2 mg</span><span class="vc-task__detail">חשב נפח ובחר נתיב מתן</span></span>
         </span>
       </div>
 

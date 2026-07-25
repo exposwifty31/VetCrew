@@ -9,7 +9,7 @@
   /* Self-contained: every slide lives under deck/ and works from file://
      (double-click index.html). Fonts load from Google when online and fall
      back to system fonts offline. Built to the 12-slide concept blueprint;
-     slide 13 is the interactive appendix. */
+     slide 13 is the interactive appendix, slide 14 the ending. */
   html,body{margin:0;height:100%;background:var(--surface-base);font-family:var(--font-ui);color:var(--text-primary);overflow:hidden;}
 
   .deck{position:fixed;inset:0;}
@@ -24,6 +24,15 @@
     padding:14px min(9vw,130px);background:rgba(6,10,14,.88);border-top:1px solid var(--border-default);
     font-size:var(--fs-body);font-weight:600;color:var(--text-primary);line-height:var(--lh-snug);}
 
+  /* explainer strip — a richer takeaway for hero slides that must self-explain */
+  .explain{position:absolute;bottom:0;inset-inline:0;z-index:6;box-sizing:border-box;
+    padding:16px min(9vw,130px) 18px;background:rgba(6,10,14,.92);border-top:1px solid var(--border-default);
+    display:flex;flex-direction:column;gap:10px;}
+  .explain .lead{font-size:var(--fs-body);font-weight:700;color:var(--text-primary);line-height:var(--lh-snug);}
+  .explain .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-5);}
+  .explain .ex .t{font-size:var(--fs-sm);font-weight:700;color:var(--action-quiet,#74c9d0);margin-bottom:2px;}
+  .explain .ex .d{font-size:var(--fs-sm);color:var(--text-secondary);line-height:var(--lh-normal);}
+
   /* chapter tag on embedded slides — same visual family as the zonetag */
   .chapter{position:absolute;top:12px;inset-inline-start:14px;z-index:6;
     font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;
@@ -31,7 +40,36 @@
 
   /* ── content slides ── */
   .content{display:flex;flex-direction:column;justify-content:center;gap:var(--sp-6);
-    padding:min(9vh,96px) min(9vw,130px);box-sizing:border-box;}
+    padding:min(9vh,96px) min(9vw,130px);box-sizing:border-box;
+    background:radial-gradient(900px 520px at 82% 22%, rgba(18,128,143,.08), transparent 70%);}
+  /* ghost section numeral — quiet depth, never competes with content */
+  .content::after{content:attr(data-num);position:absolute;bottom:-.12em;inset-inline-end:18px;z-index:0;
+    font-family:var(--font-metric);font-weight:700;font-size:min(36vh,340px);line-height:1;
+    letter-spacing:-.04em;color:rgba(232,244,248,.028);pointer-events:none;user-select:none;}
+  .content > *{position:relative;z-index:1;}
+
+  /* ── motion: staggered entrance on activation; strips rise from the edge.
+        Everything transform/opacity only; fully disabled under reduced motion. ── */
+  @media (prefers-reduced-motion: no-preference){
+    .slide.content.active > *{opacity:0;transform:translateY(16px);
+      animation:enter .55s cubic-bezier(.25,1,.5,1) forwards;}
+    .slide.content.active > :nth-child(1){animation-delay:.05s;}
+    .slide.content.active > :nth-child(2){animation-delay:.15s;}
+    .slide.content.active > :nth-child(3){animation-delay:.28s;}
+    .slide.content.active > :nth-child(4){animation-delay:.42s;}
+    .slide.content.active > :nth-child(5){animation-delay:.54s;}
+    .slide.content.active > :nth-child(6){animation-delay:.66s;}
+    .slide.active .takeaway,.slide.active .explain{
+      transform:translateY(101%);animation:strip .5s cubic-bezier(.25,1,.5,1) .35s forwards;}
+    .slide.active .chapter{opacity:0;animation:appear .4s var(--ease-standard) .2s forwards;}
+    @keyframes enter{to{opacity:1;transform:none;}}
+    @keyframes strip{to{transform:none;}}
+    @keyframes appear{to{opacity:1;}}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important;}
+  }
+  .content h1,.content li,.punch,.quietlines p{overflow-wrap:break-word;}
   .kicker{font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;color:var(--action-quiet,#74c9d0);}
   .content h1{margin:0;font-size:var(--fs-display);font-weight:700;line-height:var(--lh-snug);max-width:24ch;}
@@ -135,6 +173,14 @@
   .failure .f{font-size:var(--fs-body-lg);font-weight:600;color:var(--text-primary);line-height:var(--lh-snug);}
   .failure .why{font-size:var(--fs-sm);color:var(--text-secondary);line-height:var(--lh-normal);}
 
+  /* free-standing paragraph on verbal slides */
+  .intro{font-size:var(--fs-body-lg);color:var(--text-secondary);line-height:var(--lh-normal);max-width:62ch;margin:0;}
+  .intro b{color:var(--text-primary);font-weight:600;}
+
+  /* close slide — quiet ridge on the horizon, glowing base marker */
+  .close-ridge{position:absolute;bottom:0;inset-inline:0;height:34vh;pointer-events:none;z-index:0;opacity:.9;}
+  .close-ridge svg{width:100%;height:100%;display:block;}
+
   /* ── navigation chrome ── */
   .nav{position:fixed;bottom:18px;inset-inline-end:18px;z-index:20;display:flex;gap:8px;}
   .nav button{width:44px;height:44px;border-radius:var(--radius-sm);cursor:pointer;
@@ -171,7 +217,7 @@
   </section>
 
   <!-- 2 · the problem, in her world — three quiet lines, honest, not blaming -->
-  <section class="slide content" data-title="הבעיה">
+  <section class="slide content" data-title="הבעיה" data-num="02">
     <div class="kicker">מה קורה היום</div>
     <h1>איך יודעים שטכנאי חדש יכול להתחיל לעבוד?</h1>
     <div class="quietlines">
@@ -179,11 +225,11 @@
       <p>ו<b>המבחן שלך</b> — שבכתב, מטבעו, לא יכול לתפוס את הרצפה: הוא מכסה רק חלק מהידע, ולא את הביצוע.</p>
       <p>וגם, הכי חשוב: <b>לחץ מצד ההנהלה</b> להעסיק טכנאים חדשים — בגלל מחסור.</p>
     </div>
-    <div class="punch">הערכה חלשה + גיוס בלחץ = סיכון שנכנס לרצפה. זו לא אשמה של אף אחד — אלה הכלים.</div>
+    <div class="punch">הערכה חלשה + גיוס בלחץ = טכנאי מבולבל שלא בטוח בעצמו — שבקצה דורש יותר עבודה מכולם, ומסכן את בעלי החיים. זו לא אשמה של אף אחד — אלה הכלים.</div>
   </section>
 
   <!-- 3 · why it matters — figures with citations, no adjectives -->
-  <section class="slide content" data-title="העלות">
+  <section class="slide content" data-title="העלות" data-num="03">
     <div class="kicker">למה זה חשוב</div>
     <h1>זו לא בעיה מקומית — זה כל התחום</h1>
     <div class="tiles">
@@ -206,7 +252,7 @@
   </section>
 
   <!-- 4 · the gap nobody fills -->
-  <section class="slide content" data-title="הפער">
+  <section class="slide content" data-title="הפער" data-num="04">
     <div class="kicker">מה קיים — ומה חסר</div>
     <h1>יש מי שמסמן וי על מטלות. אין מי שמודד החלטות.</h1>
     <div class="contrast">
@@ -233,24 +279,31 @@
   <section class="slide" data-title="ההר">
     <span class="chapter">הקונספט — הר הכשירות</span>
     <iframe title="הר הכשירות — מהמטלה היומיומית ועד החייאה מרובת־מטופלים" data-src="mountain.html"></iframe>
-    <div class="takeaway">בונים רגל אחת של ההר — לא את כולו. הבסיס יושב על מודל המשימות הצבעוני שהצוות כבר עובד איתו כל משמרת, כך שכמעט לא נדרש שינוי התנהגות.</div>
+    <div class="takeaway">בונים את כל השכבות של ההר — אירועי סימולציה מובנים, שנכתבים בהדרכתך ובעזרתך, סביב שיטת העבודה שהצוות כבר עובד איתה במשמרת, במציאות.</div>
   </section>
 
   <!-- 6 · see it: the technician's station (HERO) -->
   <section class="slide" data-title="המוצר">
     <span class="chapter">ככה זה נראה</span>
     <iframe title="תחנת הטכנאי — משימות לצד מוניטור מטופל" data-src="split-screen.html"></iframe>
-    <div class="takeaway">זה מה שהטכנאי רואה: מוניטור נאמן למקור לצד משימות של מטופל מאושפז. קוראים את המוניטור, מבצעים, מזינים ערכים — בדיוק המשמרת, בסימולציה.</div>
+    <div class="explain">
+      <div class="lead">זה מה שהטכנאי רואה מולו: מוניטור של מטופל מאושפז, ולצידו רשימת המשימות של אותו מטופל — בדיוק המשמרת, בסימולציה.</div>
+      <div class="cols">
+        <div class="ex"><div class="t">מוניטור חי, נאמן למקור</div><div class="d">אותם צבעים, אותם גלים ואותם ערכים כמו במחלקה. מצב המטופל משתנה בזמן אמת — צריך לקרוא אותו בעצמך.</div></div>
+        <div class="ex"><div class="t">משימות של משמרת אמיתית</div><div class="d">קבלת משימות לפי צבע — בצע, בצע ודווח, מתוזמן — אותה שיטה שהצוות כבר עובד איתה היום.</div></div>
+        <div class="ex"><div class="t">בלי רמזים</div><div class="d">תרופה שדורשת אישור רופא נראית כמו כל משימה אחרת. לדעת לעצור ולקרוא לרופא — זה בדיוק מה שנמדד.</div></div>
+      </div>
+    </div>
   </section>
 
   <!-- 7 · the decision layer — dose AND route, scored separately (HERO) -->
-  <section class="slide content" data-title="שכבת ההחלטות">
+  <section class="slide content" data-title="שכבת ההחלטות" data-num="07">
     <div class="duo">
       <div class="textcol">
         <div class="kicker">שכבת ההחלטות</div>
         <h1>לא רק ״עשית״ — אלא ״עשית נכון״</h1>
         <ul>
-          <li><b>מנה ונתיב נמדדים בנפרד.</b> נפח נכון בנתיב פסול — תרופה ל־SC בלבד שנדחפת IV — הוא כשל מלא, לא ״כמעט נכון״.</li>
+          <li><b>כמות במ״ל ודרך המתן נמדדות בנפרד.</b> כמות נכונה בדרך מתן פסולה — תרופה ל־SC בלבד שנדחפת IV — היא כשל מלא, לא ״כמעט נכון״.</li>
           <li><b>המערכת לא מחשבת ולא חוסמת.</b> הטעות היא המדידה: הבחירה נרשמת, מקבלת חותמת זמן, ונשפטת.</li>
           <li><b>והשאלה הקשה באמת:</b> האם שמת לב לחריגה ועצרת — או המשכת לדחוף?</li>
         </ul>
@@ -286,83 +339,109 @@
   <section class="slide" data-title="התוצאה">
     <span class="chapter">התוצאה — רשומה שאפשר לבקר</span>
     <img class="shot" style="object-position:top right" src="assets/aar-screen.png" alt="מסך סקירה לאחר סשן — ציר זמן של אירועים, דירוג ANTS שמקושר לאירועים, וצ׳קליסט טכני">
-    <div class="takeaway">התוצאה: הטכנאי נבחן בתנאי לחץ שמדמים מציאות אמיתית, שאפשר להעביר עליה ביקורת אמיתית — כל ציון מקושר לרגע המדויק שיצר אותו — וללא שום סכנה לבעלי חיים אמיתיים.</div>
+    <div class="explain">
+      <div class="lead">מה שרואים כאן: הרשומה שנשארת אחרי כל מבחן — ציר הזמן של האירועים, הציונים, והקשר בין כל ציון לרגע שיצר אותו.</div>
+      <div class="cols">
+        <div class="ex"><div class="t">מבחן בתנאי אמת</div><div class="d">הטכנאי נבחן תחת לחץ שמדמה משמרת אמיתית — לא שאלון בכיתה. רואים איך הוא מתפקד, לא רק מה הוא זוכר.</div></div>
+        <div class="ex"><div class="t">ביקורת אמיתית</div><div class="d">כל פעולה נרשמת עם חותמת זמן. כל ציון מקושר לאירוע שממנו נולד — אפשר לפתוח, לבדוק ולערער.</div></div>
+        <div class="ex"><div class="t">אפס סיכון</div><div class="d">היום טעויות של טכנאי חדש קורות על מטופלים חיים. כאן הן קורות בסימולציה — המקום היחיד שבו מותר להיכשל.</div></div>
+      </div>
+    </div>
   </section>
 
   <!-- 9 · why it's defensible — the clinical gate -->
-  <section class="slide content" data-title="השער הקליני">
-    <div class="kicker">למה אפשר לסמוך על זה</div>
-    <h1>שום דבר לא מנקד אף אחד לפני אישור קליני מול תקן</h1>
+  <section class="slide content" data-title="השער הקליני" data-num="09">
+    <div class="kicker">אמינות קלינית</div>
+    <h1>בלי אישור קליני — אף אחד לא מקבל ציון</h1>
     <div class="steps">
       <div class="step">
         <span class="n">1</span>
-        <span class="t">טענה קלינית</span>
-        <span class="d">כל עובדה שמשפיעה על ציון — מנה, נתיב, רצף פעולות</span>
+        <span class="t">כל פרט קליני בתרחיש</span>
+        <span class="d">מינון, דרך מתן, סדר פעולות — כל מה שמשפיע על ציון של מישהו</span>
       </div>
       <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span>
       <div class="step">
         <span class="n">2</span>
-        <span class="t">בדיקה מול תקן מפורסם</span>
-        <span class="d"><bdi dir="ltr">RECOVER</bdi> · רשימת הכישורים של <bdi dir="ltr">CVTEA</bdi> · תווית התרופה עצמה</span>
+        <span class="t">נבדק מול תקן מוכר</span>
+        <span class="d"><bdi dir="ltr">RECOVER</bdi> להחייאה · רשימת הכישורים של <bdi dir="ltr">CVTEA</bdi> · העלון של התרופה עצמה</span>
       </div>
       <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span>
       <div class="step">
         <span class="n">3</span>
-        <span class="t">חתימה + גרסה</span>
-        <span class="d">בלי חתימה — התרחיש לא מנקד אף אחד. מובנה במערכת, לא נוהל.</span>
+        <span class="t">ורק אז נחתם</span>
+        <span class="d">תרחיש בלי חתימה פשוט לא נותן ציונים. זה מובנה במערכת — אי אפשר לדלג על זה.</span>
       </div>
     </div>
-    <div class="punch">דיוק קליני הוא לא ליטוש — הוא תנאי סף.</div>
+    <div class="punch">דיוק קליני אצלנו הוא לא שלב ליטוש בסוף — הוא תנאי הכניסה.</div>
   </section>
 
   <!-- 10 · the keystone — her expertise is the product -->
-  <section class="slide content" data-title="אבן הראשה">
+  <section class="slide content" data-title="אבן הראשה" data-num="10">
     <div class="kicker">מה באמת עומד מאחורי זה</div>
     <h1>הידע הקליני הוא המוצר. בלעדיו — אין כלום.</h1>
+    <p class="intro">תוכנה יודעת למדוד, לתעד ולתת ציון. מה שהיא לא יודעת לבד זה <b>מה נכון למדוד</b>: אילו טעויות באמת קורות על הרצפה, מה מסוכן, ומה מבדיל בין טכנאי שמוכן לבין אחד שעוד לא. את הידע הזה אי אפשר להוריד מהאינטרנט — הוא קיים רק אצל מי שחיה את העבודה הזאת. שתי דוגמאות אמיתיות:</p>
     <div class="failures">
       <div class="failure">
-        <span class="f">תרופה ל־SC בלבד — שניתנת IV</span>
-        <span class="why">כשל שנצפה על הרצפה. אי־אפשר להוריד את זה מהאינטרנט — זה שיפוט קליני שהפך לתרחיש מדיד.</span>
+        <span class="f">תרופה שמיועדת ל־SC בלבד — ניתנת IV</span>
+        <span class="why">טעות אמיתית שנצפתה על הרצפה. מי שלא מכיר את התרופה לעומק לא יעצור — והמערכת בודקת בדיוק את זה. תרחיש כזה לא נולד מספר לימוד. הוא נולד ממי שראתה את זה קורה.</span>
       </div>
       <div class="failure">
-        <span class="f">גישה ורידית — לפני נתיב אוויר ודופק</span>
-        <span class="why">היפוך סדר עדיפויות תחת לחץ. הזיהוי שזה קורה, ומתי — הוא הידע שהמערכת בנויה סביבו.</span>
+        <span class="f">גישה ורידית — לפני בדיקת נתיב אוויר ודופק</span>
+        <span class="why">תחת לחץ, סדר העדיפויות מתהפך: רצים למה שמרגיש דחוף במקום למה שבאמת קריטי. לזהות את הדפוס הזה ולהפוך אותו לתרחיש מדיד — זה ידע קליני, לא תכנות.</span>
       </div>
     </div>
-    <div class="punch">המערכת שווה בדיוק כמו הקלינאית שמאמתת אותה — והיא לא יכולה להתקיים בלעדיה. האדם הזה, כאן, זו את. לא חותמת גומי — הסמכות שהמוצר נבנה סביבה.</div>
+    <div class="punch">כדי שהמערכת תהיה נכונה קלינית, חייב לעמוד מאחוריה מישהו עם הידע והניסיון לאמת כל פרט. בבית החולים הזה יש אדם אחד עם ההכשרה הזאת — זו את. לא חותמת גומי — הסמכות המקצועית שהמוצר כולו נבנה סביבה.</div>
   </section>
 
   <!-- 11 · what the role actually means — bounded, defensible -->
-  <section class="slide content" data-title="התפקיד בפועל">
-    <div class="kicker">מה זה אומר בפועל</div>
-    <h1>תפקיד מוגדר, מגובה בתקנים, מתועד בשמך</h1>
+  <section class="slide content" data-title="התפקיד בפועל" data-num="11">
+    <div class="kicker">אז מה בעצם מבקשים ממך</div>
+    <h1>תפקיד ברור, עם גבולות ברורים — ועל שמך</h1>
     <div class="steps">
       <div class="step">
         <span class="n">א</span>
-        <span class="t">טענה מגיעה אלייך</span>
-        <span class="d">אחת־אחת, בקצב שלך — מתחילים מתרחיש בסיס אחד</span>
+        <span class="t">מגיע אלייך פריט אחד</span>
+        <span class="d">בקצב שלך, בלי לחץ. מתחילים מתרחיש בסיס אחד בלבד.</span>
       </div>
       <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span>
       <div class="step">
         <span class="n">ב</span>
-        <span class="t">את מאשרת מול תקן בשם</span>
-        <span class="d">לא ״לפי דעתך״ — מול <bdi dir="ltr">RECOVER · CVTEA</bdi> · תווית התרופה. גבול אחריות ברור.</span>
+        <span class="t">את בודקת אותו מול תקן</span>
+        <span class="d">לא ״לפי דעתך״ — מול <bdi dir="ltr">RECOVER · CVTEA</bdi> · העלון של התרופה. האחריות תחומה וברורה.</span>
       </div>
       <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span>
       <div class="step">
         <span class="n">ג</span>
-        <span class="t">נחתם ונרשם בשמך</span>
-        <span class="d">החתימה נשמרת לצד גרסת התרחיש — סמכות שאפשר לצטט</span>
+        <span class="t">האישור נרשם על שמך</span>
+        <span class="d">יחד עם גרסת התרחיש — כך שלכל ציון יש גיבוי קליני מתועד, בשמך.</span>
       </div>
     </div>
-    <div class="punch">לא המצאת תוכן ולא אחריות פתוחה — אימות מול תקן, בשמך, בהיקף קטן ומוגדר.</div>
+    <div class="punch">את לא ממציאה תוכן ולא לוקחת אחריות בלי גבול — את מאמתת מול תקן, בהיקף קטן ומוגדר, וזה נרשם לזכותך.</div>
   </section>
 
-  <!-- 12 · close — the mountain, together -->
-  <section class="slide" data-title="סיכום">
-    <span class="chapter">מכאן מתחילים</span>
-    <iframe title="הר הכשירות — נקודת ההתחלה" data-src="mountain.html"></iframe>
-    <div class="takeaway">מתחילים ברגל אחת של ההר. יחד. הצעד הבא — שיחה.</div>
+  <!-- 12 · close — a distinct slide (not the slide-5 diagram again): the
+       horizon, the base marker glowing, and the invitation -->
+  <section class="slide content" data-title="סיכום" data-num="12">
+    <div class="kicker">ומכאן</div>
+    <h1>מתחילים ברגל אחת של ההר. יחד.</h1>
+    <div class="quietlines">
+      <p>הצעד הראשון קטן ומדיד: <b>תרחיש בסיס אחד</b> — שנכתב בהדרכתך, נבדק מול תקן, ומאושר בחתימתך.</p>
+      <p>בלי התחייבות מעבר לזה. אם זה עובד — מטפסים לשכבה הבאה. אם לא — נשארת רשומה מסודרת של מה שנוסה.</p>
+    </div>
+    <div class="punch">הצעד הבא — שיחה.</div>
+    <div class="close-ridge" aria-hidden="true">
+      <svg viewBox="0 0 1600 340" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ridge" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#15202c"/><stop offset="100%" stop-color="#0a1017"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 340 L240 240 L420 300 L700 120 L940 280 L1180 190 L1420 300 L1600 250 V340 Z" fill="url(#ridge)"/>
+        <circle cx="1420" cy="300" r="10" fill="#0b1620" stroke="#12808f" stroke-width="3"/>
+        <circle cx="1420" cy="300" r="4" fill="#4fd0d8"/>
+        <text x="1398" y="272" font-family="monospace" font-size="14" fill="#4fd0d8" letter-spacing="1" text-anchor="end">מתחילים כאן</text>
+      </svg>
+    </div>
   </section>
 
   <!-- 13 · appendix — the interactive proof, for a self-guided reader -->
@@ -370,6 +449,14 @@
     <span class="chapter">נספח · נסי בעצמך · אינטראקטיבי</span>
     <iframe title="T2 NIBP — גוף החלטה אינטראקטיבי" data-src="t2-nibp.html"></iframe>
     <div class="takeaway">השקף הזה חי: תנוחה, מיקום, מידת שרוול. המערכת לא חוסמת טעות ולא מרמזת — היא מתעדת, ומחכה לשיקול הדעת שלך.</div>
+  </section>
+
+  <!-- 14 · ending -->
+  <section class="slide content cover" data-title="סיום">
+    <div class="mark">Vet<span>Crew</span></div>
+    <h2>תודה שהקדשת מהזמן שלך.</h2>
+    <div class="punch">אם משהו כאן דיבר אלייך — הצעד הבא הוא שיחה עם דן.</div>
+    <div class="meta">הצעת קונספט · דרג בסיס · 2026</div>
   </section>
 
 </main>
