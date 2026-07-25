@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { replay, type EngineEvent } from "@vetcrew/engine";
+import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
 import { t } from "./i18n";
 
@@ -19,13 +19,44 @@ const CHANNELS = [
   { label: "ART", cssVar: "--ch-art", fallback: "#FF3B30" },
 ] as const;
 
+/** Smoke scenario: SpO2 deteriorates, oxygen at t=15s recovers it. */
+const SMOKE_SCENARIO: ScenarioDef = {
+  slug: "shell-smoke",
+  version: "0.0.1",
+  vitals: {
+    hr: { initial: 90, target: 140, ratePerSec: 1, jitter: 0.5 },
+    spo2: { initial: 95, target: 80, ratePerSec: 0.5, jitter: 0.1 },
+  },
+  triggers: [
+    {
+      id: "oxygen",
+      on: { kind: "action", action: "oxygen_on" },
+      effects: [{ vital: "spo2", target: 97, ratePerSec: 1 }],
+    },
+  ],
+};
+
 function engineSmoke() {
   const events: EngineEvent[] = [{ seq: 1, type: "phase_change", phase: "running" }];
+  let seq = 1;
   for (let i = 0; i < 30; i++) {
-    events.push({ seq: i + 2, type: "tick", dtMs: 1000 });
+    events.push({ seq: ++seq, type: "tick", dtMs: 1000 });
+    if (i === 14) {
+      events.push({
+        seq: ++seq,
+        type: "action",
+        role: "technician",
+        actorId: "shell",
+        action: "oxygen_on",
+      });
+    }
   }
-  const state = replay(20260725, events);
-  return { events: events.length, hr: state.vitals.hr.toFixed(1) };
+  const state = replay(20260725, events, SMOKE_SCENARIO);
+  return {
+    events: events.length,
+    hr: (state.vitals["hr"]?.value ?? 0).toFixed(1),
+    spo2: (state.vitals["spo2"]?.value ?? 0).toFixed(1),
+  };
 }
 
 export default function App() {
@@ -82,7 +113,7 @@ export default function App() {
       <section style={{ marginBlockStart: 32 }}>
         <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("shell.engine.heading")}</h2>
         <p style={{ fontVariantNumeric: "tabular-nums" }}>
-          {t("shell.engine.summary", { events: engine.events, hr: engine.hr })}
+          {t("shell.engine.summary", { events: engine.events, hr: engine.hr, spo2: engine.spo2 })}
         </p>
       </section>
     </main>

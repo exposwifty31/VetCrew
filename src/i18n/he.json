@@ -11,5 +11,5 @@
   "shell.server.db.not-configured": "בסיס נתונים: לא מוגדר",
   "shell.tokens.heading": "טוקני ערוצים (שכבה A)",
   "shell.engine.heading": "מנוע",
-  "shell.engine.summary": "רדיוסר דטרמיניסטי · {events} אירועים · דופק {hr}"
+  "shell.engine.summary": "רדיוסר דטרמיניסטי · {events} אירועים · דופק {hr} · סטורציה {spo2} (אחרי חמצן)"
 }
