@@ -81,7 +81,10 @@ async function boot() {
       createSessionRouter(db, tenantId, { authEnabled, readAuth }),
     );
     // Manager evidence is employee-performance PII — signed-in when Clerk is on.
-    app.use("/api", createManagerRouter(db, tenantId, signedIn));
+    app.use(
+      "/api",
+      createManagerRouter(db, tenantId, { authEnabled, clerkEnabled, readAuth }),
+    );
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {
