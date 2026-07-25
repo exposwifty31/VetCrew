@@ -17,14 +17,14 @@ export default defineConfig({
     {
       command: "pnpm dev:server",
       url: "http://localhost:3001/api/health",
-      reuseExistingServer: true,
-      timeout: 30_000,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
     },
     {
       command: "pnpm dev",
       url: "http://localhost:5173",
-      reuseExistingServer: true,
-      timeout: 30_000,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
     },
   ],
 });

@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+import { demoEvents } from "../server/test/fixtures/demo-events.js";
+
 /**
  * Phase 4 E2E: the MVP flow end to end — a session is run (via API, the
  * trainee station is Sprint 3), its AAR opens in the browser, an instructor
@@ -9,42 +11,6 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  */
 
 const SCENARIO_SLUG = "base-rung-resp-distress";
-
-interface DemoEvent {
-  seq: number;
-  type: string;
-  [key: string]: unknown;
-}
-
-function demoEvents(): DemoEvent[] {
-  const events: DemoEvent[] = [];
-  let seq = 0;
-  let timeMs = 0;
-  const tick = (upToMs: number) => {
-    while (timeMs < upToMs) {
-      events.push({ seq: ++seq, type: "tick", dtMs: 5000 });
-      timeMs += 5000;
-    }
-  };
-  const act = (action: string) => {
-    events.push({ seq: ++seq, type: "action", role: "technician", actorId: "e2e-trainee", action });
-  };
-  events.push({ seq: ++seq, type: "phase_change", phase: "briefing" });
-  events.push({ seq: ++seq, type: "phase_change", phase: "running" });
-  tick(10_000);
-  act("vitals_callout");
-  tick(25_000);
-  act("oxygen_on");
-  tick(45_000);
-  act("iv_access_attempt");
-  tick(55_000);
-  act("airway_pulses_check");
-  tick(90_000);
-  act("give_drug_sc");
-  tick(120_000);
-  events.push({ seq: ++seq, type: "phase_change", phase: "debrief" });
-  return events;
-}
 
 async function runSession(request: APIRequestContext): Promise<string> {
   const created = await request.post("/api/sessions", {
@@ -57,7 +23,7 @@ async function runSession(request: APIRequestContext): Promise<string> {
   expect(created.status()).toBe(201);
   const { session } = (await created.json()) as { session: { id: string } };
   const appended = await request.post(`/api/sessions/${session.id}/events`, {
-    data: { events: demoEvents() },
+    data: { events: demoEvents("e2e-trainee") },
   });
   expect(appended.status()).toBe(201);
   return session.id;

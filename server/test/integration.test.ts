@@ -10,6 +10,7 @@ import { runMigrations } from "../db/migrate.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
+import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
 /**
  * Phase 4 integration suite (DB-backed, serial):
@@ -33,33 +34,7 @@ let baseUrl: string;
 
 /** Same shape as the seed-demo run: deliberate priority inversion included. */
 function demoEvents(): EngineEvent[] {
-  const events: EngineEvent[] = [];
-  let seq = 0;
-  let timeMs = 0;
-  const tick = (upToMs: number) => {
-    while (timeMs < upToMs) {
-      events.push({ seq: ++seq, type: "tick", dtMs: 5000 });
-      timeMs += 5000;
-    }
-  };
-  const act = (action: string) => {
-    events.push({ seq: ++seq, type: "action", role: "technician", actorId: "it-trainee", action });
-  };
-  events.push({ seq: ++seq, type: "phase_change", phase: "briefing" });
-  events.push({ seq: ++seq, type: "phase_change", phase: "running" });
-  tick(10_000);
-  act("vitals_callout");
-  tick(25_000);
-  act("oxygen_on");
-  tick(45_000);
-  act("iv_access_attempt"); // before airway_pulses_check: the recorded floor failure
-  tick(55_000);
-  act("airway_pulses_check");
-  tick(90_000);
-  act("give_drug_sc");
-  tick(120_000);
-  events.push({ seq: ++seq, type: "phase_change", phase: "debrief" });
-  return events;
+  return buildDemoEvents("it-trainee");
 }
 
 async function api(path: string, init?: RequestInit): Promise<Response> {
@@ -89,6 +64,15 @@ async function appendEvents(sessionId: string, events: EngineEvent[]): Promise<v
 }
 
 beforeAll(async () => {
+  // This suite DROPS THE SCHEMA of whatever TEST_DATABASE_URL points at.
+  // Refuse to run against anything whose database name doesn't say "test",
+  // so a copy-pasted DATABASE_URL can never nuke a real database.
+  const dbName = new URL(TEST_DATABASE_URL).pathname.replace(/^\//, "");
+  if (!/test/i.test(dbName)) {
+    throw new Error(
+      `TEST_DATABASE_URL database "${dbName}" does not look like a test database (must contain "test")`,
+    );
+  }
   ({ pool, db } = createDb(TEST_DATABASE_URL));
   // Fresh schema per run: constraints and triggers are part of what we test.
   await pool.query("drop schema public cascade");
@@ -193,8 +177,12 @@ describe("tenant isolation", () => {
       "select id from vc_scenarios where tenant_id = $1 limit 1",
       [tenantId],
     );
+    // Upsert so this test does not depend on the previous test having run.
     const otherTenantId = (
-      await pool.query<{ id: string }>("select id from vc_tenants where slug = 'other'")
+      await pool.query<{ id: string }>(
+        `insert into vc_tenants (slug, name) values ('other', 'Other Hospital')
+         on conflict (slug) do update set name = excluded.name returning id`,
+      )
     ).rows[0]?.id;
     // Session under the OTHER tenant pointing at the PILOT tenant's scenario.
     await expect(
