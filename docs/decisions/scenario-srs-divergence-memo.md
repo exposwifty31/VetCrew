@@ -21,7 +21,7 @@ Sprint 3 builds the trainee station **around the scenario**. A monitor-driven cr
 `resp-distress` is reclassified as the **engine-proving demo** (it exists to exercise deterioration, triggers, and the AAR — which it did). The seven-task stepped scenario from the SRS becomes **Scenario #2**, and it is what the Sprint 3 station targets. The SRS gains a note that the deterioration engine shipped early as a demo, not as the base rung.
 - Cost: one SRS edit + authoring Scenario #2 (data only, no engine change — the reducer already handles both shapes).
 - Preserves: everything built; the demo stays as the pitch asset.
-- Also fixes the secondary deviations by scoping them to the demo: Scenario #2 scores SA + DM only, no communication hook.
+- Also resolves the secondary deviations: they are accepted as properties of the **demo only** (`resp-distress` keeps its `task_management` scoring and communication hook as engine-exercise content that scores no real trainee), while **Scenario #2** — the stepped SRS scenario the Sprint 3 station targets — scores Situation Awareness + Decision-Making only and carries no communication hook, exactly as the SRS specifies. Sprint 3 must not inherit the demo's scoring rules.
 
 **(b) The SRS stands as-is.**
 `resp-distress` is replaced before the station UI locks onto it. The seven-task scenario is authored now and becomes the only scenario.

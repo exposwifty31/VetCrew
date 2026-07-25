@@ -55,16 +55,6 @@ async function loadSession(db: Db, tenantId: string, id: string) {
   return rows[0];
 }
 
-async function maxSeq(db: Db, sessionId: string): Promise<number> {
-  const rows = await db
-    .select({ seq: sessionEvents.seq })
-    .from(sessionEvents)
-    .where(eq(sessionEvents.sessionId, sessionId))
-    .orderBy(desc(sessionEvents.seq))
-    .limit(1);
-  return rows[0]?.seq ?? 0;
-}
-
 /** Walk phase_change events through the FSM from a starting phase. */
 function projectPhase(from: SessionPhase, events: readonly EngineEvent[]): SessionPhase {
   let phase = from;
@@ -147,27 +137,38 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const id = paramId(req);
-    const session = id === null ? undefined : await loadSession(db, tenantId, id);
-    if (session === undefined) {
+    if (id === null) {
       res.status(404).json({ error: "session not found" });
       return;
     }
     const events = parsed.data.events;
-    // Seq authority (audit R1): the log is the evidence record — a batch must
-    // continue the sequence contiguously; retroactive or gapped seqs are
-    // rejected here and by the DB trigger (migration 0004).
-    const currentMax = await maxSeq(db, session.id);
-    const contiguous = events.every((event, i) => event.seq === currentMax + 1 + i);
-    if (!contiguous) {
-      res.status(409).json({
-        error: `events must continue the log contiguously from seq ${currentMax + 1}`,
-      });
-      return;
-    }
-    // Append + projection in one transaction (audit R4): a failure between
-    // them must not leave the listing column out of sync with the log.
-    const nextPhase = projectPhase(session.phase as SessionPhase, events);
-    await db.transaction(async (tx) => {
+    // Every session-dependent read happens INSIDE the transaction under a row
+    // lock, so concurrent appends serialize instead of racing the seq check
+    // (audit R1/R4 + PR review). The DB trigger (migration 0004) backstops.
+    type AppendResult =
+      | { kind: "not_found" }
+      | { kind: "gap"; expected: number }
+      | { kind: "ok" };
+    const result: AppendResult = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(simSessions)
+        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
+        .for("update");
+      const session = rows[0];
+      if (session === undefined) return { kind: "not_found" };
+      const maxRows = await tx
+        .select({ seq: sessionEvents.seq })
+        .from(sessionEvents)
+        .where(eq(sessionEvents.sessionId, session.id))
+        .orderBy(desc(sessionEvents.seq))
+        .limit(1);
+      const currentMax = maxRows[0]?.seq ?? 0;
+      // Seq authority: a batch must continue the log contiguously; retroactive
+      // or gapped seqs would rewrite the replay of the evidence record.
+      const contiguous = events.every((event, i) => event.seq === currentMax + 1 + i);
+      if (!contiguous) return { kind: "gap", expected: currentMax + 1 };
+      const nextPhase = projectPhase(session.phase as SessionPhase, events);
       await tx.insert(sessionEvents).values(
         events.map((event) => ({
           tenantId,
@@ -183,8 +184,25 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         // Denormalized phase for listings; the log stays authoritative.
         await tx.update(simSessions).set({ phase: nextPhase }).where(eq(simSessions.id, session.id));
       }
+      return { kind: "ok" };
     });
-    res.status(201).json({ appended: events.length });
+    switch (result.kind) {
+      case "not_found":
+        res.status(404).json({ error: "session not found" });
+        return;
+      case "gap":
+        res.status(409).json({
+          error: `events must continue the log contiguously from seq ${result.expected}`,
+        });
+        return;
+      case "ok":
+        res.status(201).json({ appended: events.length });
+        return;
+      default: {
+        const exhaustive: never = result;
+        throw new Error(`Unhandled result: ${JSON.stringify(exhaustive)}`);
+      }
+    }
   });
 
   router.get("/:id/aar", async (req: Request, res: Response) => {
@@ -247,49 +265,57 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       return;
     }
     const id = paramId(req);
-    const session = id === null ? undefined : await loadSession(db, tenantId, id);
-    if (session === undefined) {
+    if (id === null) {
       res.status(404).json({ error: "session not found" });
       return;
     }
-    // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
-    // session in any other phase cannot be rated.
-    if (session.phase !== "debrief") {
-      res.status(409).json({
-        error: `session is in phase "${session.phase}"; ratings are submitted from debrief`,
-      });
-      return;
-    }
-    // Scoring gate: time-in-training must exist before a session can be scored —
-    // it is the progression axis and cannot be backfilled (CLAUDE.md §4).
-    if (session.traineeTimeInTrainingDays === null) {
-      res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
-      return;
-    }
-    // Evidence must point at events that actually exist in THIS session —
-    // a rating with fabricated evidence is worse than no rating (§2.3).
-    const existingSeqRows = await db
-      .select({ seq: sessionEvents.seq })
-      .from(sessionEvents)
-      .where(eq(sessionEvents.sessionId, session.id));
-    const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
-    const unknownSeqs = parsed.data.ratings
-      .flatMap((rating) => rating.evidenceEventSeqs)
-      .filter((seq) => !existingSeqs.has(seq));
-    if (unknownSeqs.length > 0) {
-      res.status(422).json({
-        error: `evidence references events not in this session: ${[...new Set(unknownSeqs)].join(", ")}`,
-      });
-      return;
-    }
-    // The scored transition goes THROUGH the log (audit F-b): replaying the
-    // events must yield the same phase the projection column reports.
-    const scoredEvent: EngineEvent = {
-      seq: Math.max(...existingSeqs, 0) + 1,
-      type: "phase_change",
-      phase: "scored",
-    };
-    await db.transaction(async (tx) => {
+    // Phase guard, evidence check, and seq derivation all read session state,
+    // so they run INSIDE the transaction under a row lock — a concurrent
+    // append cannot make the debrief check stale or collide the scored seq.
+    type RatingsResult =
+      | { kind: "not_found" }
+      | { kind: "wrong_phase"; phase: string }
+      | { kind: "no_time_in_training" }
+      | { kind: "unknown_evidence"; seqs: number[] }
+      | { kind: "ok" };
+    const result: RatingsResult = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(simSessions)
+        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
+        .for("update");
+      const session = rows[0];
+      if (session === undefined) return { kind: "not_found" };
+      // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
+      // session in any other phase cannot be rated.
+      if (session.phase !== "debrief") return { kind: "wrong_phase", phase: session.phase };
+      // Scoring gate: time-in-training must exist before a session can be
+      // scored — it is the progression axis and cannot be backfilled (§4).
+      if (session.traineeTimeInTrainingDays === null) return { kind: "no_time_in_training" };
+      // Evidence must point at events that actually exist in THIS session —
+      // a rating with fabricated evidence is worse than no rating (§2.3).
+      const existingSeqRows = await tx
+        .select({ seq: sessionEvents.seq })
+        .from(sessionEvents)
+        .where(eq(sessionEvents.sessionId, session.id));
+      const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
+      const unknownSeqs = parsed.data.ratings
+        .flatMap((rating) => rating.evidenceEventSeqs)
+        .filter((seq) => !existingSeqs.has(seq));
+      if (unknownSeqs.length > 0) {
+        return { kind: "unknown_evidence", seqs: [...new Set(unknownSeqs)] };
+      }
+      let currentMax = 0;
+      for (const seq of existingSeqs) {
+        if (seq > currentMax) currentMax = seq;
+      }
+      // The scored transition goes THROUGH the log (audit F-b): replaying the
+      // events must yield the same phase the projection column reports.
+      const scoredEvent: EngineEvent = {
+        seq: currentMax + 1,
+        type: "phase_change",
+        phase: "scored",
+      };
       await tx.insert(antsRatings).values(
         parsed.data.ratings.map((rating) => ({
           tenantId,
@@ -310,8 +336,33 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         payload: scoredEvent,
       });
       await tx.update(simSessions).set({ phase: "scored" }).where(eq(simSessions.id, session.id));
+      return { kind: "ok" };
     });
-    res.status(201).json({ rated: parsed.data.ratings.length });
+    switch (result.kind) {
+      case "not_found":
+        res.status(404).json({ error: "session not found" });
+        return;
+      case "wrong_phase":
+        res.status(409).json({
+          error: `session is in phase "${result.phase}"; ratings are submitted from debrief`,
+        });
+        return;
+      case "no_time_in_training":
+        res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
+        return;
+      case "unknown_evidence":
+        res.status(422).json({
+          error: `evidence references events not in this session: ${result.seqs.join(", ")}`,
+        });
+        return;
+      case "ok":
+        res.status(201).json({ rated: parsed.data.ratings.length });
+        return;
+      default: {
+        const exhaustive: never = result;
+        throw new Error(`Unhandled result: ${JSON.stringify(exhaustive)}`);
+      }
+    }
   });
 
   return router;

@@ -227,11 +227,16 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
           evidenceEventSeqs: [...(evidenceByDomain[domain] ?? [])],
         })),
       );
-      const refreshed = await fetchAar(sessionId);
-      setData(refreshed);
-      setSubmitState("saved");
     } catch {
       setSubmitState("error");
+      return;
+    }
+    // The rating is saved; a failed refresh must not mask that outcome.
+    setSubmitState("saved");
+    try {
+      setData(await fetchAar(sessionId));
+    } catch {
+      // stale view is acceptable — the stored ratings render on next load
     }
   };
 
