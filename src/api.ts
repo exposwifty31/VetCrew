@@ -87,23 +87,33 @@ export async function fetchAar(sessionId: string): Promise<AarResponse> {
   return (await res.json()) as AarResponse;
 }
 
+function authHeaders(token: string | null | undefined): HeadersInit {
+  if (token === null || token === undefined || token.length === 0) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
 export async function fetchTraineeEvidence(
   traineeId: string,
+  token?: string | null,
 ): Promise<TraineeEvidenceResponse> {
-  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/evidence`);
+  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/evidence`, {
+    headers: authHeaders(token),
+  });
   if (!res.ok) throw new Error(`evidence: ${res.status}`);
   return (await res.json()) as TraineeEvidenceResponse;
 }
 
 export async function fetchTraineeTrend(
   traineeId: string,
-  scenarioSlug?: string,
+  options?: { scenarioSlug?: string; token?: string | null },
 ): Promise<TraineeTrendResponse> {
   const qs =
-    scenarioSlug === undefined
+    options?.scenarioSlug === undefined
       ? ""
-      : `?scenarioSlug=${encodeURIComponent(scenarioSlug)}`;
-  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/trend${qs}`);
+      : `?scenarioSlug=${encodeURIComponent(options.scenarioSlug)}`;
+  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/trend${qs}`, {
+    headers: authHeaders(options?.token),
+  });
   if (!res.ok) throw new Error(`trend: ${res.status}`);
   return (await res.json()) as TraineeTrendResponse;
 }

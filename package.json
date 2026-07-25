@@ -12,6 +12,7 @@
     "dev:server": "tsx watch --env-file-if-exists=.env server/index.ts",
     "seed:demo": "tsx --env-file-if-exists=.env server/scripts/seed-demo.ts",
     "build": "vite build",
+    "start": "NODE_ENV=production tsx server/index.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p server/tsconfig.json && pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",

@@ -1,5 +1,7 @@
 {
   "app.title": "VetCrew",
+  "auth.signIn": "Sign in",
+  "auth.signUp": "Sign up",
   "shell.subtitle": "Sprint 2 shell — engine, contracts, server, AAR",
   "shell.server.heading": "Server",
   "shell.server.checking": "Checking connection…",

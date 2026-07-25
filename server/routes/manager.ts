@@ -15,7 +15,7 @@ import {
   type AntsDomain,
 } from "@vetcrew/shared";
 import { and, asc, eq, inArray } from "drizzle-orm";
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type Response, type RequestHandler } from "express";
 
 import type { Db } from "../db/client.js";
 import { antsRatings, scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
@@ -38,8 +38,13 @@ async function loadEvents(db: Db, sessionId: string): Promise<EngineEvent[]> {
  * Security: Clerk manager-role binding is still open (standing veto); tenant
  * filter is mandatory on every query.
  */
-export function createManagerRouter(db: Db, tenantId: string): Router {
+export function createManagerRouter(
+  db: Db,
+  tenantId: string,
+  requireAuth: RequestHandler = (_req, _res, next) => next(),
+): Router {
   const router = Router();
+  router.use(requireAuth);
 
   router.get("/trainees/:traineeId/evidence", async (req: Request, res: Response) => {
     const traineeId = req.params["traineeId"];

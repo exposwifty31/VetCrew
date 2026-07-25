@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
 import { createSession, fetchSessions, type SessionSummary } from "./api.js";
+import AuthBar from "./components/AuthBar.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
 import InstructorConsolePage from "./pages/InstructorConsolePage.js";
@@ -154,6 +155,7 @@ function HomePage() {
 
   return (
     <main style={{ maxWidth: 640, marginInline: "auto", padding: "var(--sp-8, 32px)" }}>
+      <AuthBar />
       <h1 style={{ fontSize: "var(--fs-xl, 28px)", marginBlockEnd: 4 }}>{t("app.title")}</h1>
       <p style={{ color: "var(--text-secondary, #9aa7b8)", marginBlockStart: 0 }}>{t("shell.subtitle")}</p>
 

@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/react";
 import { useEffect, useState } from "react";
 
 import {
@@ -60,16 +61,23 @@ export default function ManagerEvidencePage({
   traineeId: string;
   focus?: "evidence" | "trend";
 }) {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [evidence, setEvidence] = useState<TraineeEvidenceResponse | null | "error">(null);
   const [trend, setTrend] = useState<TraineeTrendResponse | null | "error">(null);
   const [showInternal, setShowInternal] = useState(false);
 
   useEffect(() => {
+    if (!isLoaded) return;
     let cancelled = false;
     setEvidence(null);
     setTrend(null);
-    Promise.all([fetchTraineeEvidence(traineeId), fetchTraineeTrend(traineeId)])
-      .then(([ev, tr]) => {
+    void (async () => {
+      try {
+        const token = isSignedIn ? await getToken() : null;
+        const [ev, tr] = await Promise.all([
+          fetchTraineeEvidence(traineeId, token),
+          fetchTraineeTrend(traineeId, { token }),
+        ]);
         if (cancelled) return;
         setEvidence(ev);
         setTrend(tr);
@@ -77,16 +85,16 @@ export default function ManagerEvidencePage({
         // rows with the badge rather than an empty desk.
         const hasReviewed = ev.sessions.some((s) => s.clinicallyReviewed);
         if (!hasReviewed && ev.sessions.length > 0) setShowInternal(true);
-      })
-      .catch(() => {
+      } catch {
         if (cancelled) return;
         setEvidence("error");
         setTrend("error");
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [traineeId]);
+  }, [traineeId, isLoaded, isSignedIn, getToken]);
 
   if (evidence === null || trend === null) {
     return (

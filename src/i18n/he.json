@@ -1,5 +1,7 @@
 {
   "app.title": "VetCrew",
+  "auth.signIn": "התחברות",
+  "auth.signUp": "הרשמה",
   "shell.subtitle": "שלד ספרינט 2 — מנוע, חוזים, שרת, AAR",
   "shell.server.heading": "שרת",
   "shell.server.checking": "בודק חיבור…",
