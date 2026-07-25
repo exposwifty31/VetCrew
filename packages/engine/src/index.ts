@@ -22,3 +22,16 @@ export type {
   VitalEffect,
   VitalParams,
 } from "./scenario.js";
+export {
+  evaluateChecklist,
+  type ChecklistItemDef,
+  type ChecklistItemResult,
+  type ChecklistResult,
+  type ChecklistRule,
+} from "./checklist.js";
+export {
+  buildAar,
+  type AarModel,
+  type AarTimelineEntry,
+  type AarVitalsSample,
+} from "./aar.js";

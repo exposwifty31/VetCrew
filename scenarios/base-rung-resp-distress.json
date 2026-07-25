@@ -1,0 +1,107 @@
+{
+  "slug": "base-rung-resp-distress",
+  "version": "0.1.0",
+  "title": "Canine respiratory distress — base rung (single role)",
+  "titleHe": "מצוקה נשימתית בכלב — שלב בסיס (תפקיד יחיד)",
+  "species": "canine",
+  "presentingComplaint": "Medium-breed dog presented with acute respiratory distress, cyanotic gums.",
+  "presentingComplaintHe": "כלב בינוני שהגיע עם מצוקה נשימתית חריפה וחניכיים כחלחלות.",
+  "clinicallyReviewed": false,
+  "clinicalReviewer": null,
+  "roles": ["technician"],
+  "engine": {
+    "vitals": {
+      "spo2": { "initial": 88, "target": 72, "ratePerSec": 0.15, "jitter": 0.2 },
+      "hr": { "initial": 130, "target": 175, "ratePerSec": 0.4, "jitter": 0.8 },
+      "rr": { "initial": 52, "target": 70, "ratePerSec": 0.2, "jitter": 0.5 }
+    },
+    "triggers": [
+      {
+        "id": "oxygen-recovers",
+        "on": { "kind": "action", "action": "oxygen_on" },
+        "effects": [
+          { "vital": "spo2", "target": 96, "ratePerSec": 0.4 },
+          { "vital": "rr", "target": 36, "ratePerSec": 0.15 },
+          { "vital": "hr", "target": 120, "ratePerSec": 0.3 }
+        ]
+      },
+      {
+        "id": "decompensation-at-150s",
+        "on": { "kind": "time", "atMs": 150000 },
+        "effects": [
+          { "vital": "spo2", "ratePerSec": 0.5 },
+          { "vital": "hr", "target": 190 }
+        ]
+      },
+      {
+        "id": "monitor-artifact",
+        "on": { "kind": "injection", "injection": "monitor_artifact" },
+        "effects": [{ "vital": "hr", "jitter": 6 }]
+      }
+    ]
+  },
+  "actions": [
+    { "id": "airway_pulses_check", "label": "Check airway and pulses", "labelHe": "בדיקת נתיב אוויר ודפקים" },
+    { "id": "oxygen_on", "label": "Start oxygen supplementation", "labelHe": "התחלת העשרת חמצן" },
+    { "id": "iv_access_attempt", "label": "Attempt IV access", "labelHe": "ניסיון גישה ורידית" },
+    { "id": "give_drug_sc", "label": "Give SC-only medication — SC route", "labelHe": "מתן תרופה תת-עורית — בדרך תת-עורית" },
+    { "id": "give_drug_iv_wrong_route", "label": "Give SC-only medication — IV route (route error)", "labelHe": "מתן תרופה תת-עורית — בדרך ורידית (שגיאת דרך מתן)" },
+    { "id": "vitals_callout", "label": "Call out vitals change", "labelHe": "הכרזת שינוי במדדים" },
+    { "id": "check_chart", "label": "Review patient chart", "labelHe": "עיון בתיק המטופל" }
+  ],
+  "checklist": [
+    {
+      "id": "airway-before-iv",
+      "label": "Airway/pulses assessed before IV access (priority order)",
+      "labelHe": "הערכת נתיב אוויר ודפקים לפני גישה ורידית (סדר עדיפויות)",
+      "weight": 3,
+      "role": "technician",
+      "rule": { "kind": "action_before", "action": "airway_pulses_check", "before": "iv_access_attempt" }
+    },
+    {
+      "id": "oxygen-within-60s",
+      "label": "Oxygen started within 60 seconds",
+      "labelHe": "חמצן הותחל בתוך 60 שניות",
+      "weight": 2,
+      "role": "technician",
+      "rule": { "kind": "action_performed", "action": "oxygen_on", "withinMs": 60000 }
+    },
+    {
+      "id": "iv-access",
+      "label": "IV access attempted",
+      "labelHe": "בוצע ניסיון גישה ורידית",
+      "weight": 2,
+      "role": "technician",
+      "rule": { "kind": "action_performed", "action": "iv_access_attempt" }
+    },
+    {
+      "id": "no-route-error",
+      "label": "SC-only medication NOT given IV (route check)",
+      "labelHe": "תרופה תת-עורית לא ניתנה ורידית (בדיקת דרך מתן)",
+      "weight": 3,
+      "role": "technician",
+      "rule": { "kind": "action_not_performed", "action": "give_drug_iv_wrong_route" }
+    },
+    {
+      "id": "drug-given-correct-route",
+      "label": "Medication given via correct (SC) route",
+      "labelHe": "התרופה ניתנה בדרך הנכונה (תת-עורית)",
+      "weight": 1,
+      "role": "technician",
+      "rule": { "kind": "action_performed", "action": "give_drug_sc" }
+    },
+    {
+      "id": "vitals-callout",
+      "label": "Vitals change called out (communication hook)",
+      "labelHe": "הוכרז שינוי במדדים (עוגן תקשורת)",
+      "weight": 1,
+      "role": "technician",
+      "rule": { "kind": "action_performed", "action": "vitals_callout" }
+    }
+  ],
+  "injections": [
+    { "id": "monitor_artifact", "label": "Monitor artifact (HR noise)", "labelHe": "ארטיפקט במוניטור (רעש בדופק)" },
+    { "id": "owner_distressed", "label": "Distressed owner enters treatment area", "labelHe": "בעלים נסער נכנס לאזור הטיפולים" }
+  ],
+  "scoringDimensions": ["task_management", "situation_awareness", "decision_making"]
+}

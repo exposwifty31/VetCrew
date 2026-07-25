@@ -17,9 +17,9 @@ export interface VitalParams {
 
 export interface VitalEffect {
   readonly vital: string;
-  readonly target?: number;
-  readonly ratePerSec?: number;
-  readonly jitter?: number;
+  readonly target?: number | undefined;
+  readonly ratePerSec?: number | undefined;
+  readonly jitter?: number | undefined;
 }
 
 export type TriggerCondition =
