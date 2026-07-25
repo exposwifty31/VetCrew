@@ -9,6 +9,7 @@ import type { AntsDomain } from "@vetcrew/shared";
 
 export interface SessionSummary {
   id: string;
+  scenarioSlug: string;
   scenarioVersion: string;
   phase: SessionPhase;
   traineeId: string | null;

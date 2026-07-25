@@ -25,7 +25,11 @@ export {
   type ValueFieldDef,
 } from "./tasks.js";
 export {
+  instructorView,
   roleView,
+  type InstructorInjectionItem,
+  type InstructorTaskSummary,
+  type InstructorView,
   type RoleView,
   type ViewChoiceStep,
   type ViewTask,
@@ -47,6 +51,7 @@ export {
   type VitalState,
 } from "./reducer.js";
 export type {
+  InjectionMenuItem,
   ScenarioDef,
   TriggerCondition,
   TriggerDef,

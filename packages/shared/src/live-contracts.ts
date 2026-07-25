@@ -4,7 +4,7 @@ import { sessionPhaseSchema } from "./contracts.js";
 import { taskChipCodeSchema, taskOptionSchema, taskSubmissionSchema } from "./tasks.js";
 
 /**
- * Socket.IO wire contracts for live sessions (Sprint 3).
+ * Socket.IO wire contracts for live sessions (Sprint 3–4).
  * Client intents carry NO seq — the server is the sole sequencing authority.
  */
 
@@ -18,8 +18,15 @@ export const liveRejectCodeSchema = z.enum([
   "scenario",
 ]);
 
+export const stationKindSchema = z.enum(["trainee", "instructor"]);
+
 export const sessionJoinSchema = z.object({
   sessionId: z.string().uuid(),
+  stationKind: stationKindSchema.default("trainee"),
+  /**
+   * Trainee: scenario role slug. Instructor: must be `"instructor"`.
+   * Attribution role for trainee intents is stamped from this binding.
+   */
   role: z.string().min(1),
   /** Last successfully applied seq; 0 / omitted = cold join. */
   lastSeq: z.number().int().nonnegative().optional(),
@@ -152,9 +159,59 @@ export const roleViewWireSchema = z.object({
   ),
 });
 
-export const sessionSnapshotSchema = z.object({
+export const instructorViewWireSchema = z.object({
+  phase: sessionPhaseSchema,
+  timeMs: z.number().nonnegative(),
   seq: z.number().int().nonnegative(),
-  roleView: roleViewWireSchema,
+  scenarioSlug: z.string().min(1),
+  scenarioVersion: z.string().min(1),
+  species: z.string().nullable(),
+  vitals: z.record(z.string(), z.number()),
+  injections: z.array(
+    z.object({
+      id: z.string().min(1),
+      label: z.string().min(1),
+      labelHe: z.string().min(1),
+      fired: z.boolean(),
+      firedAtMs: z.number().int().nonnegative().nullable(),
+    }),
+  ),
+  taskSummaries: z.array(
+    z.object({
+      id: z.string().min(1),
+      role: z.string().nullable(),
+      title: z.string().min(1),
+      titleHe: z.string().min(1),
+      lifecycle: taskLifecycleSchema,
+      hidden: z.boolean(),
+    }),
+  ),
+  roles: z.array(z.string().min(1)),
+});
+
+export const sessionSnapshotSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("trainee"),
+    seq: z.number().int().nonnegative(),
+    roleView: roleViewWireSchema,
+  }),
+  z.object({
+    kind: z.literal("instructor"),
+    seq: z.number().int().nonnegative(),
+    instructorView: instructorViewWireSchema,
+  }),
+]);
+
+export const sessionPresenceSchema = z.object({
+  sessionId: z.string().uuid(),
+  connected: z.array(
+    z.object({
+      role: z.string().min(1),
+      stationKind: stationKindSchema,
+      actorId: z.string().min(1),
+      status: z.literal("connected"),
+    }),
+  ),
 });
 
 export const sessionRejectSchema = z.object({
@@ -166,10 +223,13 @@ export const sessionConnectionSchema = z.object({
   status: z.enum(["connected", "reconnecting", "closed"]),
 });
 
+export type StationKind = z.infer<typeof stationKindSchema>;
 export type SessionJoin = z.infer<typeof sessionJoinSchema>;
 export type ClientIntent = z.infer<typeof clientIntentSchema>;
 export type RoleViewWire = z.infer<typeof roleViewWireSchema>;
+export type InstructorViewWire = z.infer<typeof instructorViewWireSchema>;
 export type SessionSnapshot = z.infer<typeof sessionSnapshotSchema>;
+export type SessionPresence = z.infer<typeof sessionPresenceSchema>;
 export type SessionReject = z.infer<typeof sessionRejectSchema>;
 export type LiveRejectCode = z.infer<typeof liveRejectCodeSchema>;
 
@@ -182,4 +242,5 @@ export const LIVE_EVENTS = {
   events: "session:events",
   reject: "session:reject",
   connection: "session:connection",
+  presence: "session:presence",
 } as const;

@@ -80,20 +80,33 @@ export default function StationPage({ sessionId }: Props) {
         </div>
       )}
 
-      {roleView?.phase === "draft" || roleView?.phase === "briefing" ? (
-        <BriefingBar
-          phase={roleView.phase}
-          disabled={!live}
-          onStart={() => {
-            // One transition per click — socket intents are not batched.
-            if (roleView.phase === "draft") {
-              sendIntent({ type: "phase_change", phase: "briefing" });
-              return;
-            }
-            sendIntent({ type: "phase_change", phase: "running" });
+      {roleView !== null &&
+        (roleView.phase === "draft" || roleView.phase === "briefing") && (
+          <div
+            role="status"
+            style={{
+              padding: "12px 16px",
+              borderBottom: "1px solid var(--border-default, #243040)",
+              background: "var(--task-surface, #121926)",
+            }}
+          >
+            {t("station.waitingForInstructor")}
+          </div>
+        )}
+
+      {roleView?.phase === "paused" && (
+        <div
+          role="status"
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--border-default, #243040)",
+            background: "rgba(0,128,128,0.15)",
+            fontWeight: 700,
           }}
-        />
-      ) : null}
+        >
+          {t("station.paused")}
+        </div>
+      )}
 
       <div
         style={{
@@ -157,50 +170,6 @@ function ConnectionPill({ status }: { status: ConnectionStatus }) {
     >
       {label}
     </span>
-  );
-}
-
-function BriefingBar({
-  phase,
-  disabled,
-  onStart,
-}: {
-  phase: "draft" | "briefing";
-  disabled: boolean;
-  onStart: () => void;
-}) {
-  return (
-    <div
-      style={{
-        padding: "12px 16px",
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderBottom: "1px solid var(--border-default, #243040)",
-        background: "var(--task-surface, #121926)",
-      }}
-    >
-      <p style={{ margin: 0 }}>{t(`station.briefing.${phase}`)}</p>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onStart}
-        style={{
-          minHeight: 48,
-          minWidth: 120,
-          paddingInline: 16,
-          background: "var(--action-accent, #008080)",
-          color: "#fff",
-          border: 0,
-          borderRadius: 8,
-          fontWeight: 700,
-          cursor: disabled ? "not-allowed" : "pointer",
-        }}
-      >
-        {t("station.briefing.start")}
-      </button>
-    </div>
   );
 }
 

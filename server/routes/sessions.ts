@@ -12,7 +12,13 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
 import type { Db } from "../db/client.js";
-import { antsRatings, scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
+import {
+  antsRatings,
+  roleStations,
+  scenarios,
+  sessionEvents,
+  simSessions,
+} from "../db/schema/index.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { compileScenario } from "../scenarios.js";
 
@@ -76,12 +82,14 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       .select({
         id: simSessions.id,
         scenarioId: simSessions.scenarioId,
+        scenarioSlug: scenarios.slug,
         scenarioVersion: simSessions.scenarioVersion,
         phase: simSessions.phase,
         traineeId: simSessions.traineeId,
         createdAt: simSessions.createdAt,
       })
       .from(simSessions)
+      .innerJoin(scenarios, eq(scenarios.id, simSessions.scenarioId))
       .where(eq(simSessions.tenantId, tenantId))
       .orderBy(desc(simSessions.createdAt));
     res.json({ sessions: rows });
@@ -108,6 +116,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
       res.status(404).json({ error: "scenario not found" });
       return;
     }
+    const authored = authoredScenarioSchema.parse(scenario.definition);
     const inserted = await db
       .insert(simSessions)
       .values({
@@ -119,7 +128,26 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         traineeTimeInTrainingDays: input.traineeTimeInTrainingDays ?? null,
       })
       .returning();
-    res.status(201).json({ session: inserted[0] });
+    const session = inserted[0];
+    if (session === undefined) {
+      res.status(500).json({ error: "failed to create session" });
+      return;
+    }
+    // Assignment stubs only — Clerk binding is still a Security veto (Sprint 4).
+    await db.insert(roleStations).values(
+      authored.roles.map((role) => ({
+        tenantId,
+        sessionId: session.id,
+        role,
+      })),
+    );
+    res.status(201).json({
+      session: {
+        ...session,
+        scenarioSlug: authored.slug,
+        roles: authored.roles,
+      },
+    });
   });
 
   router.post("/:id/events", async (req: Request, res: Response) => {

@@ -3,29 +3,41 @@ import type { Server as HttpServer } from "node:http";
 import type { EngineEventBody } from "@vetcrew/shared";
 import {
   LIVE_EVENTS,
+  instructorViewWireSchema,
   parseClientIntent,
   roleViewWireSchema,
   sessionJoinSchema,
   type ClientIntent,
+  type SessionPresence,
   type SessionSnapshot,
+  type StationKind,
 } from "@vetcrew/shared";
 import { Server, type Socket } from "socket.io";
 
 import type { RoomRegistry } from "./room-registry.js";
 import type { SessionRoom } from "./session-room.js";
 
-/** Station target under memo Option (a) — join rejects other slugs. */
+/** Trainee station target under memo Option (a). */
 export const STATION_SCENARIO_SLUG = "base-rung-stepped-tasks";
+/** Instructor inject-demo scenario (menu has injections). */
+export const INSTRUCTOR_DEMO_SCENARIO_SLUG = "base-rung-resp-distress";
+
+const TRAINEE_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
+const INSTRUCTOR_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
 
 type SocketBinding = {
   readonly sessionId: string;
   readonly role: string;
   readonly actorId: string;
   readonly tenantId: string;
+  readonly stationKind: StationKind;
 };
 
 type SocketData = {
   binding?: SocketBinding;
+  unsubSnapshot?: () => void;
+  unsubPresence?: () => void;
+  unsubRoomPresence?: () => void;
 };
 
 export type LiveSocketOptions = {
@@ -78,7 +90,7 @@ function toBody(intent: ClientIntent, binding: SocketBinding): EngineEventBody {
   }
 }
 
-function emitSnapshot(socket: Socket, room: SessionRoom, role: string): void {
+function emitTraineeSnapshot(socket: Socket, room: SessionRoom, role: string): void {
   const view = room.project(role);
   const parsed = roleViewWireSchema.safeParse(view);
   if (!parsed.success) {
@@ -88,8 +100,66 @@ function emitSnapshot(socket: Socket, room: SessionRoom, role: string): void {
     });
     return;
   }
-  const frame: SessionSnapshot = { seq: view.seq, roleView: parsed.data };
+  const frame: SessionSnapshot = { kind: "trainee", seq: view.seq, roleView: parsed.data };
   socket.emit(LIVE_EVENTS.snapshot, frame);
+}
+
+function emitInstructorSnapshot(socket: Socket, room: SessionRoom): void {
+  const view = room.projectInstructor();
+  const parsed = instructorViewWireSchema.safeParse(view);
+  if (!parsed.success) {
+    socket.emit(LIVE_EVENTS.reject, {
+      code: "validation",
+      message: "instructor view failed wire validation",
+    });
+    return;
+  }
+  const frame: SessionSnapshot = {
+    kind: "instructor",
+    seq: view.seq,
+    instructorView: parsed.data,
+  };
+  socket.emit(LIVE_EVENTS.snapshot, frame);
+}
+
+function emitPresence(socket: Socket, sessionId: string, room: SessionRoom): void {
+  const payload: SessionPresence = {
+    sessionId,
+    connected: room.listPresence(),
+  };
+  socket.emit(LIVE_EVENTS.presence, payload);
+}
+
+function authorizeIntent(
+  binding: SocketBinding,
+  intent: ClientIntent,
+  room: SessionRoom,
+): { ok: true } | { ok: false; code: "role_bound" | "validation"; message: string } {
+  if (binding.stationKind === "instructor") {
+    if (intent.type === "task_start" || intent.type === "task_submit" || intent.type === "action") {
+      return { ok: false, code: "role_bound", message: "instructor cannot send trainee intents" };
+    }
+    if (intent.type === "injection") {
+      const allowed = room.injectionMenuIds();
+      if (!allowed.includes(intent.injection)) {
+        return {
+          ok: false,
+          code: "validation",
+          message: `injection "${intent.injection}" is not on this scenario menu`,
+        };
+      }
+    }
+    return { ok: true };
+  }
+  // Trainee path
+  if (intent.type === "injection" || intent.type === "phase_change") {
+    return {
+      ok: false,
+      code: "role_bound",
+      message: "trainee cannot inject or change session phase",
+    };
+  }
+  return { ok: true };
 }
 
 export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOptions): Server {
@@ -125,11 +195,16 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         return;
       }
 
-      const { sessionId, role, lastSeq, actorId } = parsed.data;
-      if (role !== "technician") {
+      // Clear prior membership if re-joining.
+      data.unsubSnapshot?.();
+      data.unsubPresence?.();
+      data.unsubRoomPresence?.();
+
+      const { sessionId, role, lastSeq, actorId, stationKind } = parsed.data;
+      if (stationKind === "instructor" && role !== "instructor") {
         const reject = {
           code: "role_bound" as const,
-          message: `Sprint 3 allows only role "technician"; got "${role}"`,
+          message: 'instructor join requires role "instructor"',
         };
         socket.emit(LIVE_EVENTS.reject, reject);
         ack?.(reject);
@@ -143,10 +218,31 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         ack?.(reject);
         return;
       }
-      if (room.scenarioSlug !== STATION_SCENARIO_SLUG) {
+
+      if (stationKind === "trainee") {
+        if (!TRAINEE_SCENARIOS.has(room.scenarioSlug)) {
+          const reject = {
+            code: "scenario" as const,
+            message: `trainee join not allowed for scenario ${room.scenarioSlug}`,
+          };
+          socket.emit(LIVE_EVENTS.reject, reject);
+          ack?.(reject);
+          return;
+        }
+        const roles = room.scenarioRoles;
+        if (roles.length > 0 && !roles.includes(role)) {
+          const reject = {
+            code: "role_bound" as const,
+            message: `role "${role}" is not in scenario roles`,
+          };
+          socket.emit(LIVE_EVENTS.reject, reject);
+          ack?.(reject);
+          return;
+        }
+      } else if (!INSTRUCTOR_SCENARIOS.has(room.scenarioSlug)) {
         const reject = {
           code: "scenario" as const,
-          message: `station join is limited to ${STATION_SCENARIO_SLUG}`,
+          message: `instructor join not allowed for scenario ${room.scenarioSlug}`,
         };
         socket.emit(LIVE_EVENTS.reject, reject);
         ack?.(reject);
@@ -156,31 +252,61 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
       const binding: SocketBinding = {
         sessionId,
         role,
-        actorId: actorId ?? "dev-trainee",
+        actorId: actorId ?? (stationKind === "instructor" ? "dev-instructor" : "dev-trainee"),
         tenantId: options.tenantId,
+        stationKind,
       };
       data.binding = binding;
       await socket.join(socketRoom(sessionId));
 
-      const unsub = room.onSnapshot(role, (frame) => {
+      data.unsubRoomPresence = room.registerPresence({
+        socketId: socket.id,
+        role,
+        stationKind,
+        actorId: binding.actorId,
+      });
+      data.unsubPresence = room.onPresence((members) => {
+        const payload: SessionPresence = { sessionId, connected: [...members] };
+        socket.emit(LIVE_EVENTS.presence, payload);
+      });
+      data.unsubSnapshot = room.onSnapshot(stationKind, role, (frame) => {
+        if (frame.kind === "instructor") {
+          const wire = instructorViewWireSchema.safeParse(frame.instructorView);
+          if (!wire.success) return;
+          socket.emit(LIVE_EVENTS.snapshot, {
+            kind: "instructor",
+            seq: frame.instructorView.seq,
+            instructorView: wire.data,
+          } satisfies SessionSnapshot);
+          return;
+        }
         const wire = roleViewWireSchema.safeParse(frame.roleView);
         if (!wire.success) return;
         socket.emit(LIVE_EVENTS.snapshot, {
+          kind: "trainee",
           seq: frame.roleView.seq,
           roleView: wire.data,
         } satisfies SessionSnapshot);
       });
+
       socket.once("disconnect", () => {
-        unsub();
+        data.unsubSnapshot?.();
+        data.unsubPresence?.();
+        data.unsubRoomPresence?.();
       });
 
-      emitSnapshot(socket, room, role);
+      if (stationKind === "instructor") {
+        emitInstructorSnapshot(socket, room);
+      } else {
+        emitTraineeSnapshot(socket, room, role);
+      }
+      emitPresence(socket, sessionId, room);
       // Catch-up events are optional; snapshot alone is correctness.
       if (lastSeq !== undefined && lastSeq < room.appliedSeq) {
         // Intentionally empty: client replaces view from snapshot.
       }
       socket.emit(LIVE_EVENTS.connection, { status: "connected" });
-      ack?.({ ok: true, seq: room.appliedSeq });
+      ack?.({ ok: true, seq: room.appliedSeq, stationKind });
     });
 
     socket.on(LIVE_EVENTS.intent, async (raw: unknown, ack?: (result: unknown) => void) => {
@@ -199,20 +325,17 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         return;
       }
 
-      // S3 station: reject instructor-only injections from the trainee path.
-      if (parsed.data.type === "injection") {
-        const reject = {
-          code: "role_bound" as const,
-          message: "injections are instructor-only",
-        };
+      const room = options.registry.get(binding.sessionId);
+      if (room === undefined) {
+        const reject = { code: "not_found" as const, message: "live room not loaded" };
         socket.emit(LIVE_EVENTS.reject, reject);
         ack?.(reject);
         return;
       }
 
-      const room = options.registry.get(binding.sessionId);
-      if (room === undefined) {
-        const reject = { code: "not_found" as const, message: "live room not loaded" };
+      const authz = authorizeIntent(binding, parsed.data, room);
+      if (!authz.ok) {
+        const reject = { code: authz.code, message: authz.message };
         socket.emit(LIVE_EVENTS.reject, reject);
         ack?.(reject);
         return;
@@ -233,6 +356,9 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
     socket.on(LIVE_EVENTS.leave, async () => {
       const binding = data.binding;
       if (binding === undefined) return;
+      data.unsubSnapshot?.();
+      data.unsubPresence?.();
+      data.unsubRoomPresence?.();
       await socket.leave(socketRoom(binding.sessionId));
       delete data.binding;
       socket.emit(LIVE_EVENTS.connection, { status: "closed" });
