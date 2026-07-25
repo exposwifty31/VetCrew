@@ -11,5 +11,5 @@
   "shell.server.db.not-configured": "Database: not configured",
   "shell.tokens.heading": "Channel tokens (Layer A)",
   "shell.engine.heading": "Engine",
-  "shell.engine.summary": "Deterministic reducer · {events} events · HR {hr}"
+  "shell.engine.summary": "Deterministic reducer · {events} events · HR {hr} · SpO₂ {spo2} (post-oxygen)"
 }

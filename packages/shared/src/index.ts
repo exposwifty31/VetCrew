@@ -9,6 +9,14 @@ export {
   type SessionPhase,
 } from "./contracts.js";
 export {
+  scenarioDefSchema,
+  triggerConditionSchema,
+  triggerDefSchema,
+  vitalEffectSchema,
+  vitalParamsSchema,
+  type ScenarioDefWire,
+} from "./scenario.js";
+export {
   antsDomainSchema,
   antsRatingSchema,
   scenarioSchema,

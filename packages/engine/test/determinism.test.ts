@@ -5,6 +5,7 @@ import {
   reduce,
   replay,
   type EngineEvent,
+  type ScenarioDef,
 } from "../src/index.js";
 
 /**
@@ -12,6 +13,22 @@ import {
  * same seed + same event sequence => byte-identical state.
  * This is the engine's acceptance gate; it runs in CI on every engine change.
  */
+
+const SCENARIO: ScenarioDef = {
+  slug: "test-golden",
+  version: "0.0.1",
+  vitals: {
+    hr: { initial: 80, target: 140, ratePerSec: 0.8, jitter: 0.5 },
+    spo2: { initial: 96, target: 85, ratePerSec: 0.3, jitter: 0.2 },
+  },
+  triggers: [
+    {
+      id: "artifact",
+      on: { kind: "injection", injection: "nibp_artifact" },
+      effects: [{ vital: "hr", jitter: 3 }],
+    },
+  ],
+};
 
 function fixtureEvents(): EngineEvent[] {
   const events: EngineEvent[] = [];
@@ -39,7 +56,7 @@ function fixtureEvents(): EngineEvent[] {
 }
 
 function runAll(seed: number, events: EngineEvent[]) {
-  let state = createInitialState(seed);
+  let state = createInitialState(seed, SCENARIO);
   for (const event of events) {
     state = reduce(state, event);
   }
@@ -64,13 +81,13 @@ describe("engine determinism", () => {
   test("replay(seed, events) rebuilds the incremental fold exactly", () => {
     const events = fixtureEvents();
     const incremental = runAll(42, events);
-    const replayed = replay(42, events);
+    const replayed = replay(42, events, SCENARIO);
     expect(JSON.stringify(replayed)).toBe(JSON.stringify(incremental));
   });
 
   test("reduce is pure: input state is not mutated", () => {
     const events = fixtureEvents();
-    const initial = createInitialState(42);
+    const initial = createInitialState(42, SCENARIO);
     const snapshot = JSON.stringify(initial);
     const firstEvent = events[0];
     if (firstEvent === undefined) throw new Error("fixture is empty");

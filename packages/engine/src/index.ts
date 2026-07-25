@@ -13,4 +13,12 @@ export {
   reduce,
   replay,
   type EngineState,
+  type VitalState,
 } from "./reducer.js";
+export type {
+  ScenarioDef,
+  TriggerCondition,
+  TriggerDef,
+  VitalEffect,
+  VitalParams,
+} from "./scenario.js";
