@@ -140,14 +140,34 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     };
   }, []);
 
+  // Reset every session-scoped field when the route changes — AarPage is
+  // reused across hash navigations, so stale rater/evidence/scores must not
+  // bleed into the next session.
   useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    setError(false);
+    setScrubMs(0);
+    setFilter("all");
+    setRaterId("");
+    setActiveDomain(null);
+    setEvidenceByDomain({});
+    setScores({});
+    setSubmitState("idle");
+    setHighlightSeq(null);
     fetchAar(sessionId)
       .then((d) => {
+        if (cancelled) return;
         setData(d);
         setScrubMs(d.aar.durationMs);
         setActiveDomain(d.scenario.scoringDimensions[0] ?? null);
       })
-      .catch(() => setError(true));
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   useEffect(() => {
@@ -206,6 +226,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
   };
 
   const submit = async () => {
+    const targetSessionId = session.id;
     const complete =
       raterId.trim().length > 0 &&
       scenario.scoringDimensions.every(
@@ -219,7 +240,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
     setSubmitState("saving");
     try {
       await submitRatings(
-        session.id,
+        targetSessionId,
         raterId.trim(),
         scenario.scoringDimensions.map((domain) => ({
           domain,
@@ -228,17 +249,22 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
         })),
       );
     } catch {
-      setSubmitState("error");
+      // Ignore if the user navigated away mid-submit.
+      if (targetSessionId === sessionId) setSubmitState("error");
       return;
     }
     // The rating is saved; a failed refresh must not mask that outcome.
+    if (targetSessionId !== sessionId) return;
     setSubmitState("saved");
     try {
-      setData(await fetchAar(sessionId));
+      const refreshed = await fetchAar(targetSessionId);
+      if (targetSessionId === sessionId) setData(refreshed);
     } catch {
       // stale view is acceptable — the stored ratings render on next load
     }
   };
+
+  const canRate = session.phase === "debrief";
 
   return (
     <main style={{ maxWidth: 860, marginInline: "auto", padding: 24 }}>
@@ -394,7 +420,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
                   outlineOffset: 1,
                 }}
               >
-                {entry.type === "action" && session.phase !== "scored" && (
+                {entry.type === "action" && canRate && (
                   /* 44px touch target (tablet-first); the visible box stays 24px. */
                   <label
                     style={{
@@ -412,7 +438,10 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
                       checked={activeEvidence.includes(entry.seq)}
                       onChange={() => toggleEvidence(entry.seq)}
                       style={{ width: 24, height: 24 }}
-                      aria-label={`evidence-${entry.seq}`}
+                      aria-label={t("aar.timeline.evidenceFor", {
+                        seq: entry.seq,
+                        domain: t(`ants.${activeDomain ?? "task_management"}` as MessageKey),
+                      })}
                     />
                   </label>
                 )}
@@ -475,7 +504,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
             ))}
           </ul>
         </section>
-      ) : (
+      ) : canRate ? (
         <section style={card}>
           <h2>{t("aar.rating.heading")}</h2>
           <p style={{ color: "var(--text-secondary)" }}>{t("aar.rating.formative")}</p>
@@ -528,6 +557,7 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
                       <button
                         key={value}
                         onClick={() => setScores((prev) => ({ ...prev, [domain]: value }))}
+                        aria-pressed={scores[domain] === value}
                         style={{
                           width: 44,
                           height: 44,
@@ -571,11 +601,20 @@ export default function AarPage({ sessionId }: { sessionId: string }) {
             <p style={{ color: "var(--text-critical)" }}>{t("aar.rating.incomplete")}</p>
           )}
           {submitState === "error" && (
-            <p style={{ color: "var(--text-critical)" }}>{t("aar.rating.error")}</p>
+            <p role="alert" style={{ color: "var(--text-critical)" }}>
+              {t("aar.rating.error")}
+            </p>
           )}
           {submitState === "saved" && (
-            <p style={{ color: "var(--text-running)" }}>{t("aar.rating.submitted")}</p>
+            <p role="status" aria-live="polite" style={{ color: "var(--text-running)" }}>
+              {t("aar.rating.submitted")}
+            </p>
           )}
+        </section>
+      ) : (
+        <section style={card}>
+          <h2>{t("aar.rating.heading")}</h2>
+          <p style={{ color: "var(--text-secondary)" }}>{t("aar.rating.notDebrief")}</p>
         </section>
       )}
     </main>

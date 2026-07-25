@@ -148,7 +148,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
     type AppendResult =
       | { kind: "not_found" }
       | { kind: "gap"; expected: number }
-      | { kind: "ok" };
+      | { kind: "ok"; phase: SessionPhase };
     const result: AppendResult = await db.transaction(async (tx) => {
       const rows = await tx
         .select()
@@ -184,7 +184,9 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         // Denormalized phase for listings; the log stays authoritative.
         await tx.update(simSessions).set({ phase: nextPhase }).where(eq(simSessions.id, session.id));
       }
-      return { kind: "ok" };
+      // Echo the projected phase so a client learns when an illegal
+      // phase_change was recorded but refused by the FSM.
+      return { kind: "ok", phase: nextPhase };
     });
     switch (result.kind) {
       case "not_found":
@@ -196,7 +198,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         });
         return;
       case "ok":
-        res.status(201).json({ appended: events.length });
+        res.status(201).json({ appended: events.length, phase: result.phase });
         return;
       default: {
         const exhaustive: never = result;
