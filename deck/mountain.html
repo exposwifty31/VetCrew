@@ -23,19 +23,9 @@
   .row .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;}
   .row h2{margin:0;font-size:20px;font-weight:700;color:#e6eef4;letter-spacing:-0.01em;}
   .row .sub{font-size:13.5px;color:#8ea2b1;line-height:1.5;padding-inline-start:21px;}
-
-  /* entrance: tiers reveal base → summit, the climb follows. GPU-only props. */
-  @media (prefers-reduced-motion: no-preference){
-    .row{opacity:0;transform:translateY(14px);
-      animation:rise .5s cubic-bezier(.25,1,.5,1) forwards;}
-    .row:nth-child(4){animation-delay:.15s;}  /* base first */
-    .row:nth-child(3){animation-delay:.45s;}
-    .row:nth-child(2){animation-delay:.75s;}
-    .row:nth-child(1){animation-delay:1.05s;} /* summit last */
-    .climb-g{opacity:0;animation:appear .8s cubic-bezier(.25,1,.5,1) 1.3s forwards;}
-    @keyframes rise{to{opacity:1;transform:none;}}
-    @keyframes appear{to{opacity:1;}}
-  }
+  /* No entrance animation here on purpose: this file is embedded in the deck
+     and preloaded off-screen, so a staggered reveal risks reading as "empty"
+     if the slide is reached mid-sequence. The diagram must always be whole. */
   .badge{display:inline-flex;align-items:center;gap:6px;margin-inline-start:10px;padding:3px 10px;border-radius:999px;
     background:rgba(0,128,128,.18);border:1px solid #12808f;color:#4fd0d8;
     font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;}
