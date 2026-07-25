@@ -1,9 +1,9 @@
 # VetCrew — Project Context for Claude Code
 
-**Status:** pre-v1 pitch package — deterministic engine, live station + instructor console, AAR/ANTS, manager evidence desk, Clerk + Railway wired. Solo build (Dan), AI-agent-driven.
-**Last updated:** 2026-07-25 (Sprint 5a + Clerk/Railway live; Reviewer is the pitch audience)
+**Status:** pre-v1 pitch package — deterministic engine; **shipped:** trainee station, instructor console (live inject/pause), manager evidence desk, AAR/ANTS; auth-bound live join via Clerk + `role_stations`; CI/e2e test-auth seam (`VETCREW_TEST_AUTH`). Solo build (Dan), AI-agent-driven.
+**Last updated:** 2026-07-25 (Sprint 5a + auth-bound pitch path; Reviewer is the pitch audience)
 
-**Current milestone (2026-07-25):** pitch-ready package for the Reviewer (§6) — concept end-to-end and UI visible enough to judge problem/solution fit. Standing open: Clerk→`role_stations` binding, clinical review stamps, scenario Option (a) countersign. No hiring verdicts until N + three raters.
+**Current milestone (2026-07-25):** pitch-ready package for the Reviewer (§6) — concept end-to-end and UI visible enough to judge problem/solution fit. **Shipped:** station + instructor + manager under auth-bound join. **Open HITL:** clinical review stamp ([#12](https://github.com/exposwifty31/VetCrew/issues/12)) — Reviewer must stamp `clinically_reviewed` before real-person scores; code gates only. **Future:** full crew multi-station. No hiring verdicts until N + three raters.
 
 Read this file before writing any code. It encodes decisions that are expensive to reverse and marks the ones that are cheap. Do not silently re-litigate anything under "Frozen for v1"; do raise it explicitly if you think it's wrong.
 
@@ -129,19 +129,19 @@ The reducer is pure. Inside it:
 
 Scoring moved to position 2. Reason: **scoring is the product.** If it ships fourth, you learn whether a manager finds the output credible in month four or five.
 
-1. **Bootstrap** — repo, TS config, Vitest, Postgres + Drizzle schema for the event log, Railway deploy skeleton.
-2. **Deterministic scenario engine + AAR + instructor rating** — pure reducer, seeded PRNG, replay test, one minimal scenario, instructor rates the non-technical dimensions, AAR renders from replay. **No trainee UI yet.** Goal: put a scored session in front of the department manager as early as possible.
+1. **Bootstrap** — repo, TS config, Vitest, Postgres + Drizzle schema for the event log, Railway deploy skeleton. ✓
+2. **Deterministic scenario engine + AAR + instructor rating** — pure reducer, seeded PRNG, replay test, one minimal scenario, instructor rates the non-technical dimensions, AAR renders from replay. ✓ Goal: put a scored session in front of the department manager as early as possible.
    **MVP refinement (2026-07-24):** the first scenario is **one base rung** — a single-role, technical-competence task sequence producing a role-attributed record — not a full crew scenario. Per §2.7, ship the rung, not the mountain.
-3. **One room, one station** — the trainee role station against the live engine.
-4. **Full crew + instructor console** — remaining role stations, live injection, partial-view enforcement.
-5. **Scoring surfaces** — readiness bands, per-dimension drift detection for veterans, manager-facing views.
-6. **Access modes** — pre-hire screening flow, onboarding cohorts.
+3. **One room, one station** — the trainee role station against the live engine. ✓ Auth-bound join via Clerk + `role_stations.assigned_user_id`; CI test-auth seam.
+4. **Instructor console** — live injection, pause/resume, end. ✓ **Full crew** — remaining role stations, partial-view enforcement — **future**.
+5. **Scoring surfaces** — manager evidence desk ✓; readiness bands, per-dimension drift detection for veterans — **future**.
+6. **Access modes** — pre-hire screening flow, onboarding cohorts — **future**.
 
 Voice, LLM, and 3D all sit after this list, gated on §6.
 
 ---
 
-## 6. Open risks — validate before building past step 2
+## 6. Open risks — pilot validation (pitch path shipped)
 
 **6.1 — Hebrew STT (downgraded: model substitution, not a blocker).**
 Nova-3 Medical is trained on English medical conversations, so that specific model choice would have failed at an Israeli pilot site. But Deepgram now ships production Hebrew monolingual STT on Nova-3 — streaming and batch, with Keyterm Prompting and Numerals. Keyterm Prompting allows injecting up to 100 domain terms without retraining, which is the likely path for veterinary drug names.
