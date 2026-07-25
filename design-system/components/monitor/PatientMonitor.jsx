@@ -463,12 +463,15 @@ function resp(t) {
 /* Fixed lane stack — base-rung config. NO invasive arterial line, so no Art
    lane; respiration is shown instead. Five lanes map 1:1 to the five value
    blocks (ECG spans its two lanes) so every waveform aligns with its number. */
+/* Canvas cannot read CSS vars per-stroke; these literals MUST mirror the
+   --ch-* channel tokens in tokens/instrument.css (the muscle-memory colour
+   contract). If a channel token changes, change it here in the same commit. */
 const WAVES = [
-  { key: "ecg1", gen: ecg,   kind: "beat",   color: "#"+"00ff66", label: "I",     tag: "1mV" },
-  { key: "ecg2", gen: ecg,   kind: "beat",   color: "#"+"00ff66", label: "II",    tag: "1mV" },
-  { key: "pleth",gen: pleth, kind: "beat",   color: "#"+"00ccff", label: "Pleth", tag: ""    },
-  { key: "co2",  gen: capno, kind: "breath", color: "#"+"ffcc00", label: "CO2",   tag: ""    },
-  { key: "resp", gen: resp,  kind: "breath", color: "#"+"d7b13a", label: "Resp",  tag: ""    },
+  { key: "ecg1", gen: ecg,   kind: "beat",   color: "#00ff66", label: "I",     tag: "1mV" },
+  { key: "ecg2", gen: ecg,   kind: "beat",   color: "#00ff66", label: "II",    tag: "1mV" },
+  { key: "pleth",gen: pleth, kind: "beat",   color: "#00ccff", label: "Pleth", tag: ""    },
+  { key: "co2",  gen: capno, kind: "breath", color: "#ffcc00", label: "CO2",   tag: ""    },
+  { key: "resp", gen: resp,  kind: "breath", color: "#d7b13a", label: "Resp",  tag: ""    },
 ];
 
 const DEF = {

@@ -92,10 +92,10 @@ inject("vc-task", `
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.vc-task--do .vc-task__code { color: var(--task-do); }
-.vc-task--report .vc-task__code { color: var(--task-report); }
-.vc-task--timed .vc-task__code { color: var(--task-timed); }
-.vc-task--approval .vc-task__code { color: var(--task-approval); }
+.vc-task--do .vc-task__code { color: var(--task-do-text); }
+.vc-task--report .vc-task__code { color: var(--task-report-text); }
+.vc-task--timed .vc-task__code { color: var(--task-timed-text); }
+.vc-task--approval .vc-task__code { color: var(--task-approval-text); }
 
 .vc-task__title {
   font-size: var(--fs-body);
@@ -120,11 +120,11 @@ inject("vc-task", `
   color: var(--text-muted);
 }
 .vc-task__win b {
-  color: var(--task-timed);
+  color: var(--task-timed-text);
   font-weight: 600;
 }
 .vc-task__win[data-closing="1"] b {
-  color: var(--task-do);
+  color: var(--task-do-text);
   animation: vc-task-closing .8s steps(1,end) infinite;
 }
 .vc-task__win[data-closing="1"]::before {

@@ -27,7 +27,7 @@
     background:var(--task-timed);color:var(--task-timed-fg);}
   .task__badge svg{width:22px;height:22px;}
   .task__t{display:flex;flex-direction:column;gap:3px;min-width:0;}
-  .task__code{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--task-timed);}
+  .task__code{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--task-timed-text);}
   .task__title{font-size:17px;font-weight:600;line-height:1.25;}
   .task__meta{font-size:13.5px;color:var(--task-text-dim);}
   .task__meta b{font-family:var(--font-metric);font-weight:700;}
@@ -81,7 +81,8 @@
   .meas__st{margin-inline-start:auto;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
     text-transform:uppercase;color:var(--task-text-faint);}
   .bar{margin-top:12px;height:6px;border-radius:var(--radius-pill);background:var(--task-bg);overflow:hidden;}
-  .bar__f{height:100%;background:var(--task-action);width:0%;transition:width 200ms linear;}
+  /* scaleX, not width — compositor-only; origin right = inline-start in RTL */
+  .bar__f{height:100%;background:var(--task-action);transform:scaleX(0);transform-origin:100% 50%;transition:transform 200ms linear;}
 
   /* device error — names the problem AND the recovery */
   .err__t{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:var(--task-error);}
@@ -361,10 +362,10 @@ el('start').onclick = ()=>{
 /* inflation → either an error or a reading */
 function inflate(willFail){
   let p=0; const target=willFail?300:157;
-  el('measSt').textContent='ניפוח'; el('barf').style.width='0%';
+  el('measSt').textContent='ניפוח'; el('barf').style.transform='scaleX(0)';
   const t=setInterval(()=>{
     p+=14; el('cuffP').textContent=Math.min(p,target);
-    el('barf').style.width = Math.min(100, (p/target)*100)+'%';
+    el('barf').style.transform = 'scaleX('+Math.min(1, p/target)+')';
     if(p>=target){
       clearInterval(t);
       if(willFail){ setTimeout(()=>toError(),450); }
@@ -377,7 +378,7 @@ function deflate(){
   let p=157;
   const t=setInterval(()=>{
     p-=6; el('cuffP').textContent=Math.max(p,58);
-    el('barf').style.width = Math.max(0,((p-58)/(157-58))*100)+'%';
+    el('barf').style.transform = 'scaleX('+Math.max(0,(p-58)/(157-58))+')';
     if(p<=58){ clearInterval(t); toReading(); }
   },55);
 }

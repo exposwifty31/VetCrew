@@ -26,7 +26,7 @@
 
   --task-text:      #e7edf2; /* @kind color */
   --task-text-dim:  #94a3af; /* @kind color */
-  --task-text-faint:#63717d; /* @kind color */
+  --task-text-faint:#8d9ba7; /* @kind color — floor: 4.5:1 on all task surfaces */
 
   /* matte code palette (badge fill / text-on-badge / soft chip tint / edge) */
   --task-do:      #c1941d;  /* @kind color */
@@ -45,12 +45,19 @@
   --task-approval-fg:   #ffffff; /* @kind color */
   --task-approval-soft: #3a1712; /* @kind color */
 
-  /* lifecycle verdict marks (contained in the panel) */
-  --task-done:  #2f9e5b;  /* @kind color */
-  --task-error: #d84a3a;  /* @kind color */
+  /* code colours used AS TEXT (labels, countdowns) — the badge fills above
+     stay matte; these variants clear 4.5:1 on every task surface */
+  --task-do-text:       #c1941d; /* @kind color */
+  --task-report-text:   #b190e4; /* @kind color */
+  --task-timed-text:    #45c47a; /* @kind color */
+  --task-approval-text: #ef8477; /* @kind color */
+
+  /* lifecycle verdict marks (contained in the panel; text/icon use — AA) */
+  --task-done:  #45c47a;  /* @kind color */
+  --task-error: #ec7a6c;  /* @kind color */
 
   --task-action:      #008080; /* @kind color */
-  --task-action-fg:   #04141a; /* @kind color */
+  --task-action-fg:   #ffffff; /* @kind color — 4.77:1 on --task-action */
   --task-focus:       #7fd6df; /* @kind color */
 }
 
