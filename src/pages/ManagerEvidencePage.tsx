@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import {
   fetchTraineeEvidence,
@@ -14,13 +14,17 @@ import { t, type MessageKey } from "../i18n/index.js";
  * Same Reflective register as AAR. No hiring verdicts / readiness bands.
  */
 
-const card: React.CSSProperties = {
+const card: CSSProperties = {
   background: "var(--surface-card)",
   border: "1px solid var(--border-default)",
   borderRadius: "var(--r-md, 8px)",
   padding: 16,
   marginBlockStart: 16,
 };
+
+const hasClerkKey =
+  typeof import.meta.env.VITE_CLERK_PUBLISHABLE_KEY === "string" &&
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.length > 0;
 
 function driftKey(drift: TraineeTrendResponse["overallDrift"]): MessageKey {
   switch (drift) {
@@ -54,6 +58,21 @@ function hintDirectionKey(
   }
 }
 
+type AuthSession = {
+  isLoaded: boolean;
+  isSignedIn: boolean;
+  getToken: () => Promise<string | null>;
+};
+
+function useClerkAuthSession(): AuthSession {
+  const auth = useAuth();
+  return {
+    isLoaded: auth.isLoaded,
+    isSignedIn: Boolean(auth.isSignedIn),
+    getToken: async () => (await auth.getToken()) ?? null,
+  };
+}
+
 export default function ManagerEvidencePage({
   traineeId,
   focus = "evidence",
@@ -61,7 +80,39 @@ export default function ManagerEvidencePage({
   traineeId: string;
   focus?: "evidence" | "trend";
 }) {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  if (!hasClerkKey) {
+    return (
+      <ManagerEvidenceBody
+        traineeId={traineeId}
+        focus={focus}
+        session={{ isLoaded: true, isSignedIn: false, getToken: async () => null }}
+      />
+    );
+  }
+  return <ManagerEvidenceWithClerk traineeId={traineeId} focus={focus} />;
+}
+
+function ManagerEvidenceWithClerk({
+  traineeId,
+  focus,
+}: {
+  traineeId: string;
+  focus: "evidence" | "trend";
+}) {
+  const session = useClerkAuthSession();
+  return <ManagerEvidenceBody traineeId={traineeId} focus={focus} session={session} />;
+}
+
+function ManagerEvidenceBody({
+  traineeId,
+  focus,
+  session,
+}: {
+  traineeId: string;
+  focus: "evidence" | "trend";
+  session: AuthSession;
+}) {
+  const { isLoaded, isSignedIn, getToken } = session;
   const [evidence, setEvidence] = useState<TraineeEvidenceResponse | null | "error">(null);
   const [trend, setTrend] = useState<TraineeTrendResponse | null | "error">(null);
   const [showInternal, setShowInternal] = useState(false);

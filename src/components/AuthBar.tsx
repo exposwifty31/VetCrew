@@ -2,8 +2,14 @@ import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
 
 import { t } from "../i18n/index.js";
 
+const hasClerkKey =
+  typeof import.meta.env.VITE_CLERK_PUBLISHABLE_KEY === "string" &&
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.length > 0;
+
 /** Minimal auth chrome for the pitch shell — Hebrew labels via i18n. */
 export default function AuthBar() {
+  if (!hasClerkKey) return null;
+
   return (
     <div
       style={{

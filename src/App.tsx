@@ -227,8 +227,8 @@ function HomePage() {
             style={{
               minHeight: 48,
               paddingInline: 16,
-              background: "transparent",
               // Outline accent must meet WCAG AA on --bg (#0a1216): #008080 is ~3.95:1.
+              background: "transparent",
               color: "var(--action-accent-contrast, #5eead4)",
               border: "2px solid var(--action-accent-contrast, #5eead4)",
               borderRadius: 8,
