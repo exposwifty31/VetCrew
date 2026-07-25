@@ -2,7 +2,14 @@ import { useMemo, useState, type CSSProperties } from "react";
 
 import type { ClientIntent, RoleViewWire } from "@vetcrew/shared";
 
+import { CompactAuthBanner } from "../components/AuthBar.js";
+import {
+  hasClerkPublishableKey,
+  noBearerToken,
+  useClerkBearerToken,
+} from "../hooks/useBearerToken.js";
 import { t } from "../i18n";
+import { rejectMessageKey } from "../live/rejectMessage.js";
 import { useSession, type ConnectionStatus } from "../live/useSession.js";
 
 const VITAL_META: Record<string, { label: string; cssVar: string; fallback: string }> = {
@@ -16,7 +23,24 @@ const VITAL_META: Record<string, { label: string; cssVar: string; fallback: stri
 type Props = { readonly sessionId: string };
 
 export default function StationPage({ sessionId }: Props) {
-  const { roleView, connectionStatus, lastReject, sendIntent } = useSession(sessionId);
+  if (hasClerkPublishableKey) {
+    return <StationPageWithClerk sessionId={sessionId} />;
+  }
+  return <StationPageBody sessionId={sessionId} getToken={noBearerToken} />;
+}
+
+function StationPageWithClerk({ sessionId }: Props) {
+  const getToken = useClerkBearerToken();
+  return <StationPageBody sessionId={sessionId} getToken={getToken} />;
+}
+
+function StationPageBody({
+  sessionId,
+  getToken,
+}: Props & { getToken: () => Promise<string | null> }) {
+  const { roleView, connectionStatus, lastReject, sendIntent } = useSession(sessionId, {
+    getToken,
+  });
   const live = connectionStatus === "connected" && roleView !== null;
   const interactive = live && roleView.phase === "running";
 
@@ -58,6 +82,8 @@ export default function StationPage({ sessionId }: Props) {
         </div>
       </header>
 
+      <CompactAuthBanner />
+
       {(connectionStatus === "reconnecting" || connectionStatus === "offline") && (
         <div
           role="alert"
@@ -75,8 +101,16 @@ export default function StationPage({ sessionId }: Props) {
       )}
 
       {lastReject !== null && (
-        <div role="status" style={{ padding: "8px 16px", color: "var(--sev-critical, #FF3333)" }}>
-          {t("station.reject", { code: lastReject.code, message: lastReject.message })}
+        <div
+          role="alert"
+          style={{
+            padding: "8px 16px",
+            color: "var(--sev-critical, #FF3333)",
+            fontWeight: 700,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {t(rejectMessageKey(lastReject))}
         </div>
       )}
 

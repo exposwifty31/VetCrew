@@ -10,6 +10,8 @@ import type {
   TraineeTrendResponse,
 } from "@vetcrew/shared";
 
+import { HttpError } from "./apiErrors.js";
+
 export type { TraineeEvidenceResponse, TraineeTrendResponse };
 
 /** Typed client for the session API (proxied /api → server). */
@@ -72,7 +74,7 @@ function jsonHeaders(token: string | null | undefined): HeadersInit {
 
 export async function fetchSessions(token?: string | null): Promise<SessionSummary[]> {
   const res = await fetch("/api/sessions", { headers: authHeaders(token) });
-  if (!res.ok) throw new Error(`sessions: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "sessions");
   const body = (await res.json()) as { sessions: SessionSummary[] };
   return body.sessions;
 }
@@ -91,7 +93,7 @@ export async function createSession(
     headers: jsonHeaders(token),
     body: JSON.stringify(input),
   });
-  if (!res.ok) throw new Error(`create session: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "create session");
   const body = (await res.json()) as { session: { id: string } };
   return body.session;
 }
@@ -103,7 +105,7 @@ export async function fetchAar(
   const res = await fetch(`/api/sessions/${sessionId}/aar`, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`aar: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "aar");
   return (await res.json()) as AarResponse;
 }
 
@@ -114,7 +116,7 @@ export async function fetchTraineeEvidence(
   const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/evidence`, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`evidence: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "evidence");
   return (await res.json()) as TraineeEvidenceResponse;
 }
 
@@ -129,7 +131,7 @@ export async function fetchTraineeTrend(
   const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/trend${qs}`, {
     headers: authHeaders(options?.token),
   });
-  if (!res.ok) throw new Error(`trend: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "trend");
   return (await res.json()) as TraineeTrendResponse;
 }
 
@@ -144,5 +146,5 @@ export async function submitRatings(
     headers: jsonHeaders(token),
     body: JSON.stringify({ raterId, ratings }),
   });
-  if (!res.ok) throw new Error(`ratings: ${res.status}`);
+  if (!res.ok) throw new HttpError(res.status, "ratings");
 }

@@ -2,7 +2,14 @@ import { useMemo, useState, type CSSProperties } from "react";
 
 import type { InstructorViewWire, SessionPhase } from "@vetcrew/shared";
 
+import { CompactAuthBanner } from "../components/AuthBar.js";
+import {
+  hasClerkPublishableKey,
+  noBearerToken,
+  useClerkBearerToken,
+} from "../hooks/useBearerToken.js";
 import { t } from "../i18n";
+import { rejectMessageKey } from "../live/rejectMessage.js";
 import { useInstructorSession } from "../live/useInstructorSession.js";
 import type { ConnectionStatus } from "../live/useSession.js";
 
@@ -29,8 +36,23 @@ function formatFiredAt(timeMs: number): string {
 }
 
 export default function InstructorConsolePage({ sessionId }: Props) {
+  if (hasClerkPublishableKey) {
+    return <InstructorConsolePageWithClerk sessionId={sessionId} />;
+  }
+  return <InstructorConsolePageBody sessionId={sessionId} getToken={noBearerToken} />;
+}
+
+function InstructorConsolePageWithClerk({ sessionId }: Props) {
+  const getToken = useClerkBearerToken();
+  return <InstructorConsolePageBody sessionId={sessionId} getToken={getToken} />;
+}
+
+function InstructorConsolePageBody({
+  sessionId,
+  getToken,
+}: Props & { getToken: () => Promise<string | null> }) {
   const { instructorView, presence, connectionStatus, lastReject, sendIntent } =
-    useInstructorSession(sessionId);
+    useInstructorSession(sessionId, { getToken });
   const [endOpen, setEndOpen] = useState(false);
   const live = connectionStatus === "connected" && instructorView !== null;
   const phase = instructorView?.phase;
@@ -60,6 +82,8 @@ export default function InstructorConsolePage({ sessionId }: Props) {
         connectionStatus={connectionStatus}
       />
 
+      <CompactAuthBanner />
+
       {(connectionStatus === "reconnecting" || connectionStatus === "offline") && (
         <div
           role="alert"
@@ -77,8 +101,16 @@ export default function InstructorConsolePage({ sessionId }: Props) {
       )}
 
       {lastReject !== null && (
-        <div role="status" style={{ padding: "8px 16px", color: "var(--sev-critical, #FF3333)" }}>
-          {t("instructor.reject", { code: lastReject.code, message: lastReject.message })}
+        <div
+          role="alert"
+          style={{
+            padding: "8px 16px",
+            color: "var(--sev-critical, #FF3333)",
+            fontWeight: 700,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {t(rejectMessageKey(lastReject))}
         </div>
       )}
 
