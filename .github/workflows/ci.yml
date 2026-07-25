@@ -78,6 +78,8 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/vetcrew_e2e_test
+      VETCREW_TEST_AUTH: "1"
+      VETCREW_ALLOW_UNREVIEWED_SCORES: "1"
       CI: "true"
     steps:
       - uses: actions/checkout@v4

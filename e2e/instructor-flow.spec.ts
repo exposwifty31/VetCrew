@@ -1,7 +1,13 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { demoEvents } from "../server/test/fixtures/demo-events.js";
+import { expectNoSeriousA11yViolations } from "./helpers/a11y.js";
+import { injectTestBearer } from "./helpers/inject-token.js";
+import {
+  E2E_INSTRUCTOR,
+  E2E_TRAINEE,
+  appendDemoRun,
+  createSession,
+} from "./helpers/session.js";
 
 /**
  * Phase 4 E2E: the MVP flow end to end — a session is run (via API, the
@@ -12,36 +18,20 @@ import { demoEvents } from "../server/test/fixtures/demo-events.js";
 
 const SCENARIO_SLUG = "base-rung-resp-distress";
 
-async function runSession(request: APIRequestContext): Promise<string> {
-  const created = await request.post("/api/sessions", {
-    data: {
-      scenarioSlug: SCENARIO_SLUG,
-      traineeId: "e2e-trainee",
-      traineeTimeInTrainingDays: 120,
-    },
+async function runSession(request: Parameters<typeof createSession>[0]): Promise<string> {
+  const sessionId = await createSession(request, {
+    scenarioSlug: SCENARIO_SLUG,
+    traineeId: E2E_TRAINEE,
+    traineeTimeInTrainingDays: 120,
   });
-  expect(created.status()).toBe(201);
-  const { session } = (await created.json()) as { session: { id: string } };
-  const appended = await request.post(`/api/sessions/${session.id}/events`, {
-    data: { events: demoEvents("e2e-trainee") },
-  });
-  expect(appended.status()).toBe(201);
-  return session.id;
-}
-
-async function expectNoSeriousA11yViolations(page: Page, surface: string): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  const serious = results.violations.filter(
-    (v) => v.impact === "critical" || v.impact === "serious",
-  );
-  expect(
-    serious,
-    `${surface}: ${serious.map((v) => `${v.id} (${v.impact}): ${v.help}`).join("; ")}`,
-  ).toEqual([]);
+  await appendDemoRun(request, sessionId, E2E_TRAINEE);
+  return sessionId;
 }
 
 test("home page lists sessions and passes the a11y scan", async ({ page, request }) => {
   await runSession(request);
+
+  await injectTestBearer(page, E2E_INSTRUCTOR, "instructor");
   await page.goto("/#/");
   await expect(page.getByRole("heading", { name: "סשנים" })).toBeVisible();
   await expect(page.getByRole("link", { name: "פתיחת תחקיר" }).first()).toBeVisible();
@@ -54,6 +44,8 @@ test("instructor reviews the AAR and submits an evidence-linked rating", async (
   request,
 }) => {
   const sessionId = await runSession(request);
+
+  await injectTestBearer(page, E2E_INSTRUCTOR, "instructor");
   await page.goto(`/#/aar/${sessionId}`);
 
   // AAR renders from replay: vitals, checklist (with the failed priority
@@ -72,26 +64,28 @@ test("instructor reviews the AAR and submits an evidence-linked rating", async (
   // Evidence-linked rating: name the rater, then for EACH ANTS domain select
   // it, mark its own evidence event, and score it (per-domain traceability).
   await page.getByLabel("שם המדרג").fill("מדריכת-בדיקה");
-  // Domain selectors (not the 1–5 score buttons, which also use aria-pressed).
-  const domainButtons = page.locator("button[aria-pressed]").filter({ hasNotText: /^[1-5]$/ });
-  const fours = page.getByRole("button", { name: "4", exact: true });
-  const domainCount = await domainButtons.count();
-  expect(domainCount).toBe(3);
-  for (let i = 0; i < domainCount; i++) {
-    await domainButtons.nth(i).click();
-    await page.getByRole("checkbox").nth(i).check();
-    await fours.nth(i).click();
+
+  for (const domain of ["ניהול משימות", "מודעות מצבית", "קבלת החלטות"] as const) {
+    const row = page
+      .locator("div")
+      .filter({ has: page.getByRole("button", { name: domain, exact: true }) })
+      .last();
+    await row.getByRole("button", { name: domain, exact: true }).click();
+    await page.getByRole("checkbox").first().check();
+    await row.getByRole("button", { name: "4", exact: true }).click();
   }
   await page.getByRole("button", { name: "שליחת דירוג" }).click();
 
-  // The stored ratings render back from the server, rater + evidence included.
+  // Server stamps raterId from auth when test auth is on.
   await expect(page.getByRole("heading", { name: "דירוגים שנשמרו" })).toBeVisible();
-  await expect(page.getByText("מדריכת-בדיקה").first()).toBeVisible();
+  await expect(page.getByText(E2E_INSTRUCTOR).first()).toBeVisible();
   await expect(page.getByText("מדורג").first()).toBeVisible();
 });
 
 test("an incomplete rating is rejected client-side", async ({ page, request }) => {
   const sessionId = await runSession(request);
+
+  await injectTestBearer(page, E2E_INSTRUCTOR, "instructor");
   await page.goto(`/#/aar/${sessionId}`);
   await expect(page.getByRole("heading", { name: "דירוג ANTS" })).toBeVisible();
   // No rater, no evidence, no scores.

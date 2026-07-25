@@ -19,6 +19,10 @@ export default defineConfig({
       url: "http://localhost:3001/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
+      env: {
+        VETCREW_TEST_AUTH: "1",
+        VETCREW_ALLOW_UNREVIEWED_SCORES: "1",
+      },
     },
     {
       command: "pnpm dev",
