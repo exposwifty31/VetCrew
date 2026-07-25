@@ -24,37 +24,53 @@ const SWEEP_PX_PER_SEC = 175;
 const BLANK_PX = 26;
 
 /* ── waveform generators: phase (0..1) → amplitude (-1..1) ─────────────── */
-function ecgWave(p) {
-  if (p < 0.12) return 0.14 * Math.sin((p / 0.12) * Math.PI);          // P
-  if (p < 0.18) return 0;
-  if (p < 0.205) return -0.18 * ((p - 0.18) / 0.025);                  // Q
-  if (p < 0.235) return -0.18 + 1.18 * ((p - 0.205) / 0.03);           // R up
-  if (p < 0.265) return 1.0 - 1.35 * ((p - 0.235) / 0.03);             // R down
-  if (p < 0.30) return -0.35 + 0.35 * ((p - 0.265) / 0.035);           // S
-  if (p < 0.42) return 0;
-  if (p < 0.62) return 0.28 * Math.sin(((p - 0.42) / 0.2) * Math.PI);  // T
-  return 0;
+/** Smoothstep ease — rounds the hard corners a piecewise-linear wave leaves
+ *  at each segment boundary, which is what makes a plotted signal look
+ *  synthetic. Real monitor traces (even simple ones) have no sharp elbows
+ *  except at a genuine physiological spike (the ECG R wave). */
+function ease(t) { return t * t * (3 - 2 * t); }
+
+/** leadGain lets ECG lead I/II diverge — two identical traces is the
+ *  single biggest "fake monitor" tell, since real limb leads see the
+ *  heart's electrical axis from different angles and never match exactly. */
+function ecgWave(p, leadGain = 1) {
+  let v;
+  if (p < 0.12) v = 0.14 * Math.sin((p / 0.12) * Math.PI);            // P
+  else if (p < 0.18) v = 0;
+  else if (p < 0.205) v = -0.16 * ease((p - 0.18) / 0.025);           // Q
+  else if (p < 0.232) v = -0.16 + 1.16 * ease((p - 0.205) / 0.027);   // R up (steep, true spike)
+  else if (p < 0.262) v = 1.0 - 1.32 * ease((p - 0.232) / 0.03);      // R down
+  else if (p < 0.30) v = -0.32 + 0.32 * ease((p - 0.262) / 0.038);    // S
+  else if (p < 0.42) v = 0;
+  else if (p < 0.64) v = 0.26 * Math.sin(((p - 0.42) / 0.22) * Math.PI); // T (slightly asymmetric)
+  else v = 0;
+  return v * leadGain;
 }
 function plethWave(p) {
-  if (p < 0.16) return Math.sin((p / 0.16) * (Math.PI / 2));
-  if (p < 0.42) { const t = (p - 0.16) / 0.26; return 1 - 0.55 * t * t; }
-  if (p < 0.5)  { const t = (p - 0.42) / 0.08; return 0.45 + 0.1 * Math.sin(t * Math.PI); } // dicrotic notch
-  const t = (p - 0.5) / 0.5;
-  return 0.55 * (1 - t) * (1 - t);
+  if (p < 0.11) return Math.pow(p / 0.11, 0.65);                     // fast systolic upstroke
+  if (p < 0.40) { const t = (p - 0.11) / 0.29; return 1 - 0.52 * ease(t) * t; }
+  if (p < 0.50) { const t = (p - 0.40) / 0.10; return 0.47 + 0.12 * Math.sin(t * Math.PI); } // dicrotic notch
+  const t = (p - 0.50) / 0.50;
+  return 0.58 * (1 - ease(t)) * (1 - t);
 }
 function co2Wave(p) {
-  if (p < 0.08) return 0;
-  if (p < 0.18) return (p - 0.08) / 0.1;                  // upstroke
-  if (p < 0.62) return 0.92 + 0.08 * ((p - 0.18) / 0.44); // alveolar plateau
-  if (p < 0.70) return 1 - (p - 0.62) / 0.08;             // downstroke
+  if (p < 0.05) return 0;                                             // phase I — dead-space baseline
+  if (p < 0.19) return ease((p - 0.05) / 0.14);                       // phase II — eased upstroke
+  if (p < 0.62) return 0.94 + 0.06 * ((p - 0.19) / 0.43);             // phase III — alveolar plateau (slight upslope)
+  if (p < 0.71) return 1 - ease((p - 0.62) / 0.09);                   // phase 0 — eased downstroke
   return 0;
 }
-/* slow impedance respiration — one smooth breath per cycle */
-function respWave(p) { return Math.sin(p * Math.PI * 2 - Math.PI / 2) * 0.72; }
+/* impedance respiration: inspiration is muscle-driven and quicker than the
+ * passive, slower expiratory return — a plain sine breathes symmetrically,
+ * which no real chest does. */
+function respWave(p) {
+  if (p < 0.38) return -0.72 + 1.44 * ease(p / 0.38);
+  return 0.72 - 1.44 * ease((p - 0.38) / 0.62);
+}
 
 const LANES = [
-  { key: 'ecg',   gen: ecgWave,   rate: 'hr', ch: 'ecg',   label: 'I',     tag: '1mV' },
-  { key: 'ecg2',  gen: ecgWave,   rate: 'hr', ch: 'ecg',   label: 'II',    tag: '1mV' },
+  { key: 'ecg',   gen: ecgWave,   rate: 'hr', ch: 'ecg',   label: 'I',     tag: '1mV', gain: 0.72 },
+  { key: 'ecg2',  gen: ecgWave,   rate: 'hr', ch: 'ecg',   label: 'II',    tag: '1mV', gain: 1.05 },
   { key: 'pleth', gen: plethWave, rate: 'hr', ch: 'pleth', label: 'Pleth', tag: ''    },
   { key: 'co2',   gen: co2Wave,   rate: 'rr', ch: 'co2',   label: 'CO2',   tag: ''    },
   { key: 'resp',  gen: respWave,  rate: 'rr', ch: 'resp',  label: 'Resp',  tag: ''    },
@@ -106,7 +122,7 @@ class MonitorRenderer {
       for (const t of this.traces) {
         const hz = (t.rate === 'rr' ? this.vitals.rr : this.vitals.hr) / 60;
         const cycles = Math.max(1, Math.round(hz * (traceW / SWEEP_PX_PER_SEC)));
-        for (let x = 0; x < traceW; x++) t.buf[x] = t.gen(((x / traceW) * cycles) % 1);
+        for (let x = 0; x < traceW; x++) t.buf[x] = t.gen(((x / traceW) * cycles) % 1, t.gain ?? 1);
       }
       this.cursor = traceW;   // no blanking gap: the trace reads as complete
       this.blink = 0;         // flashOn === true → alarm chrome holds steady-on
@@ -139,10 +155,26 @@ class MonitorRenderer {
       for (let x = Math.floor(start); x < end; x++) {
         const i = ((x % traceW) + traceW) % traceW;
         t.phase = (t.phase + (hz * dt) / Math.max(advance, 0.0001)) % 1;
-        t.buf[i] = t.gen(t.phase);
+        t.buf[i] = t.gen(t.phase, t.gain ?? 1) + this._artifact(t, i);
       }
     }
     this.cursor = end % traceW;
+  }
+
+  /** A perfectly clean plotted curve is the tell of a fake monitor. Real
+   *  traces carry small, physiologically-plausible artifact: ECG baseline
+   *  wander from chest movement, a faint dicrotic ripple on the pleth, and
+   *  cardiogenic oscillation on the capnogram plateau. Amplitudes stay well
+   *  under the signal so they read as texture, never as noise. */
+  _artifact(t, i) {
+    const e = this.elapsed;
+    if (t.ch === 'ecg') {
+      return 0.03 * Math.sin(e * 2 * Math.PI * 0.24 + (t.key === 'ecg2' ? 0.7 : 0))
+           + 0.008 * Math.sin(e * 53 + i * 0.7);
+    }
+    if (t.ch === 'pleth') return 0.006 * Math.sin(e * 41 + i * 0.4);
+    if (t.ch === 'co2' && t.phase > 0.2 && t.phase < 0.6) return 0.012 * Math.sin(e * 24);
+    return 0;
   }
 
   draw() {
@@ -193,11 +225,11 @@ class MonitorRenderer {
       const amp = laneH * 0.36;
 
       c.strokeStyle = ch.color;
-      c.lineWidth = 2;
+      c.lineWidth = 1.7;
       c.lineJoin = 'round';
       c.lineCap = 'round';
       c.shadowColor = ch.color;
-      c.shadowBlur = 7;
+      c.shadowBlur = 4;
       c.beginPath();
       let pen = false;
       for (let x = 0; x < traceW; x++) {

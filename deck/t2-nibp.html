@@ -152,7 +152,7 @@
         <div class="sec__h"><b>תנוחת המטופל</b><span>השרוול חייב להיות בגובה הלב</span></div>
         <div class="opts" id="pos"></div>
         <label class="check" id="holdWrap" hidden>
-          <input type="checkbox" id="hold"> מחזיק את הגפה בגובה הלב
+          <input type="checkbox" id="hold"> ווידוא השרוול בגובה הלב
         </label>
       </div>
 
@@ -162,7 +162,7 @@
       </div>
 
       <div class="sec">
-        <div class="sec__h"><b>מידת שרוול</b><span>סימן המדד חייב ליפול בתוך תחום השרוול</span></div>
+        <div class="sec__h"><b>מידת שרוול</b><span>סימן המדד חייב ליפול בתוך תחום השרוול · מידת השרוול כ-40% מהיקף הגפה של החיה</span></div>
         <div class="opts" id="cuff"></div>
         <div class="fit" id="fit">
           <div class="fit__lbl">התאמה - היקף הגפה מול תחום השרוול</div>
@@ -176,7 +176,7 @@
       </div>
 
       <div class="sec">
-        <div class="sec__h"><b>מצב חיה</b><span>נגזר ממידת השרוול</span></div>
+        <div class="sec__h"><b>גודל החיה</b><span>נגזר ממידת השרוול</span></div>
         <div class="opts" id="mode"></div>
       </div>
 
@@ -232,7 +232,7 @@
   </div>
 
   <p class="note">
-    כל בחירה נרשמת בנפרד - תנוחה · מיקום · מידת שרוול · מצב חיה · אבחון תקלה · פענוח.
+    כל בחירה נרשמת בנפרד - תנוחה · מיקום · מידת שרוול · גודל החיה · אבחון תקלה · פענוח.
     האפשרויות השגויות תמיד זמינות לבחירה: הטעות היא המדידה. המערכת לעולם אינה חוסמת ואינה מתקנת.
     <br>ערכים קליניים להמחשה בלבד - טעונים אישור קליני מול תקן לפני שהם מנקדים אדם.
   </p>
@@ -351,7 +351,7 @@ el('start').onclick = ()=>{
     inside && c.n===largestFitting.n ? 'ok':'bad',
     !inside ? 'מחוץ לתחום - מוביל להערכת יתר של הלחץ'
             : (c.n!==largestFitting.n ? `שתי מידות התאימו - יש לבחור את הגדולה (${largestFitting.n})` : ''));
-  addLog('מצב חיה', S.mode==='small'?'קטן':'גדול',
+  addLog('גודל החיה', S.mode==='small'?'קטן':'גדול',
     S.mode===c.mode ? 'ok':'bad', S.mode!==c.mode ? `אינו תואם לשרוול ${c.n}`:'');
 
   S.attempts++;
