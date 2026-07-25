@@ -1,5 +1,9 @@
 # dependencies
 node_modules/
+.pnpm-store/
+
+# local QA screenshots
+.qa/
 
 # build output
 dist/
