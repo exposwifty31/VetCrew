@@ -10,6 +10,29 @@ describe("wire contracts stay in sync with the engine", () => {
       { seq: 2, type: "action", role: "technician", actorId: "t1", action: "task_step" },
       { seq: 3, type: "injection", injection: "nibp_artifact" },
       { seq: 4, type: "phase_change", phase: "running" },
+      {
+        seq: 5,
+        type: "task_start",
+        role: "technician",
+        actorId: "t1",
+        taskId: "t1",
+      },
+      {
+        seq: 6,
+        type: "task_submit",
+        role: "technician",
+        actorId: "t1",
+        taskId: "t1",
+        submission: { kind: "value_entry", values: { temp: 38.4 } },
+      },
+      {
+        seq: 7,
+        type: "task_submit",
+        role: "technician",
+        actorId: "t1",
+        taskId: "t7",
+        submission: { kind: "escalate" },
+      },
     ];
     for (const sample of samples) {
       expect(engineEventSchema.safeParse(sample).success).toBe(true);

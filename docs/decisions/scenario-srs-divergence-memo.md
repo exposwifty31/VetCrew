@@ -1,6 +1,6 @@
 # Decision memo — shipped scenario vs. base-rung SRS divergence
 
-**Status:** PROPOSED — awaiting Dan's decision. Do not build the Sprint 3 station UI until this is resolved (lifecycle audit V5, 2026-07-25).
+**Status:** OPTION (A) ADOPTED PROVISIONALLY — driving Sprint 3. Dan to countersign or override in §Decision.
 **Raised by:** dev-team lifecycle audit, per the SRS's own footer rule ("any conflict with this SRS is a defect — raise it").
 
 ## The divergence
@@ -31,4 +31,4 @@ Either is fine; **undocumented divergence is not.**
 
 ## Decision
 
-_(to be filled by Dan; record date and chosen option)_
+**2026-07-25 — Option (a) adopted provisionally** on the owner's instruction to kick off Sprint 3 (and as the recommendation of both the architecture and lifecycle audits): `resp-distress` is reclassified as the engine-proving demo; the stepped seven-task SRS scenario is authored as **Scenario #2** and is what the Sprint 3 trainee station renders. Reversible at low cost until the station UI ships. **Dan to countersign or override here.**

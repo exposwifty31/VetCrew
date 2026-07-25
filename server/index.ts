@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +9,8 @@ import express from "express";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
+import { RoomRegistry } from "./live/room-registry.js";
+import { attachLiveSocket } from "./live/socket.js";
 import { createSessionRouter } from "./routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "./scenarios.js";
 import { ensurePilotTenant } from "./tenancy.js";
@@ -48,6 +51,8 @@ if (env.NODE_ENV === "production") {
 }
 
 async function boot() {
+  const httpServer = createServer(app);
+
   if (env.DATABASE_URL !== undefined) {
     const { pool, db } = createDb(env.DATABASE_URL);
     const applied = await runMigrations(pool);
@@ -57,12 +62,20 @@ async function boot() {
     const tenantId = await ensurePilotTenant(db);
     await syncScenarios(db, tenantId, loadScenarioFiles());
     app.use("/api/sessions", createSessionRouter(db, tenantId));
+
+    const registry = new RoomRegistry(db);
+    attachLiveSocket(httpServer, {
+      tenantId,
+      registry,
+      // Security veto: Clerk role-binding not shipped; loud bypass in development only.
+      allowDevBypass: !clerkEnabled && env.NODE_ENV === "development",
+    });
     dbReady = true;
   } else {
     console.warn("DATABASE_URL not set — booting without a database (dev only, no session API)");
   }
 
-  app.listen(env.PORT, () => {
+  httpServer.listen(env.PORT, () => {
     console.log(`vetcrew server listening on :${env.PORT}`);
   });
 }

@@ -1,26 +1,27 @@
-import type { EngineEvent } from "@vetcrew/engine";
+import type { EngineEventBody } from "@vetcrew/shared";
 
 /**
  * The canonical scripted demo run, shared by the integration suite, the E2E
  * suite, and anything else that needs "the" demo session: briefing -> running,
  * a deliberate priority inversion (IV access attempted before airway/pulses
  * check — the recorded floor failure), then debrief at 120s.
+ *
+ * Bodies have NO seq — the server assigns contiguous seqs on append.
  */
-export function demoEvents(actorId: string): EngineEvent[] {
-  const events: EngineEvent[] = [];
-  let seq = 0;
+export function demoEvents(actorId: string): EngineEventBody[] {
+  const events: EngineEventBody[] = [];
   let timeMs = 0;
   const tick = (upToMs: number) => {
     while (timeMs < upToMs) {
-      events.push({ seq: ++seq, type: "tick", dtMs: 5000 });
+      events.push({ type: "tick", dtMs: 5000 });
       timeMs += 5000;
     }
   };
   const act = (action: string) => {
-    events.push({ seq: ++seq, type: "action", role: "technician", actorId, action });
+    events.push({ type: "action", role: "technician", actorId, action });
   };
-  events.push({ seq: ++seq, type: "phase_change", phase: "briefing" });
-  events.push({ seq: ++seq, type: "phase_change", phase: "running" });
+  events.push({ type: "phase_change", phase: "briefing" });
+  events.push({ type: "phase_change", phase: "running" });
   tick(10_000);
   act("vitals_callout");
   tick(25_000);
@@ -32,6 +33,6 @@ export function demoEvents(actorId: string): EngineEvent[] {
   tick(90_000);
   act("give_drug_sc");
   tick(120_000);
-  events.push({ seq: ++seq, type: "phase_change", phase: "debrief" });
+  events.push({ type: "phase_change", phase: "debrief" });
   return events;
 }

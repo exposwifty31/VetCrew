@@ -1,10 +1,11 @@
-import type { EngineEvent } from "@vetcrew/engine";
+import type { EngineEventBody } from "@vetcrew/shared";
 import { and, eq } from "drizzle-orm";
 
 import { createDb } from "../db/client.js";
 import { runMigrations } from "../db/migrate.js";
-import { scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
+import { scenarios, simSessions } from "../db/schema/index.js";
 import { loadEnv } from "../env.js";
+import { appendSessionEvents } from "../live/event-append.js";
 import { loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
 
@@ -18,22 +19,21 @@ import { ensurePilotTenant } from "../tenancy.js";
 
 const DEMO_SEED = 20260725;
 
-function buildDemoEvents(): EngineEvent[] {
-  const events: EngineEvent[] = [];
-  let seq = 0;
+function buildDemoBodies(): EngineEventBody[] {
+  const bodies: EngineEventBody[] = [];
   let timeMs = 0;
   const tick = (upToMs: number) => {
     while (timeMs < upToMs) {
-      events.push({ seq: ++seq, type: "tick", dtMs: 5000 });
+      bodies.push({ type: "tick", dtMs: 5000 });
       timeMs += 5000;
     }
   };
   const act = (action: string) => {
-    events.push({ seq: ++seq, type: "action", role: "technician", actorId: "demo-trainee", action });
+    bodies.push({ type: "action", role: "technician", actorId: "demo-trainee", action });
   };
 
-  events.push({ seq: ++seq, type: "phase_change", phase: "briefing" });
-  events.push({ seq: ++seq, type: "phase_change", phase: "running" });
+  bodies.push({ type: "phase_change", phase: "briefing" });
+  bodies.push({ type: "phase_change", phase: "running" });
   tick(10_000);
   act("vitals_callout");
   tick(25_000);
@@ -43,12 +43,12 @@ function buildDemoEvents(): EngineEvent[] {
   tick(55_000);
   act("airway_pulses_check");
   tick(60_000);
-  events.push({ seq: ++seq, type: "injection", injection: "monitor_artifact" });
+  bodies.push({ type: "injection", injection: "monitor_artifact" });
   tick(90_000);
   act("give_drug_sc");
   tick(120_000);
-  events.push({ seq: ++seq, type: "phase_change", phase: "debrief" });
-  return events;
+  bodies.push({ type: "phase_change", phase: "debrief" });
+  return bodies;
 }
 
 async function main() {
@@ -62,7 +62,9 @@ async function main() {
   const scenarioFiles = loadScenarioFiles();
   await syncScenarios(db, tenantId, scenarioFiles);
 
-  const authored = scenarioFiles[0];
+  // Prefer the demo real-time scenario for the AAR seed (not the stepped station).
+  const authored =
+    scenarioFiles.find((s) => s.slug === "base-rung-resp-distress") ?? scenarioFiles[0];
   if (authored === undefined) throw new Error("no scenarios found");
 
   const scenarioRows = await db
@@ -85,7 +87,7 @@ async function main() {
       scenarioId: scenarioRow.id,
       scenarioVersion: authored.version,
       seed: DEMO_SEED,
-      phase: "debrief",
+      phase: "draft",
       traineeId: "demo-trainee",
       traineeTimeInTrainingDays: 180,
       startedAt: new Date(),
@@ -94,20 +96,15 @@ async function main() {
   const session = inserted[0];
   if (session === undefined) throw new Error("failed to create session");
 
-  const events = buildDemoEvents();
-  await db.insert(sessionEvents).values(
-    events.map((event) => ({
-      tenantId,
-      sessionId: session.id,
-      seq: event.seq,
-      type: event.type,
-      role: event.type === "action" ? event.role : null,
-      actorId: event.type === "action" ? event.actorId : null,
-      payload: event,
-    })),
-  );
+  const bodies = buildDemoBodies();
+  const result = await appendSessionEvents(db, {
+    tenantId,
+    sessionId: session.id,
+    bodies,
+  });
+  if (result.kind !== "ok") throw new Error("failed to append demo events");
 
-  console.log(`demo session seeded: ${session.id} (${events.length} events)`);
+  console.log(`demo session seeded: ${session.id} (${result.events.length} events)`);
   console.log(`AAR: http://localhost:5173/#/aar/${session.id}`);
   await pool.end();
 }

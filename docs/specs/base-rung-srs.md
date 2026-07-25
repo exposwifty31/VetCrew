@@ -1,9 +1,11 @@
 # Base Rung — Scenario #1 SRS (the v1 MVP)
 
-**Status:** draft for review · **Date:** 2026-07-24
+**Status:** draft for review · **Date:** 2026-07-24 · **Amended 2026-07-25** (divergence memo Option a)
 **Purpose:** the single consolidated, buildable specification for the first scenario — the MVP the whole pipeline exists to produce. Until now this was spread across `CLAUDE.md §5`, `mountain-decision-memo.md`, `design-system/HANDOFF.md`, and the doctrine skills; this document reconciles them into one enumerated feature list with pass/fail criteria, so development doesn't begin from five documents held in the head. (Closes audit finding F3.)
 
 **Scope discipline:** this specifies **one scenario, one role, technical competence, no crew, no crash.** Everything a later tier or the summit adds is listed under §9 Non-goals. If a requirement here implies real-time deterioration, multi-role, or CPR, it is out of scope — flag it.
+
+**Amendment (Option a):** `scenarios/base-rung-resp-distress.json` is the **engine-proving demo** (real-time deterioration). The stepped seven-task content in this SRS is authored as `scenarios/base-rung-stepped-tasks.json` and is what the Sprint 3 trainee station targets. Non-technical scoring for that scenario is Situation Awareness + Decision-Making only — no solo communication hook (`CLAUDE.md` §2.4).
 
 ---
 

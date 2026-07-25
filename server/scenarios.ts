@@ -31,8 +31,10 @@ export function compileScenario(authored: AuthoredScenario): ScenarioDef {
   return {
     slug: authored.slug,
     version: authored.version,
+    species: authored.species,
     vitals: authored.engine.vitals,
     triggers: authored.engine.triggers,
+    ...(authored.tasks.length > 0 ? { tasks: authored.tasks } : {}),
   };
 }
 
