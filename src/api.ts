@@ -2,8 +2,15 @@ import type {
   AarModel,
   ChecklistResult,
   SessionPhase,
+  TaskEvaluation,
 } from "@vetcrew/engine";
-import type { AntsDomain } from "@vetcrew/shared";
+import type {
+  AntsDomain,
+  TraineeEvidenceResponse,
+  TraineeTrendResponse,
+} from "@vetcrew/shared";
+
+export type { TraineeEvidenceResponse, TraineeTrendResponse };
 
 /** Typed client for the session API (proxied /api → server). */
 
@@ -41,6 +48,7 @@ export interface AarResponse {
     finalPhase: SessionPhase;
   };
   checklist: ChecklistResult;
+  tasks: TaskEvaluation;
   ratings: {
     id: string;
     raterId: string;
@@ -77,6 +85,37 @@ export async function fetchAar(sessionId: string): Promise<AarResponse> {
   const res = await fetch(`/api/sessions/${sessionId}/aar`);
   if (!res.ok) throw new Error(`aar: ${res.status}`);
   return (await res.json()) as AarResponse;
+}
+
+function authHeaders(token: string | null | undefined): HeadersInit {
+  if (token === null || token === undefined || token.length === 0) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchTraineeEvidence(
+  traineeId: string,
+  token?: string | null,
+): Promise<TraineeEvidenceResponse> {
+  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/evidence`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`evidence: ${res.status}`);
+  return (await res.json()) as TraineeEvidenceResponse;
+}
+
+export async function fetchTraineeTrend(
+  traineeId: string,
+  options?: { scenarioSlug?: string; token?: string | null },
+): Promise<TraineeTrendResponse> {
+  const qs =
+    options?.scenarioSlug === undefined
+      ? ""
+      : `?scenarioSlug=${encodeURIComponent(options.scenarioSlug)}`;
+  const res = await fetch(`/api/trainees/${encodeURIComponent(traineeId)}/trend${qs}`, {
+    headers: authHeaders(options?.token),
+  });
+  if (!res.ok) throw new Error(`trend: ${res.status}`);
+  return (await res.json()) as TraineeTrendResponse;
 }
 
 export async function submitRatings(

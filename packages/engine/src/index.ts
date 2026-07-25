@@ -71,3 +71,14 @@ export {
   type AarTimelineEntry,
   type AarVitalsSample,
 } from "./aar.js";
+export {
+  buildTraineeTrend,
+  cohortBandStatus,
+  overallAnts,
+  technicalPercent,
+  type CohortBandStatus,
+  type DomainHint,
+  type OverallDrift,
+  type TraineeTrendModel,
+  type TrendPointInput,
+} from "./scoring-surfaces.js";

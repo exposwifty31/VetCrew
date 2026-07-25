@@ -1,6 +1,12 @@
 import { randomInt } from "node:crypto";
 
-import { buildAar, evaluateChecklist, type EngineEvent, type SessionPhase } from "@vetcrew/engine";
+import {
+  buildAar,
+  evaluateChecklist,
+  evaluateTasks,
+  type EngineEvent,
+  type SessionPhase,
+} from "@vetcrew/engine";
 import {
   antsDomainSchema,
   authoredScenarioSchema,
@@ -203,8 +209,10 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
     }
     const authored = authoredScenarioSchema.parse(scenarioRow.definition);
     const events = await loadEvents(db, session.id);
-    const aar = buildAar(session.seed, events, compileScenario(authored));
+    const compiled = compileScenario(authored);
+    const aar = buildAar(session.seed, events, compiled);
     const checklist = evaluateChecklist(events, authored.checklist);
+    const tasks = evaluateTasks(session.seed, events, compiled);
     const ratings = await db
       .select()
       .from(antsRatings)
@@ -234,6 +242,7 @@ export function createSessionRouter(db: Db, tenantId: string): Router {
         finalPhase: aar.finalState.phase,
       },
       checklist,
+      tasks,
       ratings,
     });
   });

@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
 
 import { createSession, fetchSessions, type SessionSummary } from "./api.js";
+import AuthBar from "./components/AuthBar.js";
 import { t } from "./i18n";
 import AarPage from "./pages/AarPage.js";
 import InstructorConsolePage from "./pages/InstructorConsolePage.js";
+import ManagerEvidencePage from "./pages/ManagerEvidencePage.js";
 import StationPage from "./pages/StationPage.js";
 
 interface Health {
@@ -90,6 +92,14 @@ export default function App() {
   if (instructorMatch?.[1] !== undefined) {
     return <InstructorConsolePage sessionId={instructorMatch[1]} />;
   }
+  const managerTrendMatch = /^#\/manager\/([^/]+)\/trend$/.exec(route);
+  if (managerTrendMatch?.[1] !== undefined) {
+    return <ManagerEvidencePage traineeId={decodeURIComponent(managerTrendMatch[1])} focus="trend" />;
+  }
+  const managerMatch = /^#\/manager\/(.+)$/.exec(route);
+  if (managerMatch?.[1] !== undefined) {
+    return <ManagerEvidencePage traineeId={decodeURIComponent(managerMatch[1])} />;
+  }
   return <HomePage />;
 }
 
@@ -145,6 +155,7 @@ function HomePage() {
 
   return (
     <main style={{ maxWidth: 640, marginInline: "auto", padding: "var(--sp-8, 32px)" }}>
+      <AuthBar />
       <h1 style={{ fontSize: "var(--fs-xl, 28px)", marginBlockEnd: 4 }}>{t("app.title")}</h1>
       <p style={{ color: "var(--text-secondary, #9aa7b8)", marginBlockStart: 0 }}>{t("shell.subtitle")}</p>
 
@@ -216,8 +227,8 @@ function HomePage() {
             style={{
               minHeight: 48,
               paddingInline: 16,
-              background: "transparent",
               // Outline accent must meet WCAG AA on --bg (#0a1216): #008080 is ~3.95:1.
+              background: "transparent",
               color: "var(--action-accent-contrast, #5eead4)",
               border: "2px solid var(--action-accent-contrast, #5eead4)",
               borderRadius: 8,
@@ -227,6 +238,23 @@ function HomePage() {
           >
             {startingInstructor ? t("home.instructor.starting") : t("home.instructor.start")}
           </button>
+          <a
+            href="#/manager/pitch-trainee"
+            style={{
+              minHeight: 48,
+              paddingInline: 16,
+              display: "inline-flex",
+              alignItems: "center",
+              background: "transparent",
+              color: "var(--text-primary, #e8eef4)",
+              border: "1px solid var(--border-default, #2a3a42)",
+              borderRadius: 8,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            {t("home.manager.open")}
+          </a>
         </div>
       </section>
 

@@ -73,3 +73,15 @@ export {
   type Scenario,
   type SimSession,
 } from "./entities.js";
+export {
+  cohortBandStatusSchema,
+  domainHintSchema,
+  evidenceSessionSchema,
+  overallDriftSchema,
+  traineeEvidenceResponseSchema,
+  traineeTrendResponseSchema,
+  trendPointSchema,
+  type EvidenceSession,
+  type TraineeEvidenceResponse,
+  type TraineeTrendResponse,
+} from "./scoring-surfaces.js";

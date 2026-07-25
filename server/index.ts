@@ -6,11 +6,13 @@ import { fileURLToPath } from "node:url";
 import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 
+import { requireSignedIn } from "./auth.js";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
 import { RoomRegistry } from "./live/room-registry.js";
 import { attachLiveSocket } from "./live/socket.js";
+import { createManagerRouter } from "./routes/manager.js";
 import { createSessionRouter } from "./routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "./scenarios.js";
 import { ensurePilotTenant } from "./tenancy.js";
@@ -62,13 +64,16 @@ async function boot() {
     const tenantId = await ensurePilotTenant(db);
     await syncScenarios(db, tenantId, loadScenarioFiles());
     app.use("/api/sessions", createSessionRouter(db, tenantId));
+    // Manager evidence is employee-performance PII — signed-in when Clerk is on.
+    app.use("/api", createManagerRouter(db, tenantId, requireSignedIn(clerkEnabled)));
 
     const registry = new RoomRegistry(db);
     attachLiveSocket(httpServer, {
       tenantId,
       registry,
-      // Security veto: Clerk role-binding not shipped; loud bypass in development only.
-      allowDevBypass: !clerkEnabled && env.NODE_ENV === "development",
+      // Clerk keys may be present for SPA/manager auth while role_stations
+      // binding is still open — keep the loud join bypass in development only.
+      allowDevBypass: env.NODE_ENV === "development",
     });
     dbReady = true;
   } else {
