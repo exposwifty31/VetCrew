@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 
-import { isAuthEnabled, readAuth, requireSignedIn } from "./auth.js";
+import { createReadAuthFromToken, isAuthEnabled, readAuth, requireSignedIn } from "./auth.js";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
@@ -74,6 +74,7 @@ async function boot() {
     // E2E/integration leave Clerk keys unset so requireSignedIn is a no-op.
     const authEnabled = isAuthEnabled(clerkEnabled);
     const signedIn = requireSignedIn(clerkEnabled);
+    const allowDevBypass = env.NODE_ENV === "development" && !authEnabled;
     app.use(
       "/api/sessions",
       signedIn,
@@ -86,9 +87,10 @@ async function boot() {
     attachLiveSocket(httpServer, {
       tenantId,
       registry,
-      // Clerk keys may be present for SPA/manager auth while role_stations
-      // binding is still open — keep the loud join bypass in development only.
-      allowDevBypass: env.NODE_ENV === "development",
+      db,
+      authEnabled,
+      readAuthFromToken: createReadAuthFromToken(secretKey),
+      allowDevBypass,
       corsOrigin: resolveCorsOrigin(env.NODE_ENV),
     });
     dbReady = true;

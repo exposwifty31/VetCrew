@@ -1,3 +1,4 @@
+import { verifyToken } from "@clerk/backend";
 import { getAuth } from "@clerk/express";
 import type { NextFunction, Request, Response } from "express";
 
@@ -19,6 +20,16 @@ export function isTestAuthEnabled(): boolean {
 
 export function isAuthEnabled(clerkEnabled: boolean): boolean {
   return clerkEnabled || isTestAuthEnabled();
+}
+
+export type TokenAuthReader = (token: string | undefined) => Promise<AuthSnapshot>;
+
+/** Normalize socket `auth.token` — accepts raw JWT or `Bearer …` prefix. */
+export function authorizationHeaderFromToken(token: string | undefined): string | undefined {
+  if (token === undefined || token.length === 0) {
+    return undefined;
+  }
+  return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
 }
 
 export function parseTestBearer(header: string | undefined): AuthSnapshot | null {
@@ -89,6 +100,44 @@ export function readAuth(req: Request): AuthSnapshot {
     return testAuth;
   }
   return readClerkAuth(req);
+}
+
+/** Socket handshake token → AuthSnapshot (test bearer first, then Clerk JWT). */
+export async function readAuthFromToken(
+  token: string | undefined,
+  clerkSecretKey?: string,
+): Promise<AuthSnapshot> {
+  const testAuth = parseTestBearer(authorizationHeaderFromToken(token));
+  if (testAuth !== null) {
+    return testAuth;
+  }
+  if (clerkSecretKey === undefined) {
+    return { isAuthenticated: false, userId: null, role: null };
+  }
+  const header = authorizationHeaderFromToken(token);
+  if (header === undefined) {
+    return { isAuthenticated: false, userId: null, role: null };
+  }
+  const jwt = header.slice("Bearer ".length);
+  try {
+    const payload = await verifyToken(jwt, { secretKey: clerkSecretKey });
+    const userId = payload.sub ?? null;
+    if (userId === null) {
+      return { isAuthenticated: false, userId: null, role: null };
+    }
+    const claims = payload as Record<string, unknown>;
+    return {
+      isAuthenticated: true,
+      userId,
+      role: readClerkRole(claims),
+    };
+  } catch {
+    return { isAuthenticated: false, userId: null, role: null };
+  }
+}
+
+export function createReadAuthFromToken(clerkSecretKey: string | undefined): TokenAuthReader {
+  return (token: string | undefined) => readAuthFromToken(token, clerkSecretKey);
 }
 
 /**

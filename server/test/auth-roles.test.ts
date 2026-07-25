@@ -5,9 +5,11 @@ import express from "express";
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import {
+  authorizationHeaderFromToken,
   isAuthEnabled,
   parseTestBearer,
   readAuth,
+  readAuthFromToken,
   requireRole,
   requireSignedIn,
   type AuthSnapshot,
@@ -22,6 +24,46 @@ afterEach(() => {
   } else {
     process.env.VETCREW_TEST_AUTH = ORIGINAL_TEST_AUTH;
   }
+});
+
+describe("authorizationHeaderFromToken", () => {
+  test("returns undefined for empty token", () => {
+    expect(authorizationHeaderFromToken(undefined)).toBeUndefined();
+    expect(authorizationHeaderFromToken("")).toBeUndefined();
+  });
+
+  test("adds Bearer prefix when missing", () => {
+    expect(authorizationHeaderFromToken("test:user:trainee")).toBe("Bearer test:user:trainee");
+  });
+
+  test("preserves existing Bearer prefix", () => {
+    expect(authorizationHeaderFromToken("Bearer jwt-here")).toBe("Bearer jwt-here");
+  });
+});
+
+describe("readAuthFromToken", () => {
+  test("parses test bearer with or without Bearer prefix", async () => {
+    process.env.VETCREW_TEST_AUTH = "1";
+    await expect(readAuthFromToken("test:tok-user:trainee")).resolves.toEqual({
+      isAuthenticated: true,
+      userId: "tok-user",
+      role: "trainee",
+    } satisfies AuthSnapshot);
+    await expect(readAuthFromToken("Bearer test:tok-user:trainee")).resolves.toEqual({
+      isAuthenticated: true,
+      userId: "tok-user",
+      role: "trainee",
+    } satisfies AuthSnapshot);
+  });
+
+  test("returns unauthenticated when token is missing", async () => {
+    process.env.VETCREW_TEST_AUTH = "1";
+    await expect(readAuthFromToken(undefined)).resolves.toEqual({
+      isAuthenticated: false,
+      userId: null,
+      role: null,
+    });
+  });
 });
 
 describe("parseTestBearer", () => {

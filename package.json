@@ -26,6 +26,7 @@
     "guard:dead": "knip"
   },
   "dependencies": {
+    "@clerk/backend": "^3.13.0",
     "@clerk/express": "^2.1.45",
     "@clerk/react": "^6.12.7",
     "@vetcrew/engine": "workspace:*",

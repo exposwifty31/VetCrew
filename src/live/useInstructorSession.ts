@@ -22,17 +22,27 @@ export type UseInstructorSessionResult = {
   readonly sendIntent: (intent: ClientIntent) => void;
 };
 
+export type UseInstructorSessionOptions = {
+  /** Dev-bypass only — ignored when the server stamps actorId from auth. */
+  readonly actorId?: string;
+  readonly getToken?: () => Promise<string | null>;
+};
+
 /** Thin instructor live client — renders instructorView only, never RoleView. */
 export function useInstructorSession(
   sessionId: string,
-  actorId = "dev-instructor",
+  options: UseInstructorSessionOptions = {},
 ): UseInstructorSessionResult {
+  const actorId = options.actorId ?? "dev-instructor";
+  const getToken = options.getToken;
   const [instructorView, setInstructorView] = useState<InstructorViewWire | null>(null);
   const [presence, setPresence] = useState<SessionPresence["connected"]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
   const [lastReject, setLastReject] = useState<SessionReject | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const lastSeqRef = useRef(0);
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   useEffect(() => {
     setInstructorView(null);
@@ -40,67 +50,77 @@ export function useInstructorSession(
     setConnectionStatus("connecting");
     lastSeqRef.current = 0;
 
-    const socket = io({
-      path: "/socket.io",
-      transports: ["websocket", "polling"],
-      reconnection: true,
-    });
-    socketRef.current = socket;
+    let cancelled = false;
+    let socket: Socket | null = null;
 
-    const join = () => {
-      socket.emit(LIVE_EVENTS.join, {
-        sessionId,
-        stationKind: "instructor",
-        role: "instructor",
-        lastSeq: lastSeqRef.current,
-        actorId,
+    void (async () => {
+      const token = getTokenRef.current !== undefined ? await getTokenRef.current() : null;
+      if (cancelled) return;
+
+      socket = io({
+        path: "/socket.io",
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        auth: token !== null ? { token } : {},
       });
-    };
+      socketRef.current = socket;
 
-    socket.on("connect", () => {
-      setConnectionStatus("connecting");
-      join();
-    });
-    socket.on("disconnect", () => {
-      setConnectionStatus("reconnecting");
-      setInstructorView(null);
-    });
-    socket.io.on("reconnect_attempt", () => {
-      setConnectionStatus("reconnecting");
-      setInstructorView(null);
-    });
-    socket.on(LIVE_EVENTS.snapshot, (raw: unknown) => {
-      const parsed = sessionSnapshotSchema.safeParse(raw);
-      if (!parsed.success || parsed.data.kind !== "instructor") return;
-      lastSeqRef.current = parsed.data.seq;
-      setInstructorView(parsed.data.instructorView);
-      setConnectionStatus("connected");
-    });
-    socket.on(LIVE_EVENTS.presence, (raw: unknown) => {
-      const parsed = sessionPresenceSchema.safeParse(raw);
-      if (parsed.success) setPresence(parsed.data.connected);
-    });
-    socket.on(LIVE_EVENTS.reject, (raw: unknown) => {
-      const parsed = sessionRejectSchema.safeParse(raw);
-      if (parsed.success) setLastReject(parsed.data);
-    });
-    socket.on(LIVE_EVENTS.connection, (raw: unknown) => {
-      if (
-        raw !== null &&
-        typeof raw === "object" &&
-        "status" in raw &&
-        (raw as { status: string }).status === "closed"
-      ) {
-        setConnectionStatus("offline");
-      }
-    });
+      const join = () => {
+        socket?.emit(LIVE_EVENTS.join, {
+          sessionId,
+          stationKind: "instructor",
+          role: "instructor",
+          lastSeq: lastSeqRef.current,
+          actorId,
+        });
+      };
+
+      socket.on("connect", () => {
+        setConnectionStatus("connecting");
+        join();
+      });
+      socket.on("disconnect", () => {
+        setConnectionStatus("reconnecting");
+        setInstructorView(null);
+      });
+      socket.io.on("reconnect_attempt", () => {
+        setConnectionStatus("reconnecting");
+        setInstructorView(null);
+      });
+      socket.on(LIVE_EVENTS.snapshot, (raw: unknown) => {
+        const parsed = sessionSnapshotSchema.safeParse(raw);
+        if (!parsed.success || parsed.data.kind !== "instructor") return;
+        lastSeqRef.current = parsed.data.seq;
+        setInstructorView(parsed.data.instructorView);
+        setConnectionStatus("connected");
+      });
+      socket.on(LIVE_EVENTS.presence, (raw: unknown) => {
+        const parsed = sessionPresenceSchema.safeParse(raw);
+        if (parsed.success) setPresence(parsed.data.connected);
+      });
+      socket.on(LIVE_EVENTS.reject, (raw: unknown) => {
+        const parsed = sessionRejectSchema.safeParse(raw);
+        if (parsed.success) setLastReject(parsed.data);
+      });
+      socket.on(LIVE_EVENTS.connection, (raw: unknown) => {
+        if (
+          raw !== null &&
+          typeof raw === "object" &&
+          "status" in raw &&
+          (raw as { status: string }).status === "closed"
+        ) {
+          setConnectionStatus("offline");
+        }
+      });
+    })();
 
     return () => {
-      socket.emit(LIVE_EVENTS.leave, {});
-      socket.disconnect();
+      cancelled = true;
+      socket?.emit(LIVE_EVENTS.leave, {});
+      socket?.disconnect();
       socketRef.current = null;
     };
-  }, [sessionId, actorId]);
+  }, [sessionId, actorId, getToken]);
 
   const sendIntent = (intent: ClientIntent) => {
     const socket = socketRef.current;

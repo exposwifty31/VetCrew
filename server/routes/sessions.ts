@@ -166,6 +166,28 @@ function resolveCreateBindings(
   }
 }
 
+/** Live join allowlist — sessionId + scenario role must match assigned_user_id. */
+export async function assertRoleStationBinding(
+  db: Db,
+  tenantId: string,
+  sessionId: string,
+  role: string,
+  userId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ assignedUserId: roleStations.assignedUserId })
+    .from(roleStations)
+    .where(
+      and(
+        eq(roleStations.tenantId, tenantId),
+        eq(roleStations.sessionId, sessionId),
+        eq(roleStations.role, role),
+      ),
+    );
+  const row = rows[0];
+  return row !== undefined && row.assignedUserId === userId;
+}
+
 /** REST ownership — manager/instructor see all; trainees only assigned stations. */
 export async function assertSessionAccess(
   db: Db,
