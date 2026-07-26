@@ -49,6 +49,6 @@ Production roles: Clerk `user.publicMetadata.vetcrewRole` (`manager` \| `instruc
 
 ## Product posture
 
-- Two scoring axes: technical checklist/tasks + ANTS (formative until three raters).
+- Two scoring axes: technical checklist/tasks + ANTS (formative until normative data exists and evidence is reviewed by three raters or asynchronously by multiple raters).
 - Cross-person readiness bands withheld (`cohort_insufficient`) until cohort N exists.
 - Unreviewed scenarios (`clinically_reviewed: false`) are internal-testing only.

@@ -43,12 +43,18 @@ if (secretKey !== undefined && publishableKey !== undefined) {
 let dbReady = false;
 
 app.get("/api/health", (_req, res) => {
-  const dbStatus =
-    dbReady ? "ready" : env.DATABASE_URL === undefined ? "not-configured" : "starting";
+  let dbStatus: "ready" | "starting" | "not-configured";
+  if (dbReady) {
+    dbStatus = "ready";
+  } else if (env.DATABASE_URL === undefined) {
+    dbStatus = "not-configured";
+  } else {
+    dbStatus = "starting";
+  }
   const payload = {
     ok: dbReady || env.DATABASE_URL === undefined,
     auth: clerkEnabled ? ("clerk" as const) : ("dev-bypass" as const),
-    db: dbStatus as "ready" | "starting" | "not-configured",
+    db: dbStatus,
   };
   // Fail the probe while Postgres is configured but not yet migrated/ready.
   if (env.DATABASE_URL !== undefined && !dbReady) {

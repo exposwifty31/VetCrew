@@ -3,7 +3,7 @@
 **Status:** pre-v1 pitch package — deterministic engine; **shipped:** trainee station, instructor console (live inject/pause), manager evidence desk, AAR/ANTS; auth-bound live join via Clerk + `role_stations`; CI/e2e test-auth seam (`VETCREW_TEST_AUTH`). Solo build (Dan), AI-agent-driven.
 **Last updated:** 2026-07-25 (Sprint 5a + auth-bound pitch path; Reviewer is the pitch audience)
 
-**Current milestone (2026-07-25):** pitch-ready package for the Reviewer (§6) — concept end-to-end and UI visible enough to judge problem/solution fit. **Shipped:** station + instructor + manager under auth-bound join. **Open HITL:** clinical review stamp ([#12](https://github.com/exposwifty31/VetCrew/issues/12)) — Reviewer must stamp `clinically_reviewed` before real-person scores; code gates only. **Future:** full crew multi-station. No hiring verdicts until N + three raters.
+**Current milestone (2026-07-25):** pitch-ready package for the Reviewer (§6) — concept end-to-end and UI visible enough to judge problem/solution fit. **Shipped:** station + instructor + manager under auth-bound join. **Open HITL:** clinical review stamp ([#12](https://github.com/exposwifty31/VetCrew/issues/12)) — Reviewer must stamp `clinically_reviewed` before real-person scores; code gates only. **Future:** full crew multi-station. No hiring verdicts until normative data exists and evidence is reviewed by three raters or asynchronously by multiple raters from recorded sessions.
 
 Read this file before writing any code. It encodes decisions that are expensive to reverse and marks the ones that are cheap. Do not silently re-litigate anything under "Frozen for v1"; do raise it explicitly if you think it's wrong.
 
