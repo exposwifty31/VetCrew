@@ -18,5 +18,8 @@ export const antsRatings = vcTable("ants_ratings", {
   domain: text("domain").notNull(),
   score: integer("score").notNull(),
   evidenceEventSeqs: integer("evidence_event_seqs").array().notNull(),
+  /** Log head at rating time — tamper-evident bind (migration 0006). */
+  logHeadSeq: integer("log_head_seq").notNull(),
+  logHeadHash: text("log_head_hash").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

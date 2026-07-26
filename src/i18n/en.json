@@ -60,6 +60,7 @@
   "manager.evidence.tit": "TiT {days}d",
   "manager.evidence.tech": "tech {percent}%",
   "manager.evidence.ants": "ANTS {score}",
+  "manager.evidence.logHead": "log head {seq}",
   "manager.evidence.internalBadge": "Internal only",
   "manager.evidence.openAar": "Open AAR",
   "aar.tasks.heading": "Tasks — expected vs actual",

@@ -331,6 +331,13 @@ describe("score -> source-event traceability", () => {
     expect(body.ratings).toHaveLength(3);
     const tm = body.ratings.find((r) => r.domain === "task_management");
     expect(tm?.evidenceEventSeqs).toEqual([4, 7]);
+
+    const attested = await pool.query<{ log_head_seq: number; log_head_hash: string }>(
+      `select log_head_seq, log_head_hash from vc_ants_ratings where session_id = $1 limit 1`,
+      [session.id],
+    );
+    expect(attested.rows[0]?.log_head_seq).toBeGreaterThan(0);
+    expect(attested.rows[0]?.log_head_hash).toMatch(/^[a-f0-9]{64}$/);
   });
 });
 

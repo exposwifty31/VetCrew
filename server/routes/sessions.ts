@@ -29,6 +29,7 @@ import {
   sessionEvents,
   simSessions,
 } from "../db/schema/index.js";
+import { attestEvidenceSeqs, loadEventLogRows } from "../evidence-attest.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { compileScenario } from "../scenarios.js";
 
@@ -494,17 +495,17 @@ export function createSessionRouter(
       if (session.traineeTimeInTrainingDays === null) return { kind: "no_time_in_training" };
       // Evidence must point at events that actually exist in THIS session —
       // a rating with fabricated evidence is worse than no rating (§2.3).
-      const existingSeqRows = await tx
-        .select({ seq: sessionEvents.seq })
-        .from(sessionEvents)
-        .where(eq(sessionEvents.sessionId, session.id));
-      const existingSeqs = new Set(existingSeqRows.map((row) => row.seq));
-      const unknownSeqs = parsed.data.ratings
-        .flatMap((rating) => rating.evidenceEventSeqs)
-        .filter((seq) => !existingSeqs.has(seq));
-      if (unknownSeqs.length > 0) {
-        return { kind: "unknown_evidence", seqs: [...new Set(unknownSeqs)] };
+      // Freeze log head (seq + hash) before appending phase=scored.
+      const logRows = await loadEventLogRows(tx, session.id);
+      const allEvidenceSeqs = parsed.data.ratings.flatMap((rating) => rating.evidenceEventSeqs);
+      const attested = attestEvidenceSeqs(logRows, allEvidenceSeqs);
+      if (attested.kind === "empty_evidence") {
+        return { kind: "unknown_evidence", seqs: [] };
       }
+      if (attested.kind === "unknown_evidence") {
+        return { kind: "unknown_evidence", seqs: attested.seqs };
+      }
+      const { logHeadSeq, logHeadHash } = attested.attestation;
       await tx.insert(antsRatings).values(
         parsed.data.ratings.map((rating) => ({
           tenantId,
@@ -513,6 +514,8 @@ export function createSessionRouter(
           domain: rating.domain,
           score: rating.score,
           evidenceEventSeqs: rating.evidenceEventSeqs,
+          logHeadSeq,
+          logHeadHash,
         })),
       );
       // Scored transition goes THROUGH the log via the sole seq authority

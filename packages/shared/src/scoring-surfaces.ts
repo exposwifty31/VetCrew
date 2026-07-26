@@ -21,6 +21,9 @@ export const evidenceSessionSchema = z.object({
   overallAnts: z.number().min(1).max(5).nullable(),
   ratedDomainCount: z.number().int().nonnegative(),
   createdAt: z.string().min(1),
+  /** Frozen event-log head when ANTS was submitted — evidence bind, not a verdict. */
+  logHeadSeq: z.number().int().nonnegative().nullable(),
+  logHeadHash: z.string().min(1).nullable(),
 });
 
 export const traineeEvidenceResponseSchema = z.object({

@@ -60,6 +60,7 @@
   "manager.evidence.tit": "ותק {days} ימים",
   "manager.evidence.tech": "טכני {percent}%",
   "manager.evidence.ants": "ANTS {score}",
+  "manager.evidence.logHead": "ראש לוג {seq}",
   "manager.evidence.internalBadge": "פנימי בלבד",
   "manager.evidence.openAar": "פתיחת תחקיר",
   "aar.tasks.heading": "משימות — צפוי מול בפועל",

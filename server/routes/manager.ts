@@ -125,10 +125,16 @@ export function createManagerRouter(
       const checklist = evaluateChecklist(events, authored.checklist);
       const tasks = evaluateTasks(row.seed, events, compiled);
       const ratings = await db
-        .select({ domain: antsRatings.domain, score: antsRatings.score })
+        .select({
+          domain: antsRatings.domain,
+          score: antsRatings.score,
+          logHeadSeq: antsRatings.logHeadSeq,
+          logHeadHash: antsRatings.logHeadHash,
+        })
         .from(antsRatings)
         .where(and(eq(antsRatings.tenantId, tenantId), eq(antsRatings.sessionId, row.sessionId)));
       const scores = ratings.map((r) => r.score);
+      const head = ratings[0];
       if (row.traineeTimeInTrainingDays === null) {
         throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
       }
@@ -144,6 +150,8 @@ export function createManagerRouter(
         overallAnts: overallAnts(scores),
         ratedDomainCount: scores.length,
         createdAt: row.createdAt.toISOString(),
+        logHeadSeq: head?.logHeadSeq ?? null,
+        logHeadHash: head?.logHeadHash ?? null,
       });
     }
 

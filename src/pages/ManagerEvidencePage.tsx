@@ -320,6 +320,18 @@ function ManagerEvidenceBody({
                   {t("manager.evidence.ants", {
                     score: session.overallAnts ?? "—",
                   })}
+                  {session.logHeadSeq !== null && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span
+                        title={session.logHeadHash ?? undefined}
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {t("manager.evidence.logHead", { seq: session.logHeadSeq })}
+                      </span>
+                    </>
+                  )}
                   {!session.clinicallyReviewed && (
                     <>
                       {" "}
