@@ -34,3 +34,6 @@ build/
 
 # nested design-system repo (its own git history)
 /Design System (1)/
+
+# Isolated git worktrees (local agent workspaces)
+.worktrees/
