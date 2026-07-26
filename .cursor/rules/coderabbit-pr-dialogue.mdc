@@ -1,0 +1,46 @@
+---
+description: CodeRabbit PR dialogue + never merge without CodeRabbit final approval
+alwaysApply: true
+---
+
+# CodeRabbit merge gate (working agreement)
+
+- **Never merge** to `master` until `coderabbitai[bot]` latest review state is **APPROVED** and commit status context **`CodeRabbit`** is **success**.
+- Cursor/human approvals do **not** substitute for CodeRabbit. Resolve or rebut every actionable CodeRabbit thread before merge.
+- Do not use `@coderabbitai ignore` or bypass rulesets/admins to skip review except a documented production hotfix, with a follow-up audit PR the same day.
+
+## Symbiotic loop (reply in-thread)
+
+```text
+# Fixed in commit
+@coderabbitai Fixed in <sha>: <one-line what changed>. Please re-review.
+
+# False positive / intentional
+@coderabbitai False positive for VetCrew: <constraint from CLAUDE.md / test>.
+Leaving as-is. Please resolve this thread if you agree.
+
+# Duplicate / repetitive nit
+@coderabbitai Same root cause as thread <url>. Tracking the fix there. Please resolve this duplicate.
+
+# Need learning for future reviews
+@coderabbitai Please remember for this repository: <durable preference>. Example: engine code must stay free of Date.now()/Math.random().
+
+# Need full pass after large rewrite
+@coderabbitai full review
+```
+
+After addressing feedback: wait for auto-approve (`request_changes_workflow`), or top-level `@coderabbitai approve` only when every actionable finding is fixed or rebutted.
+
+## Anti-patterns (do not do)
+
+- Merging because `cursor[bot]` APPROVED
+- `@coderabbitai ignore` in the PR description to skip the gate
+- Bulk `@coderabbitai resolve` without addressing or rebutting findings
+- Disabling the ruleset or adding yourself to bypass to "just land it"
+- Treating `CodeRabbit` status success alone as approval (need latest `coderabbitai[bot]` review **APPROVED** too)
+
+## Hotfix exception procedure
+
+1. Document in the PR body: `HOTFIX: <reason>; audit PR due <same calendar day>`.
+2. If admin bypass is unavoidable, open `audit/hotfix-<date>` PR within 24h and run audit steps (Task 6 Steps 3–5).
+3. Do not stack multiple hotfixes without an audit wave.

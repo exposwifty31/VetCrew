@@ -1,0 +1,94 @@
+name: coderabbit-approval-gate
+
+# Triggers intentionally omit check_suite: that event has no pull_request payload,
+# so the job fail-closed and concurrency cancel-in-progress could cancel a green
+# PR run. Re-evaluate only when PR number is available (PR open/sync + reviews).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: coderabbit-approval-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  coderabbit-approval:
+    name: CodeRabbit approval
+    if: github.event.pull_request.draft != true && github.event.pull_request.number != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require coderabbitai[bot] APPROVED on latest review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request?.number;
+            // Defensive: job-level if should already skip non-PR contexts.
+            if (!pull_number) {
+              core.info('No pull_request context; skipping CodeRabbit approval gate.');
+              return;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+
+            const cr = reviews.filter((r) => r.user?.login === 'coderabbitai[bot]');
+            if (cr.length === 0) {
+              core.setFailed(
+                'No CodeRabbit review yet. Wait for coderabbitai[bot], or comment `@coderabbitai full review`.',
+              );
+              return;
+            }
+
+            // Latest review by submitted_at, then id as tie-breaker.
+            cr.sort((a, b) => {
+              const t = Date.parse(a.submitted_at) - Date.parse(b.submitted_at);
+              return t !== 0 ? t : a.id - b.id;
+            });
+            const latest = cr[cr.length - 1];
+            const headSha = context.payload.pull_request?.head?.sha;
+            core.info(
+              `Latest CodeRabbit review #${latest.id}: ${latest.state} at ${latest.submitted_at} on ${latest.commit_id}`,
+            );
+
+            // Fail closed if the latest review is for a stale head — GitHub does
+            // not auto-dismiss APPROVED when new commits land unless dismiss-stale
+            // is enabled; bind the gate to the current PR head SHA.
+            if (!headSha) {
+              core.setFailed('Missing pull_request.head.sha; cannot bind CodeRabbit approval to head.');
+              return;
+            }
+            if (latest.commit_id !== headSha) {
+              core.setFailed(
+                `Latest CodeRabbit review is for ${latest.commit_id}, not current head ${headSha}. Wait for a re-review on the latest commit.`,
+              );
+              return;
+            }
+
+            if (latest.state === 'APPROVED') {
+              core.info('CodeRabbit final approval present on current head.');
+              return;
+            }
+
+            if (latest.state === 'CHANGES_REQUESTED') {
+              core.setFailed(
+                'CodeRabbit requested changes. Reply in-thread, fix, resolve threads, then wait for auto-approve or `@coderabbitai approve`.',
+              );
+              return;
+            }
+
+            core.setFailed(
+              `CodeRabbit latest review is ${latest.state}, not APPROVED. Resolve actionable threads (request_changes_workflow) or run \`@coderabbitai full review\`.`,
+            );
