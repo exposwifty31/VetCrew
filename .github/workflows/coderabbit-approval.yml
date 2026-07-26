@@ -58,10 +58,27 @@ jobs:
               return t !== 0 ? t : a.id - b.id;
             });
             const latest = cr[cr.length - 1];
-            core.info(`Latest CodeRabbit review #${latest.id}: ${latest.state} at ${latest.submitted_at}`);
+            const headSha = context.payload.pull_request?.head?.sha;
+            core.info(
+              `Latest CodeRabbit review #${latest.id}: ${latest.state} at ${latest.submitted_at} on ${latest.commit_id}`,
+            );
+
+            // Fail closed if the latest review is for a stale head — GitHub does
+            // not auto-dismiss APPROVED when new commits land unless dismiss-stale
+            // is enabled; bind the gate to the current PR head SHA.
+            if (!headSha) {
+              core.setFailed('Missing pull_request.head.sha; cannot bind CodeRabbit approval to head.');
+              return;
+            }
+            if (latest.commit_id !== headSha) {
+              core.setFailed(
+                `Latest CodeRabbit review is for ${latest.commit_id}, not current head ${headSha}. Wait for a re-review on the latest commit.`,
+              );
+              return;
+            }
 
             if (latest.state === 'APPROVED') {
-              core.info('CodeRabbit final approval present.');
+              core.info('CodeRabbit final approval present on current head.');
               return;
             }
 
