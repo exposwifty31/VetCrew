@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+reviews:
+  profile: "chill"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  review_progress: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "^master$"
+      - "^main$"
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+  path_instructions:
+    - path: "packages/engine/**"
+      instructions: >
+        Pure reducer only. No Date.now(), Math.random(), I/O, or network.
+        Determinism and event-log auditability are non-negotiable.
+    - path: "server/**"
+      instructions: >
+        Thin orchestration over the engine. Session lifecycle is an explicit
+        state machine. Do not move simulation logic into Express handlers.
+    - path: "src/**"
+      instructions: >
+        Thin clients. No client-side state computation that the engine owns.
+        Hebrew-first UI strings must go through the i18n module. Respect the
+        two colour systems (monitor channel vs task code) from CLAUDE.md.
+    - path: "scenarios/**"
+      instructions: >
+        Scenarios are data. Flag clinical accuracy concerns. Unreviewed
+        scenarios must not drive real-person scores without clinically_reviewed.
+chat:
+  auto_reply: true
