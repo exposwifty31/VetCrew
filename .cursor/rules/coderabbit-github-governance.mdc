@@ -1,0 +1,24 @@
+---
+description: CodeRabbit YAML + GitHub ruleset/CI merge-gate conventions
+globs: "{**/.coderabbit.yaml,.github/**/*}"
+alwaysApply: false
+---
+
+# CodeRabbit + GitHub governance
+
+- Keep `reviews.request_changes_workflow: true` so CodeRabbit can **CHANGES_REQUESTED** / **APPROVE**.
+- Keep `reviews.review_progress: true`. This repo’s required status context is **`CodeRabbit`** (commit status). Confirm the exact name on a recent PR before changing rulesets.
+- Required ruleset checks for `master`: `CodeRabbit`, `verify`, `integration`, `e2e`, plus workflow **`CodeRabbit approval`** (latest `coderabbitai[bot]` review must be APPROVED).
+- Prefer **Repository Rulesets** over legacy branch protection. Do not remove `block_in_required_reviewers` / “require approving reviews” once enabled.
+- Path instructions belong under `reviews.path_instructions`; do not re-litigate CLAUDE.md “Frozen for v1” in YAML.
+
+```yaml
+# Minimal gate-relevant snippet
+reviews:
+  request_changes_workflow: true
+  review_progress: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: ["^master$", "^main$"]
+```
