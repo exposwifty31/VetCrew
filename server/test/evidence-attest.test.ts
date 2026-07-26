@@ -19,6 +19,10 @@ const rows: EventLogRow[] = [
   },
 ];
 
+/**
+ * Engine seed+event determinism lives in packages/engine/test/determinism.test.ts.
+ * This file covers attestation hashing only (preimage + evidence seq checks).
+ */
 describe("evidence attestation", () => {
   test("hash is stable for the same ordered log", () => {
     const a = hashEventLog(rows);

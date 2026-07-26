@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createDb } from "../db/client.js";
 import { runMigrations } from "../db/migrate.js";
+import { hashEventLog } from "../evidence-attest.js";
 import { createManagerRouter } from "../routes/manager.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { compileScenario, loadScenarioFiles, syncScenarios } from "../scenarios.js";
@@ -336,8 +337,35 @@ describe("score -> source-event traceability", () => {
       `select log_head_seq, log_head_hash from vc_ants_ratings where session_id = $1 limit 1`,
       [session.id],
     );
-    expect(attested.rows[0]?.log_head_seq).toBeGreaterThan(0);
-    expect(attested.rows[0]?.log_head_hash).toMatch(/^[a-f0-9]{64}$/);
+    const headSeq = attested.rows[0]?.log_head_seq;
+    const headHash = attested.rows[0]?.log_head_hash;
+    expect(headSeq).toBeGreaterThan(0);
+    expect(headHash).toMatch(/^[a-f0-9]{64}$/);
+
+    // Attestation freezes the pre-scored head — recompute through that seq.
+    const logRows = await pool.query<{
+      seq: number;
+      type: string;
+      role: string | null;
+      actor_id: string | null;
+      payload: unknown;
+    }>(
+      `select seq, type, role, actor_id, payload
+       from vc_session_events
+       where session_id = $1 and seq <= $2
+       order by seq`,
+      [session.id, headSeq],
+    );
+    const expected = hashEventLog(
+      logRows.rows.map((row) => ({
+        seq: row.seq,
+        type: row.type,
+        role: row.role,
+        actorId: row.actor_id,
+        payload: row.payload,
+      })),
+    );
+    expect(headHash).toBe(expected);
   });
 });
 

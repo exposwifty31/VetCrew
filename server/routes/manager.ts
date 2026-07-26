@@ -138,6 +138,13 @@ export function createManagerRouter(
       if (row.traineeTimeInTrainingDays === null) {
         throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
       }
+      const rawHash = head?.logHeadHash ?? null;
+      const rawSeq = head?.logHeadSeq ?? null;
+      const attested =
+        rawSeq !== null &&
+        rawSeq > 0 &&
+        rawHash !== null &&
+        /^[a-f0-9]{64}$/.test(rawHash);
       sessions.push({
         sessionId: row.sessionId,
         phase: row.phase as "scored" | "archived",
@@ -150,8 +157,9 @@ export function createManagerRouter(
         overallAnts: overallAnts(scores),
         ratedDomainCount: scores.length,
         createdAt: row.createdAt.toISOString(),
-        logHeadSeq: head?.logHeadSeq ?? null,
-        logHeadHash: head?.logHeadHash ?? null,
+        // Never surface unattested/legacy rows as if they had a real bind.
+        logHeadSeq: attested ? rawSeq : null,
+        logHeadHash: attested ? rawHash : null,
       });
     }
 

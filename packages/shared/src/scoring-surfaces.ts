@@ -23,7 +23,11 @@ export const evidenceSessionSchema = z.object({
   createdAt: z.string().min(1),
   /** Frozen event-log head when ANTS was submitted — evidence bind, not a verdict. */
   logHeadSeq: z.number().int().nonnegative().nullable(),
-  logHeadHash: z.string().min(1).nullable(),
+  /** Canonical sha256 hex of the ordered log through logHeadSeq; null if unattested. */
+  logHeadHash: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
 });
 
 export const traineeEvidenceResponseSchema = z.object({
