@@ -1,12 +1,13 @@
 name: coderabbit-approval-gate
 
+# Triggers intentionally omit check_suite: that event has no pull_request payload,
+# so the job fail-closed and concurrency cancel-in-progress could cancel a green
+# PR run. Re-evaluate only when PR number is available (PR open/sync + reviews).
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   pull_request_review:
     types: [submitted, edited, dismissed]
-  check_suite:
-    types: [completed]
 
 permissions:
   contents: read
@@ -14,13 +15,13 @@ permissions:
   checks: read
 
 concurrency:
-  group: coderabbit-approval-${{ github.event.pull_request.number || github.ref }}
+  group: coderabbit-approval-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   coderabbit-approval:
     name: CodeRabbit approval
-    if: github.event.pull_request.draft != true
+    if: github.event.pull_request.draft != true && github.event.pull_request.number != null
     runs-on: ubuntu-latest
     steps:
       - name: Require coderabbitai[bot] APPROVED on latest review
@@ -30,8 +31,9 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pull_number = context.payload.pull_request?.number;
+            // Defensive: job-level if should already skip non-PR contexts.
             if (!pull_number) {
-              core.setFailed('No pull_request context; cannot evaluate CodeRabbit approval.');
+              core.info('No pull_request context; skipping CodeRabbit approval gate.');
               return;
             }
 
