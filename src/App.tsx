@@ -164,8 +164,8 @@ function HomePage({
   getToken,
   canCreateSessions,
 }: {
-  getToken: () => Promise<string | null>;
-  canCreateSessions: boolean;
+  readonly getToken: () => Promise<string | null>;
+  readonly canCreateSessions: boolean;
 }) {
   const [health, setHealth] = useState<Health | null | "down">(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);

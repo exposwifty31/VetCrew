@@ -60,7 +60,7 @@ function tokenFamily(state: PillConnectionState): string {
   return state === "live" ? "running" : state;
 }
 
-function Glyph({ state }: { state: PillConnectionState }) {
+function Glyph({ state }: { readonly state: PillConnectionState }) {
   if (state === "live") {
     return <span className="vc-connpill__dot" aria-hidden="true" />;
   }

@@ -201,6 +201,21 @@ function CommandBar({
   const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
   const paused = phase === "paused";
 
+  function copyStationLinkLabel(state: "idle" | "done" | "failed"): string {
+    switch (state) {
+      case "done":
+        return t("instructor.copyStationLink.done");
+      case "failed":
+        return t("instructor.copyStationLink.failed");
+      case "idle":
+        return t("instructor.copyStationLink");
+      default: {
+        const exhaustive: never = state;
+        throw new Error(`Unhandled copy state: ${String(exhaustive)}`);
+      }
+    }
+  }
+
   async function copyStationLink() {
     const url = `${window.location.origin}${window.location.pathname}#/station/${sessionId}`;
     try {
@@ -256,11 +271,7 @@ function CommandBar({
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         <button type="button" onClick={() => void copyStationLink()} style={lgPrimary}>
-          {copyState === "done"
-            ? t("instructor.copyStationLink.done")
-            : copyState === "failed"
-              ? t("instructor.copyStationLink.failed")
-              : t("instructor.copyStationLink")}
+          {copyStationLinkLabel(copyState)}
         </button>
         {phase === "draft" && (
           <button type="button" disabled={disabled} onClick={onStartBriefing} style={lgPrimary}>
