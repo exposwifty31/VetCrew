@@ -105,7 +105,7 @@ describe("session create binds role_stations", () => {
     expect(res.status).toBe(403);
   });
 
-  test("trainee binds technician station to self", async () => {
+  test("trainee cannot create a session (deep-link join only)", async () => {
     const res = await api("/api/sessions", {
       method: "POST",
       headers: authHeader("trainee-self", "trainee"),
@@ -114,16 +114,40 @@ describe("session create binds role_stations", () => {
         traineeTimeInTrainingDays: 10,
       }),
     });
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { session: { id: string; traineeId: string } };
-    expect(body.session.traineeId).toBe("trainee-self");
+    expect(res.status).toBe(403);
+  });
 
-    const stations = await db
-      .select()
-      .from(roleStations)
-      .where(eq(roleStations.sessionId, body.session.id));
-    const technician = stations.find((s) => s.role === "technician");
-    expect(technician?.assignedUserId).toBe("trainee-self");
+  test("authenticated null-role cannot create a session", async () => {
+    const mockRead = () => ({
+      isAuthenticated: true as const,
+      userId: "null-role-user",
+      role: null,
+    });
+    const app = express();
+    app.use(express.json());
+    app.use(
+      "/api/sessions",
+      createSessionRouter(db, tenantId, { authEnabled: true, readAuth: mockRead }),
+    );
+    const ephemeral = await new Promise<Server>((resolve, reject) => {
+      const s = app.listen(0, (err?: Error) => (err !== undefined ? reject(err) : resolve(s)));
+    });
+    try {
+      const port = (ephemeral.address() as AddressInfo).port;
+      const res = await fetch(`http://127.0.0.1:${port}/api/sessions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          scenarioSlug: SCENARIO_SLUG,
+          traineeTimeInTrainingDays: 10,
+        }),
+      });
+      expect(res.status).toBe(403);
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        ephemeral.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
   });
 
   test("instructor can create for any trainee and binds stations", async () => {
