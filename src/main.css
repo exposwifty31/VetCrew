@@ -20,3 +20,43 @@ body {
   font-family: "IBM Plex Sans Hebrew", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ConnectionPill — design-system status channel (hatch on reconnecting). */
+.vc-connpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  font-size: var(--fs-xs, 13px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.vc-connpill__g {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+.vc-connpill__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.vc-connpill--reconnecting .vc-connpill__g {
+  animation: vc-connpill-spin 1s linear infinite;
+}
+@keyframes vc-connpill-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

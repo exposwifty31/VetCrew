@@ -3,6 +3,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import type { InstructorViewWire, SessionPhase } from "@vetcrew/shared";
 
 import { CompactAuthBanner } from "../components/AuthBar.js";
+import { ConnectionPill } from "../components/ConnectionPill.js";
 import {
   e2eOrNoBearerToken,
   hasClerkPublishableKey,
@@ -70,6 +71,7 @@ function InstructorConsolePageBody({
       }}
     >
       <CommandBar
+        sessionId={sessionId}
         phase={phase}
         elapsedLabel={formatElapsed(instructorView?.timeMs ?? 0)}
         scenarioLabel={instructorView?.scenarioSlug ?? "—"}
@@ -172,6 +174,7 @@ function InstructorConsolePageBody({
 }
 
 function CommandBar({
+  sessionId,
   phase,
   elapsedLabel,
   scenarioLabel,
@@ -183,6 +186,7 @@ function CommandBar({
   onRequestEnd,
   connectionStatus,
 }: {
+  sessionId: string;
   phase: SessionPhase | undefined;
   elapsedLabel: string;
   scenarioLabel: string;
@@ -194,6 +198,20 @@ function CommandBar({
   onRequestEnd: () => void;
   connectionStatus: ConnectionStatus;
 }) {
+  const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
+  const paused = phase === "paused";
+
+  async function copyStationLink() {
+    const url = `${window.location.origin}${window.location.pathname}#/station/${sessionId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyState("done");
+    } catch {
+      setCopyState("failed");
+    }
+    window.setTimeout(() => setCopyState("idle"), 2500);
+  }
+
   return (
     <header
       style={{
@@ -210,7 +228,7 @@ function CommandBar({
         background: "var(--instrument-bg, #0A0F18)",
       }}
     >
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", minWidth: 0 }}>
         <strong style={{ fontSize: 20 }}>
           Vet<span style={{ color: "var(--action-accent, #008080)" }}>Crew</span>
         </strong>
@@ -218,16 +236,32 @@ function CommandBar({
           {phase !== undefined ? t(`phase.${phase}`) : "—"} ·{" "}
           <span style={{ fontVariantNumeric: "tabular-nums" }}>{elapsedLabel}</span>
         </span>
-        <span style={{ color: "var(--text-secondary, #9aa7b8)" }}>{scenarioLabel}</span>
-        <span style={chipStyle}>
-          {connectionStatus === "connected"
-            ? t("instructor.connection.live")
-            : connectionStatus === "reconnecting"
-              ? t("instructor.connection.reconnecting")
-              : t("instructor.connection.offline")}
+        <span
+          style={{
+            color: "var(--text-secondary, #9aa7b8)",
+            maxWidth: "16rem",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={scenarioLabel}
+        >
+          {scenarioLabel}
         </span>
+        <ConnectionPill
+          status={connectionStatus}
+          paused={paused}
+          labelPrefix="instructor"
+        />
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        <button type="button" onClick={() => void copyStationLink()} style={lgPrimary}>
+          {copyState === "done"
+            ? t("instructor.copyStationLink.done")
+            : copyState === "failed"
+              ? t("instructor.copyStationLink.failed")
+              : t("instructor.copyStationLink")}
+        </button>
         {phase === "draft" && (
           <button type="button" disabled={disabled} onClick={onStartBriefing} style={lgPrimary}>
             {t("instructor.verb.briefing")}

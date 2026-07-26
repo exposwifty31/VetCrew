@@ -105,7 +105,7 @@ describe("session create binds role_stations", () => {
     expect(res.status).toBe(403);
   });
 
-  test("trainee binds technician station to self", async () => {
+  test("trainee cannot create a session (deep-link join only)", async () => {
     const res = await api("/api/sessions", {
       method: "POST",
       headers: authHeader("trainee-self", "trainee"),
@@ -114,16 +114,7 @@ describe("session create binds role_stations", () => {
         traineeTimeInTrainingDays: 10,
       }),
     });
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { session: { id: string; traineeId: string } };
-    expect(body.session.traineeId).toBe("trainee-self");
-
-    const stations = await db
-      .select()
-      .from(roleStations)
-      .where(eq(roleStations.sessionId, body.session.id));
-    const technician = stations.find((s) => s.role === "technician");
-    expect(technician?.assignedUserId).toBe("trainee-self");
+    expect(res.status).toBe(403);
   });
 
   test("instructor can create for any trainee and binds stations", async () => {

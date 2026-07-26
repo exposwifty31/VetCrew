@@ -3,6 +3,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import type { ClientIntent, RoleViewWire } from "@vetcrew/shared";
 
 import { CompactAuthBanner } from "../components/AuthBar.js";
+import { ConnectionPill } from "../components/ConnectionPill.js";
 import {
   e2eOrNoBearerToken,
   hasClerkPublishableKey,
@@ -10,7 +11,7 @@ import {
 } from "../hooks/useBearerToken.js";
 import { t } from "../i18n";
 import { rejectMessageKey } from "../live/rejectMessage.js";
-import { useSession, type ConnectionStatus } from "../live/useSession.js";
+import { useSession } from "../live/useSession.js";
 
 const VITAL_META: Record<string, { label: string; cssVar: string; fallback: string }> = {
   hr: { label: "HR", cssVar: "--ch-hr", fallback: "#00FF66" },
@@ -67,15 +68,24 @@ function StationPageBody({
           borderBottom: "1px solid var(--border-default, #243040)",
         }}
       >
-        <div>
+        <div style={{ minWidth: 0, maxWidth: "min(100%, 28rem)" }}>
           <div style={{ fontWeight: 700 }}>{t("station.role")}</div>
-          <div style={{ color: "var(--text-secondary, #9aa7b8)", fontSize: 14 }}>
+          <div
+            style={{
+              color: "var(--text-secondary, #9aa7b8)",
+              fontSize: 14,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={`${roleView?.species ?? t("station.patient.unknown")} · ${roleView?.scenarioSlug ?? "—"}`}
+          >
             {roleView?.species ?? t("station.patient.unknown")} · {roleView?.scenarioSlug ?? "—"}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
           <PhaseBadge phase={roleView?.phase} />
-          <ConnectionPill status={connectionStatus} />
+          <ConnectionPill status={connectionStatus} labelPrefix="station" />
           <a href="#/" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}>
             {t("station.back")}
           </a>
@@ -177,32 +187,6 @@ function PhaseBadge({ phase }: { phase: RoleViewWire["phase"] | undefined }) {
       }}
     >
       {phase !== undefined ? t(`phase.${phase}`) : "—"}
-    </span>
-  );
-}
-
-function ConnectionPill({ status }: { status: ConnectionStatus }) {
-  const label =
-    status === "connected"
-      ? t("station.connection.live")
-      : status === "reconnecting"
-        ? t("station.connection.reconnecting")
-        : status === "offline"
-          ? t("station.connection.offline")
-          : t("station.connection.connecting");
-  return (
-    <span
-      style={{
-        minHeight: 44,
-        display: "inline-flex",
-        alignItems: "center",
-        paddingInline: 12,
-        borderRadius: 999,
-        background: status === "connected" ? "rgba(0,128,128,0.25)" : "rgba(255,204,0,0.2)",
-        border: "1px solid var(--border-default, #243040)",
-      }}
-    >
-      {label}
     </span>
   );
 }
