@@ -145,49 +145,31 @@ function buildRoleStationRows(
   return rows;
 }
 
+/**
+ * Floor wedge: only instructor/manager may create sessions when auth is on.
+ * Trainees join via deep-link `#/station/:sessionId` after role_stations bind.
+ */
 function resolveCreateBindings(
   auth: AuthSnapshot,
   traineeId: string | undefined,
 ): CreateBindings | "forbidden" {
+  if (!auth.isAuthenticated || auth.userId === null) {
+    return "forbidden";
+  }
   const role = auth.role;
   switch (role) {
-    case "trainee": {
-      if (traineeId !== undefined && traineeId !== auth.userId) {
-        return "forbidden";
-      }
-      const userId = auth.userId;
-      if (userId === null) {
-        return "forbidden";
-      }
-      return {
-        sessionTraineeId: userId,
-        technicianUserId: userId,
-        instructorUserId: null,
-      };
-    }
+    case "trainee":
+      return "forbidden";
     case "instructor":
     case "manager": {
-      const creatorId = auth.userId;
-      if (creatorId === null) {
-        return "forbidden";
-      }
       return {
         sessionTraineeId: traineeId ?? null,
         technicianUserId: traineeId ?? null,
-        instructorUserId: creatorId,
+        instructorUserId: auth.userId,
       };
     }
-    case null: {
-      const userId = auth.userId;
-      if (userId === null) {
-        return "forbidden";
-      }
-      return {
-        sessionTraineeId: traineeId ?? null,
-        technicianUserId: traineeId ?? null,
-        instructorUserId: userId,
-      };
-    }
+    case null:
+      return "forbidden";
     default: {
       const exhaustive: never = role;
       throw new Error(`Unhandled role: ${JSON.stringify(exhaustive)}`);

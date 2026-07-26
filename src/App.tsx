@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/react";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
@@ -15,6 +16,16 @@ const AarPage = lazy(() => import("./pages/AarPage.js"));
 const InstructorConsolePage = lazy(() => import("./pages/InstructorConsolePage.js"));
 const ManagerEvidencePage = lazy(() => import("./pages/ManagerEvidencePage.js"));
 const StationPage = lazy(() => import("./pages/StationPage.js"));
+
+/** Warm the station chunk so trainee deep-links skip Suspense tax. */
+function prefetchStationChunk(): void {
+  void import("./pages/StationPage.js");
+}
+
+function parseVetcrewRole(raw: unknown): "manager" | "instructor" | "trainee" | null {
+  if (raw === "manager" || raw === "instructor" || raw === "trainee") return raw;
+  return null;
+}
 
 function RouteLoadingFallback() {
   return <main style={{ padding: 32 }}>{t("shell.loading")}</main>;
@@ -137,21 +148,34 @@ export default function App() {
   return hasClerkPublishableKey ? (
     <HomePageWithClerk />
   ) : (
-    <HomePage getToken={e2eOrNoBearerToken} />
+    <HomePage getToken={e2eOrNoBearerToken} canCreateSessions />
   );
 }
 
 function HomePageWithClerk() {
   const getToken = useClerkBearerToken();
-  return <HomePage getToken={getToken} />;
+  const { user, isLoaded } = useUser();
+  const role = parseVetcrewRole(user?.publicMetadata?.["vetcrewRole"]);
+  const canCreateSessions = !isLoaded || role === "instructor" || role === "manager";
+  return <HomePage getToken={getToken} canCreateSessions={canCreateSessions} />;
 }
 
-function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
+function HomePage({
+  getToken,
+  canCreateSessions,
+}: {
+  readonly getToken: () => Promise<string | null>;
+  readonly canCreateSessions: boolean;
+}) {
   const [health, setHealth] = useState<Health | null | "down">(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [startingStation, setStartingStation] = useState(false);
   const [startingInstructor, setStartingInstructor] = useState(false);
   const engine = useMemo(engineSmoke, []);
+
+  useEffect(() => {
+    prefetchStationChunk();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -173,8 +197,10 @@ function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
     return () => controller.abort();
   }, [getToken]);
 
-  async function startStation() {
+  /** Instructor-owned create → console; trainee joins `#/station/:id`. */
+  async function startStationForFloor() {
     setStartingStation(true);
+    prefetchStationChunk();
     try {
       const token = await getToken();
       const session = await createSession(
@@ -185,7 +211,7 @@ function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
         },
         token,
       );
-      window.location.hash = `#/station/${session.id}`;
+      window.location.hash = `#/instructor/${session.id}`;
     } catch {
       setStartingStation(false);
     }
@@ -193,6 +219,7 @@ function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
 
   async function startInstructorDemo() {
     setStartingInstructor(true);
+    prefetchStationChunk();
     try {
       const token = await getToken();
       const session = await createSession(
@@ -258,42 +285,49 @@ function HomePage({ getToken }: { getToken: () => Promise<string | null> }) {
       <section style={{ marginBlockStart: 32 }}>
         <h2 style={{ fontSize: "var(--fs-md, 17px)" }}>{t("home.station.heading")}</h2>
         <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.station.blurb")}</p>
+        {!canCreateSessions && (
+          <p style={{ color: "var(--text-secondary, #9aa7b8)" }}>{t("home.station.traineeHint")}</p>
+        )}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <button
-            type="button"
-            disabled={startingStation || health === "down" || health === null}
-            onClick={() => void startStation()}
-            style={{
-              minHeight: 48,
-              paddingInline: 16,
-              background: "var(--action-accent, #008080)",
-              color: "#fff",
-              border: 0,
-              borderRadius: 8,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {startingStation ? t("home.station.starting") : t("home.station.start")}
-          </button>
-          <button
-            type="button"
-            disabled={startingInstructor || health === "down" || health === null}
-            onClick={() => void startInstructorDemo()}
-            style={{
-              minHeight: 48,
-              paddingInline: 16,
-              // Outline accent must meet WCAG AA on --bg (#0a1216): #008080 is ~3.95:1.
-              background: "transparent",
-              color: "var(--action-accent-contrast, #5eead4)",
-              border: "2px solid var(--action-accent-contrast, #5eead4)",
-              borderRadius: 8,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {startingInstructor ? t("home.instructor.starting") : t("home.instructor.start")}
-          </button>
+          {canCreateSessions && (
+            <>
+              <button
+                type="button"
+                disabled={startingStation || health === "down" || health === null}
+                onClick={() => void startStationForFloor()}
+                style={{
+                  minHeight: 48,
+                  paddingInline: 16,
+                  background: "var(--action-accent, #008080)",
+                  color: "#fff",
+                  border: 0,
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {startingStation ? t("home.station.starting") : t("home.station.start")}
+              </button>
+              <button
+                type="button"
+                disabled={startingInstructor || health === "down" || health === null}
+                onClick={() => void startInstructorDemo()}
+                style={{
+                  minHeight: 48,
+                  paddingInline: 16,
+                  // Outline accent must meet WCAG AA on --bg (#0a1216): #008080 is ~3.95:1.
+                  background: "transparent",
+                  color: "var(--action-accent-contrast, #5eead4)",
+                  border: "2px solid var(--action-accent-contrast, #5eead4)",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {startingInstructor ? t("home.instructor.starting") : t("home.instructor.start")}
+              </button>
+            </>
+          )}
           <a
             href="#/manager/pitch-trainee"
             style={{
