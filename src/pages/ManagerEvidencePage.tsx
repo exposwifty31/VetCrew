@@ -27,6 +27,17 @@ const card: CSSProperties = {
 };
 
 
+/** Genuine attestation only — never render NULL/legacy sentinels as log heads. */
+function attestedLogHead(
+  seq: number | null,
+  hash: string | null,
+): { seq: number; hash: string } | null {
+  if (seq === null || seq <= 0 || hash === null || !/^[a-f0-9]{64}$/.test(hash)) {
+    return null;
+  }
+  return { seq, hash };
+}
+
 function driftKey(drift: TraineeTrendResponse["overallDrift"]): MessageKey {
   switch (drift) {
     case "up":
@@ -320,6 +331,33 @@ function ManagerEvidenceBody({
                   {t("manager.evidence.ants", {
                     score: session.overallAnts ?? "—",
                   })}
+                  {(() => {
+                    const head = attestedLogHead(session.logHeadSeq, session.logHeadHash);
+                    if (head === null) return null;
+                    return (
+                      <>
+                        {" "}
+                        ·{" "}
+                        <button
+                          type="button"
+                          style={{
+                            fontVariantNumeric: "tabular-nums",
+                            background: "transparent",
+                            border: 0,
+                            color: "inherit",
+                            padding: 0,
+                            minHeight: 44,
+                            cursor: "help",
+                            textDecoration: "underline dotted",
+                          }}
+                          title={head.hash}
+                          aria-label={`${t("manager.evidence.logHead", { seq: head.seq })}: ${head.hash}`}
+                        >
+                          {t("manager.evidence.logHead", { seq: head.seq })}
+                        </button>
+                      </>
+                    );
+                  })()}
                   {!session.clinicallyReviewed && (
                     <>
                       {" "}

@@ -20,8 +20,27 @@ describe("scoring surface contracts", () => {
         overallAnts: 0,
         ratedDomainCount: 1,
         createdAt: new Date().toISOString(),
+        logHeadSeq: 7,
+        logHeadHash: "abc",
       }).success,
     ).toBe(false);
+
+    expect(
+      evidenceSessionSchema.safeParse({
+        sessionId: "11111111-1111-4111-8111-111111111111",
+        phase: "scored",
+        scenarioSlug: "s",
+        scenarioVersion: "0.1.0",
+        clinicallyReviewed: true,
+        traineeTimeInTrainingDays: 30,
+        technicalPercent: 70,
+        overallAnts: 4,
+        ratedDomainCount: 3,
+        createdAt: new Date().toISOString(),
+        logHeadSeq: 7,
+        logHeadHash: "a".repeat(64),
+      }).success,
+    ).toBe(true);
 
     const empty = traineeEvidenceResponseSchema.safeParse({
       traineeId: "pitch-trainee",

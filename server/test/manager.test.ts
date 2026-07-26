@@ -147,12 +147,23 @@ describe("manager evidence + trend", () => {
         overallAnts: number | null;
         traineeTimeInTrainingDays: number;
         clinicallyReviewed: boolean;
+        logHeadSeq: number | null;
+        logHeadHash: string | null;
       }[];
     };
     expect(evidence.bandStatus).toBe("cohort_insufficient");
     expect(evidence.sessions).toHaveLength(2);
     expect(evidence.sessions.every((s) => s.overallAnts !== null)).toBe(true);
     expect(evidence.sessions.some((s) => s.clinicallyReviewed === false)).toBe(true);
+    expect(
+      evidence.sessions.every(
+        (s) =>
+          typeof s.logHeadSeq === "number" &&
+          s.logHeadSeq > 0 &&
+          typeof s.logHeadHash === "string" &&
+          /^[a-f0-9]{64}$/.test(s.logHeadHash),
+      ),
+    ).toBe(true);
 
     const trendRes = await api(`/api/trainees/${TRAINEE}/trend`);
     expect(trendRes.status).toBe(200);
