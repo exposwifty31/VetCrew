@@ -137,9 +137,20 @@ rule, not a coincidence.)
 | **Pure motor skill, no assessable decision** | — *nothing representable* — | **refuse; out of 2D scope** |
 
 Checklist rule kinds are `action_performed(withinMs)`, `action_not_performed`, and `action_before`
-(`packages/engine/src/checklist.ts:9`). The last table row is load-bearing (see §5): if decomposition
-leaves a kernel that is *only* tactile discrimination or manual dexterity, the framework must **refuse to
-substitute** and flag the task as out-of-scope for a 2D sim — not fake it.
+(`packages/engine/src/checklist.ts:9`).
+
+**Negative claims need an explicit opportunity window.** An omission/contraindication kernel
+(`action_not_performed`) must be bound to a defined **trigger + evaluation interval** — the window in
+which the forbidden act *would have been* the wrong thing to do. Absence from the entire event stream is
+not sufficient evidence that a trainee *decided* against it; they may simply never have reached the
+decision point. (This mirrors the engine's own `action_before` rule, which **vacuous-passes when the
+hazard never occurs**, `checklist.ts:95` — the same principle: a non-occurrence only scores against a
+realised opportunity.) So a substitute that scores "did not do X" must author *when* the opportunity was
+live, not just check the whole log for X's absence.
+
+The last table row is load-bearing (see §5): if decomposition leaves a kernel that is *only* tactile
+discrimination or manual dexterity, the framework must **refuse to substitute** and flag the task as
+out-of-scope for a 2D sim — not fake it.
 
 ---
 
@@ -217,9 +228,13 @@ verbal callout, judged post-hoc.** Reach for B when the kernel is observation (a
 the assessment is the response.
 
 Why A is the spine:
-- It is the only mechanism that produces a **role-attributed, verbatim, evidence-seq-traceable,
-  tamper-evidence-bindable** event — the exact substrate the readiness/liability case
-  (`CLAUDE.md §2.2/§2.3`) and the Phase-D attestation depend on.
+- **Every** mechanism here writes a role-attributed, verbatim, seq-ordered, tamper-evidence-bindable
+  event — Mechanism D's callout is an `ActionEvent`, and §6 groups both `ActionEvent` and
+  `TaskSubmitEvent` into the same append-only log. What is distinctive about A is not that it is logged
+  but that it logs a **structured submission comparable to an authored expected answer** — so it yields a
+  high-resolution technical verdict (per-field expected-vs-actual, with a `critical` flag), which D's
+  free-text callout cannot. A is the spine because it carries *scoreable technical decisions*, not because
+  it is the only auditable event.
 - It judges correctness **post-hoc**, so it never coaches (invariant 3).
 - It is already implemented across seven body kinds — the default is *description of what works*, not new
   build.
@@ -229,6 +244,17 @@ Why A is the spine:
 Pairing D with A is deliberate: A scores *what* the trainee decided; D scores whether they *closed the
 loop* on it. Technical and non-technical are stored on separate axes anyway, so one physical act
 naturally yields evidence on both.
+
+**How the pairing is correlated (so "closed the loop" is evidenced, not assumed).** A callout `action`
+and its structured `task_submit` are joined over the event log by three keys, all already present on the
+events: shared **`actorId`/`role`** (the same person declared and called out), a **bounded time window**
+(the callout falls within an authored interval around the submission — reuse the `withinMs` timing
+primitive), and, where authored, an explicit **task/action reference** naming which declaration the
+callout is about. A "loop closed" verdict is then a join query over the log — *this actor submitted the
+med decision at seq N and called it out within the window* — not an inference. Where the join fails
+(callout absent, wrong actor, or out of window), the technical decision still scores on A; only the
+closed-loop communication credit is withheld. Absent an explicit task reference, the time-window +
+actor join is the fallback and should be treated as weaker evidence, exactly as a real debrief would.
 
 ---
 
@@ -257,9 +283,16 @@ knowledge claim, not "can safely draw up and run the infusion."
 
 **Temperature (the passive/gated case).** Kernel = initiative to measure + interpretation. Temp is
 tech-sourced, so **gate it**: blank until a declared "checking temperature" action reveals the value,
-then `value_entry` for the reading + interpretation. Passive display (current behaviour) silently drops
-the initiative claim. Evidence, gated: *"recognises the need to measure temperature and interprets it"*;
-passive: *"interprets a displayed temperature."* Same widget, different — and honestly scoped — claim.
+then `value_entry` for the reading + interpretation. **Gating alone is necessary but not sufficient** —
+revealing the value after a declaration only proves the trainee *can* click "check," not that they knew
+*to* check unprompted. To actually score initiative, the gate must be bound to a **cue and a timing
+rule**: an authored trigger makes the check *due* (a deterioration cue, a shift-protocol interval, a
+post-intervention window), and a checklist rule scores whether the declared check landed in time —
+`action_performed(withinMs)` against that cue, or `action_before` a competing task. Without that
+trigger+timing binding, "gated" degrades back to testing interpretation only. Passive display (current
+behaviour) drops the initiative claim entirely. Honestly-scoped evidence — gated *and* cued:
+*"recognises the need to measure temperature in time and interprets it"*; passive: *"interprets a
+displayed temperature."* Same widget, three different — and honestly scoped — claims.
 
 **Femoral pulse (the discriminating test — no content exists yet).** The case that proves the framework
 is real, because its clinical content is *almost entirely tactile*. Decompose:
