@@ -20,6 +20,17 @@ describe("requireSignedIn", () => {
       },
     );
     app.get(
+      "/api/signed",
+      requireSignedIn(true, () => ({
+        isAuthenticated: true,
+        userId: "user-1",
+        role: "trainee",
+      })),
+      (_req, res) => {
+        res.json({ signed: true });
+      },
+    );
+    app.get(
       "/api/open",
       requireSignedIn(false, () => ({ isAuthenticated: false, userId: null, role: null })),
       (_req, res) => {
@@ -49,6 +60,12 @@ describe("requireSignedIn", () => {
     const res = await fetch(`${baseUrl}/api/open`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ open: true });
+  });
+
+  test("passes through when Clerk is enabled and the request is signed in", async () => {
+    const res = await fetch(`${baseUrl}/api/signed`);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ signed: true });
   });
 
   test("unused Request param keeps AuthReader signature stable", () => {
