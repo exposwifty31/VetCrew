@@ -3,7 +3,12 @@
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node"],
+    // Client is built by Vite; tsc is only ever a type-checker here. noEmit
+    // makes a bare `tsc -p tsconfig.json` type-check-only so it can never leak
+    // compiled .js next to sources in src/ (server build overrides in
+    // server/tsconfig.build.json).
+    "noEmit": true
   },
   "include": ["src", "scripts", "e2e", "vite.config.ts", "playwright.config.ts", "vitest.integration.config.ts"]
 }
