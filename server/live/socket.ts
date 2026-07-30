@@ -336,16 +336,20 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         data.unsubRoomPresence?.();
       });
 
+      // Recovery is a full snapshot, deliberately — NOT a replay of the events
+      // the client missed. Stations hold no derived state (§4: thin clients
+      // render pushed state), so the room's current RoleView already IS the
+      // complete recovery; per-event catch-up would add a second code path
+      // that can disagree with the first. `lastSeq` stays in the join payload
+      // as the client's cursor for logging and for a future incremental path,
+      // and is intentionally not consulted here.
+      void lastSeq;
       if (stationKind === "instructor") {
         emitInstructorSnapshot(socket, room);
       } else {
         emitTraineeSnapshot(socket, room, role);
       }
       emitPresence(socket, sessionId, room);
-      // Catch-up events are optional; snapshot alone is correctness.
-      if (lastSeq !== undefined && lastSeq < room.appliedSeq) {
-        // Intentionally empty: client replaces view from snapshot.
-      }
       socket.emit(LIVE_EVENTS.connection, { status: "connected" });
       ack?.({ ok: true, seq: room.appliedSeq, stationKind });
     });

@@ -96,6 +96,20 @@ function fireTriggers(
   return { vitals, firedTriggerIds: fired };
 }
 
+/**
+ * Known model limit (recorded 2026-07-30): vitals are INDEPENDENT. Each drifts
+ * toward its own target at its own rate; triggers retarget them, and actions
+ * and inaction are both expressed by which triggers do or do not fire. What is
+ * absent is cross-vital feedback — a falling SpO2 does not itself drive HR up.
+ * A scenario author reproduces coupling by hand, by giving one trigger effects
+ * on several vitals.
+ *
+ * That is adequate for the base rung, where the assessed competency is the
+ * technician's decision sequence, not the physiology. It becomes wrong the
+ * moment a scenario is meant to teach a physiological *relationship* — then add
+ * a coupling term here rather than asking authors to fake it per trigger.
+ * Do not pre-build it; it buys nothing until such a scenario exists.
+ */
 export function reduce(state: EngineState, event: EngineEvent): EngineState {
   switch (event.type) {
     case "tick": {
