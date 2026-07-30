@@ -376,7 +376,7 @@ function AarPageBody({
               <strong style={{ color: item.passed ? "var(--text-running)" : "var(--text-critical)" }}>
                 {item.passed ? t("aar.checklist.pass") : t("aar.checklist.fail")}
               </strong>
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1 }}>{item.labelHe}</span>
               <span
                 style={{
                   color: "var(--text-muted)",

@@ -62,6 +62,12 @@ Expected findings to confirm in the report (from map, not invented):
 
 Deliverable: `docs/audits/2026-07-25-icu-surfaces-audit.md` (or canvas if preferred at execution time). Phase B/C consume P0–P1 only.
 
+> **Correction (2026-07-30): Phase A never ran.** `docs/audits/` does not exist. Phase C shipped anyway and claimed to sweep "P0–P1 audit items" — meaning it swept the *expected* findings listed above, not observed ones. Two real defects that a genuine audit would have caught survived to the pitch surfaces:
+> - **AAR technical checklist rendered in English** on the Hebrew-first evidence screen — `evaluateChecklist` dropped `labelHe` even though `checklistItemSchema` requires it. Fixed 2026-07-30 (engine carries `labelHe` through; `AarPage` renders it; regression test added).
+> - **Design-system `PatientMonitor` is still unwired.** The Station's left half is five numeric tiles over a large empty region; the waveform renderer proven in `spikes/webxr/src/monitor.js` is not on the pitch screen. Still open.
+>
+> Do not mark Phase A "completed" by inference from Phase C. Either run it or drop it explicitly.
+
 ---
 
 ## Phase B — Triage all (open tracker)

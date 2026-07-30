@@ -18,6 +18,8 @@ export type ChecklistRule =
 export interface ChecklistItemDef {
   readonly id: string;
   readonly label: string;
+  /** Hebrew label — required by `checklistItemSchema`; the AAR is Hebrew-first (§4). */
+  readonly labelHe: string;
   readonly weight: number;
   readonly role?: string | undefined;
   readonly rule: ChecklistRule;
@@ -26,6 +28,8 @@ export interface ChecklistItemDef {
 export interface ChecklistItemResult {
   readonly id: string;
   readonly label: string;
+  /** Carried through so the AAR can render Hebrew without re-reading the scenario. */
+  readonly labelHe: string;
   readonly weight: number;
   readonly passed: boolean;
   /** Event seqs proving (or disproving) the item. */
@@ -74,6 +78,7 @@ function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): 
       return {
         id: item.id,
         label: item.label,
+        labelHe: item.labelHe,
         weight: item.weight,
         passed: first !== undefined,
         evidenceSeqs: first !== undefined ? [first.seq] : [],
@@ -84,6 +89,7 @@ function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): 
       return {
         id: item.id,
         label: item.label,
+        labelHe: item.labelHe,
         weight: item.weight,
         passed: violations.length === 0,
         evidenceSeqs: violations.map((a) => a.seq),
@@ -99,7 +105,14 @@ function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): 
       const evidenceSeqs = [firstHazard, firstAction]
         .filter((a): a is TimedAction => a !== undefined)
         .map((a) => a.seq);
-      return { id: item.id, label: item.label, weight: item.weight, passed, evidenceSeqs };
+      return {
+        id: item.id,
+        label: item.label,
+        labelHe: item.labelHe,
+        weight: item.weight,
+        passed,
+        evidenceSeqs,
+      };
     }
     default: {
       const exhaustive: never = rule;
