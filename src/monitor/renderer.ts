@@ -18,6 +18,11 @@
 
 type ChannelKey = "ecg" | "pleth" | "art" | "co2";
 
+/**
+ * The uMEC12-Vet channel mapping (CLAUDE.md §4). `art` is retained as the
+ * documented red channel but is deliberately UNUSED — see ALL_LANES: an
+ * arterial trace requires an invasive line, which no scenario models yet.
+ */
 const CHANNELS: Record<ChannelKey, { readonly color: string; readonly label: string }> = {
   ecg: { color: "#00FF66", label: "ECG" },
   pleth: { color: "#00CCFF", label: "Pleth" },
@@ -70,19 +75,6 @@ function plethWave(p: number): number {
   const t = (p - 0.5) / 0.5;
   return 0.55 * (1 - t) * (1 - t);
 }
-function artWave(p: number): number {
-  if (p < 0.1) return Math.sin((p / 0.1) * (Math.PI / 2));
-  if (p < 0.36) {
-    const t = (p - 0.1) / 0.26;
-    return 1 - 0.6 * t;
-  }
-  if (p < 0.44) {
-    const t = (p - 0.36) / 0.08;
-    return 0.4 + 0.12 * Math.sin(t * Math.PI);
-  }
-  const t = (p - 0.44) / 0.56;
-  return 0.52 * (1 - t);
-}
 function respWave(p: number): number {
   if (p < 0.08) return 0;
   if (p < 0.18) return (p - 0.08) / 0.1; // upstroke
@@ -102,11 +94,27 @@ type LaneSpec = {
   readonly requires: keyof MonitorVitals;
 };
 
+/**
+ * NO ARTERIAL LANE — deliberate, on clinical grounds (founder ruling 2026-07-30).
+ *
+ * `Art` on a real monitor means an INVASIVE arterial line: a catheter plus
+ * pressure transducer, which is what produces a continuous pressure waveform.
+ * The base-rung scenarios supply `sys_bp`/`dia_bp` from a NON-invasive cuff,
+ * which is intermittent and cannot generate a trace at all. An `art` lane keyed
+ * on `sys_bp` therefore drew a waveform for monitoring equipment that was never
+ * attached, and duplicated the cuff numbers under a second modality — exactly
+ * the fabrication this module's header forbids (§2.3/§2.5). Cuff values appear
+ * once, as NIBP.
+ *
+ * A scenario that genuinely models an arterial line must introduce its own
+ * invasive-pressure vital; it must not borrow the cuff's. The arterial waveform
+ * generator is deleted rather than parked — it lives in git history and in
+ * `spikes/webxr/src/monitor.js` if that day comes.
+ */
 const ALL_LANES: readonly LaneSpec[] = [
   { key: "ecg", channel: "ecg", label: "ECG", gen: ecgWave, rate: "hr", requires: "hr" },
   { key: "ecg2", channel: "ecg", label: "II", gen: ecgWave, rate: "hr", requires: "hr" },
   { key: "pleth", channel: "pleth", label: "Pleth", gen: plethWave, rate: "hr", requires: "spo2" },
-  { key: "art", channel: "art", label: "Art", gen: artWave, rate: "hr", requires: "sys_bp" },
   { key: "resp", channel: "co2", label: "Resp", gen: respWave, rate: "rr", requires: "rr" },
 ];
 
@@ -339,15 +347,8 @@ export class MonitorRenderer {
     const v = this.vitals;
     if (present(v.hr)) big("HR", String(Math.round(v.hr)), CHANNELS.ecg.color, "bpm", true);
     if (present(v.spo2)) big("SpO₂", String(Math.round(v.spo2)), CHANNELS.pleth.color, "%", true);
-    if (present(v.sys_bp) && present(v.dia_bp)) {
-      big(
-        "Art",
-        `${Math.round(v.sys_bp)}/${Math.round(v.dia_bp)}`,
-        CHANNELS.art.color,
-        "mmHg",
-        false,
-      );
-    }
+    // No `Art` numeric: cuff pressures are reported once, as NIBP in the bottom
+    // band. Labelling them `Art` would claim an arterial line (see ALL_LANES).
     if (present(v.etco2)) {
       big("EtCO₂", String(Math.round(v.etco2)), CHANNELS.co2.color, "mmHg", false);
     } else if (present(v.rr)) {
