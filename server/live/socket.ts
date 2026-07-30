@@ -198,7 +198,7 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
         return;
       }
 
-      const { sessionId, role, lastSeq, actorId: clientActorId, stationKind } = parsed.data;
+      const { sessionId, role, actorId: clientActorId, stationKind } = parsed.data;
       let actorId: string;
 
       if (options.allowDevBypass) {
@@ -340,10 +340,9 @@ export function attachLiveSocket(httpServer: HttpServer, options: LiveSocketOpti
       // the client missed. Stations hold no derived state (§4: thin clients
       // render pushed state), so the room's current RoleView already IS the
       // complete recovery; per-event catch-up would add a second code path
-      // that can disagree with the first. `lastSeq` stays in the join payload
-      // as the client's cursor for logging and for a future incremental path,
-      // and is intentionally not consulted here.
-      void lastSeq;
+      // that can disagree with the first. `lastSeq` therefore stays in the join
+      // schema as the client's cursor (and a future incremental path) but is
+      // deliberately not read here — hence absent from the destructuring.
       if (stationKind === "instructor") {
         emitInstructorSnapshot(socket, room);
       } else {

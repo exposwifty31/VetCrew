@@ -25,6 +25,8 @@ type Props = {
 export function PatientMonitor({ vitals, species, alarm = "normal", frozen = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<MonitorRenderer | null>(null);
+  /** True when no rAF loop is running, so nothing else will repaint. */
+  const staticModeRef = useRef(false);
 
   // Keep the renderer fed without restarting the animation loop.
   useEffect(() => {
@@ -33,6 +35,10 @@ export function PatientMonitor({ vitals, species, alarm = "normal", frozen = fal
     renderer.setVitals(vitals);
     renderer.setAlarm(alarm);
     renderer.setSpecies(species ?? "");
+    // With no loop to pick these up, feeding alone would leave the canvas
+    // frozen on the first frame for the rest of a live reduced-motion session
+    // while the numeric tiles kept updating. Repaint once instead.
+    if (staticModeRef.current) renderer.draw();
   }, [vitals, alarm, species]);
 
   useEffect(() => {
@@ -55,13 +61,16 @@ export function PatientMonitor({ vitals, species, alarm = "normal", frozen = fal
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (reduceMotion || frozen) {
-      // One static frame: shapes and channel identity without the sweep.
+      staticModeRef.current = true;
+      // One static frame: shapes and channel identity without the sweep. Later
+      // prop changes repaint via the effect above.
       renderer.step(2.4);
       renderer.draw();
       return () => {
         rendererRef.current = null;
       };
     }
+    staticModeRef.current = false;
 
     let raf = 0;
     let last = performance.now();

@@ -66,6 +66,26 @@ function collectActions(events: readonly EngineEvent[]): TimedAction[] {
   return actions;
 }
 
+/**
+ * Single point of construction for a result row. Every branch below differs
+ * only in `passed`/`evidenceSeqs`; keeping the shell here means the next field
+ * added to ChecklistItemResult is a one-line change, not a three-place one.
+ */
+function buildResult(
+  item: ChecklistItemDef,
+  passed: boolean,
+  evidenceSeqs: readonly number[],
+): ChecklistItemResult {
+  return {
+    id: item.id,
+    label: item.label,
+    labelHe: item.labelHe,
+    weight: item.weight,
+    passed,
+    evidenceSeqs,
+  };
+}
+
 function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): ChecklistItemResult {
   const scoped = item.role === undefined ? actions : actions.filter((a) => a.role === item.role);
   const rule = item.rule;
@@ -75,25 +95,15 @@ function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): 
         (a) => a.action === rule.action && (rule.withinMs === undefined || a.timeMs <= rule.withinMs),
       );
       const first = matches[0];
-      return {
-        id: item.id,
-        label: item.label,
-        labelHe: item.labelHe,
-        weight: item.weight,
-        passed: first !== undefined,
-        evidenceSeqs: first !== undefined ? [first.seq] : [],
-      };
+      return buildResult(item, first !== undefined, first !== undefined ? [first.seq] : []);
     }
     case "action_not_performed": {
       const violations = scoped.filter((a) => a.action === rule.action);
-      return {
-        id: item.id,
-        label: item.label,
-        labelHe: item.labelHe,
-        weight: item.weight,
-        passed: violations.length === 0,
-        evidenceSeqs: violations.map((a) => a.seq),
-      };
+      return buildResult(
+        item,
+        violations.length === 0,
+        violations.map((a) => a.seq),
+      );
     }
     case "action_before": {
       const firstAction = scoped.find((a) => a.action === rule.action);
@@ -105,14 +115,7 @@ function evaluateItem(item: ChecklistItemDef, actions: readonly TimedAction[]): 
       const evidenceSeqs = [firstHazard, firstAction]
         .filter((a): a is TimedAction => a !== undefined)
         .map((a) => a.seq);
-      return {
-        id: item.id,
-        label: item.label,
-        labelHe: item.labelHe,
-        weight: item.weight,
-        passed,
-        evidenceSeqs,
-      };
+      return buildResult(item, passed, evidenceSeqs);
     }
     default: {
       const exhaustive: never = rule;

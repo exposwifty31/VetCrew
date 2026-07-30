@@ -18,7 +18,7 @@
 
 type ChannelKey = "ecg" | "pleth" | "art" | "co2";
 
-export const CHANNELS: Record<ChannelKey, { readonly color: string; readonly label: string }> = {
+const CHANNELS: Record<ChannelKey, { readonly color: string; readonly label: string }> = {
   ecg: { color: "#00FF66", label: "ECG" },
   pleth: { color: "#00CCFF", label: "Pleth" },
   art: { color: "#FF3B30", label: "Art" },
@@ -119,6 +119,13 @@ function present(value: number | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+/** Alarm→colour for the LED strip. Severity lives here, never on channel hue. */
+function ledStripColor(alarm: AlarmLevel, flashOn: boolean): string {
+  if (alarm === "critical") return flashOn ? "#FF2A1F" : "#3a0d0a";
+  if (alarm === "caution") return flashOn ? "#FFCC00" : "#3a3208";
+  return "#12202b";
+}
+
 export class MonitorRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly traceW = Math.ceil(W * TRACE_FRACTION);
@@ -180,24 +187,23 @@ export class MonitorRenderer {
   }
 
   draw(): void {
-    const c = this.ctx;
-    const crit = this.alarm === "critical";
-    const caution = this.alarm === "caution";
     const flashOn = this.blink < 0.5;
+    this.drawChrome(flashOn);
+    this.drawLanes();
+    this.drawNumericColumn(flashOn);
+    this.drawBottomBand();
+    this.drawAlarmFrame(flashOn);
+  }
+
+  /** Background, LED alarm strip, header strip — the device shell. */
+  private drawChrome(flashOn: boolean): void {
+    const c = this.ctx;
 
     c.fillStyle = "#05080d";
     c.fillRect(0, 0, W, H);
 
     // ── LED alarm strip (device chrome, part of the alarm layer) ──
-    c.fillStyle = crit
-      ? flashOn
-        ? "#FF2A1F"
-        : "#3a0d0a"
-      : caution
-        ? flashOn
-          ? "#FFCC00"
-          : "#3a3208"
-        : "#12202b";
+    c.fillStyle = ledStripColor(this.alarm, flashOn);
     c.fillRect(0, 0, W, 10);
 
     // ── header strip ──
@@ -214,9 +220,14 @@ export class MonitorRenderer {
     c.textAlign = "right";
     c.fillStyle = "#5f7382";
     c.fillText("VET MONITOR · VM-12", W - 16, 33);
+  }
 
-    // ── waveform lanes (left ~62%) — share the full trace region, so a
-    //    scenario with fewer channels gets taller lanes, not dead space ──
+  /**
+   * Waveform lanes (left ~62%) — they share the full trace region, so a
+   * scenario with fewer channels gets taller lanes, not dead space.
+   */
+  private drawLanes(): void {
+    const c = this.ctx;
     const laneH =
       this.traces.length === 0 ? 0 : (TRACE_BOTTOM - TRACE_TOP) / this.traces.length;
     let y = TRACE_TOP;
@@ -255,8 +266,12 @@ export class MonitorRenderer {
 
       y += laneH;
     }
+  }
 
-    // ── numeric column (right ~38%) — only channels the engine supplies ──
+  /** Numeric column (right ~38%) — only channels the engine supplies. */
+  private drawNumericColumn(flashOn: boolean): void {
+    const c = this.ctx;
+    const dim = this.alarm !== "normal" && !flashOn;
     const nx = this.traceW + 26;
     c.textAlign = "left";
     let ny = 74;
@@ -278,7 +293,7 @@ export class MonitorRenderer {
         size -= 4;
         c.font = `bold ${size}px ui-sans-serif, system-ui, sans-serif`;
       }
-      c.fillStyle = alarmable && (crit || caution) && !flashOn ? "#3c4a55" : color;
+      c.fillStyle = alarmable && dim ? "#3c4a55" : color;
       c.fillText(value, nx, ny + 58);
       if (unit !== "") {
         // Placed off the measured value, never a fixed offset that can collide.
@@ -307,8 +322,12 @@ export class MonitorRenderer {
     } else if (present(v.rr)) {
       big("RR", String(Math.round(v.rr)), CHANNELS.co2.color, "/min", false);
     }
+  }
 
-    // ── bottom band: Temp / NIBP (white channels) ──
+  /** Bottom band: Temp / NIBP (white channels). */
+  private drawBottomBand(): void {
+    const c = this.ctx;
+    const v = this.vitals;
     c.fillStyle = "#0b1219";
     c.fillRect(0, H - 96, W, 96);
     c.font = "14px ui-sans-serif, system-ui, sans-serif";
@@ -327,18 +346,19 @@ export class MonitorRenderer {
       c.fillStyle = "#FFFFFF";
       c.fillText(`${Math.round(v.sys_bp)}/${Math.round(v.dia_bp)}`, 220, H - 26);
     }
+  }
 
-    // ── full-screen alarm frame: the one signal allowed to cross zones (§4) ──
-    if (crit || caution) {
-      c.strokeStyle = crit
-        ? flashOn
-          ? "#FF2A1F"
-          : "#5a1410"
-        : flashOn
-          ? "#FFCC00"
-          : "#4a3f0a";
-      c.lineWidth = 6;
-      c.strokeRect(3, 3, W - 6, H - 6);
-    }
+  /**
+   * Full-screen alarm frame. §4 permits this crossing for CRITICAL ONLY — it is
+   * "the only permitted crossing", so caution must not borrow it or the critical
+   * signal dilutes (alarm fatigue on a surface that feeds an evidence record).
+   * Caution is carried by the LED strip and the value flash instead.
+   */
+  private drawAlarmFrame(flashOn: boolean): void {
+    if (this.alarm !== "critical") return;
+    const c = this.ctx;
+    c.strokeStyle = flashOn ? "#FF2A1F" : "#5a1410";
+    c.lineWidth = 6;
+    c.strokeRect(3, 3, W - 6, H - 6);
   }
 }
