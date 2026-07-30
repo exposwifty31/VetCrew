@@ -45,9 +45,28 @@ function slugify(name: string): string {
   return slug;
 }
 
+/** The only shape a worktree database name may ever take. */
+const DB_NAME_RE = /^vetcrew_(e2e_)?test_[a-z0-9][a-z0-9_]*$/;
+
 function dbNames(slug: string): { test: string; e2e: string } {
   // Both contain "test" — required by the server test suites' safety guard.
   return { test: `vetcrew_test_${slug}`, e2e: `vetcrew_e2e_test_${slug}` };
+}
+
+/**
+ * Postgres cannot parameterise an identifier, so CREATE/DROP DATABASE must
+ * interpolate. Two independent guards instead of trusting the caller:
+ *  1. the name must match DB_NAME_RE — re-checked HERE, at the point of use, so
+ *     the guarantee does not depend on slugify() staying correct elsewhere; and
+ *  2. it is then quoted with pg's escapeIdentifier.
+ * This is also what makes the safety legible to a scanner, which cannot follow
+ * validation across function boundaries.
+ */
+function safeDbIdentifier(client: Client, name: string): string {
+  if (!DB_NAME_RE.test(name)) {
+    throw new Error(`refusing to touch database "${name}": not a worktree database name`);
+  }
+  return client.escapeIdentifier(name);
 }
 
 interface WorktreeInfo {
@@ -160,7 +179,7 @@ async function createDb(client: Client, name: string): Promise<void> {
     console.warn(`  ! database ${name} already exists (stale from a previous worktree) — reusing`);
     return;
   }
-  await client.query(`create database "${name}"`);
+  await client.query(`create database ${safeDbIdentifier(client, name)}`);
   console.log(`  + created database ${name}`);
 }
 
@@ -218,8 +237,10 @@ async function cmdRm(name: string, force: boolean): Promise<void> {
   const client = await adminClient();
   try {
     // WITH (FORCE) terminates live connections (dev server still attached).
-    await client.query(`drop database if exists "${db.test}" with (force)`);
-    await client.query(`drop database if exists "${db.e2e}" with (force)`);
+    // safeDbIdentifier re-validates the scheme, so a DROP can never reach a name
+    // this script did not derive — the Security Master rule from the plan.
+    await client.query(`drop database if exists ${safeDbIdentifier(client, db.test)} with (force)`);
+    await client.query(`drop database if exists ${safeDbIdentifier(client, db.e2e)} with (force)`);
     console.log(`  - dropped ${db.test}, ${db.e2e} (if they existed)`);
   } finally {
     await client.end();
