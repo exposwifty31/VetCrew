@@ -38,7 +38,7 @@ export function PatientMonitor({ vitals, species, alarm = "normal", frozen = fal
     // With no loop to pick these up, feeding alone would leave the canvas
     // frozen on the first frame for the rest of a live reduced-motion session
     // while the numeric tiles kept updating. Repaint once instead.
-    if (staticModeRef.current) renderer.draw();
+    if (staticModeRef.current) renderer.drawStatic();
   }, [vitals, alarm, species]);
 
   useEffect(() => {
@@ -63,9 +63,9 @@ export function PatientMonitor({ vitals, species, alarm = "normal", frozen = fal
     if (reduceMotion || frozen) {
       staticModeRef.current = true;
       // One static frame: shapes and channel identity without the sweep. Later
-      // prop changes repaint via the effect above.
-      renderer.step(2.4);
-      renderer.draw();
+      // prop changes repaint via the effect above. Seeding lives in the
+      // renderer, so this component holds no waveform knowledge (§8).
+      renderer.drawStatic();
       return () => {
         rendererRef.current = null;
       };

@@ -112,6 +112,8 @@ const ALL_LANES: readonly LaneSpec[] = [
 
 const TRACE_TOP = 56;
 const TRACE_BOTTOM = H - 96;
+/** Trace-seconds synthesised for a static paint — enough to fill the lanes. */
+const SEED_SECONDS = 2.4;
 
 type Trace = { readonly spec: LaneSpec; readonly buf: Float32Array; phase: number };
 
@@ -136,6 +138,8 @@ export class MonitorRenderer {
   private cursor = 0;
   private elapsed = 0;
   private blink = 0;
+  /** Traces were (re)built and hold no samples yet — see drawStatic(). */
+  private needsSeed = true;
 
   constructor(canvas: HTMLCanvasElement) {
     canvas.width = W;
@@ -156,6 +160,8 @@ export class MonitorRenderer {
         buf: new Float32Array(this.traceW),
         phase: 0,
       }));
+      // Fresh buffers are zero-filled and only step() writes samples.
+      this.needsSeed = true;
     }
   }
 
@@ -174,16 +180,41 @@ export class MonitorRenderer {
     const advance = SWEEP_PX_PER_SEC * dt;
     const start = this.cursor;
     const end = start + advance;
+    // Emit only the integer pixels the sweep NEWLY crossed. Starting at
+    // floor(start) rewrote the pixel already drawn last frame and added ~1 extra
+    // sample per frame; since phase advances per sample, the trace beat faster
+    // than the vital it is supposed to show — at 60fps a stated HR of 92
+    // rendered at ~116. ceil()→ceil() telescopes across frames (each frame's
+    // start is the previous end), so pixels emitted total the true advance.
+    const firstPx = Math.ceil(start);
+    const lastPx = Math.ceil(end);
     for (const trace of this.traces) {
       const rateValue = trace.spec.rate === "rr" ? this.vitals.rr : this.vitals.hr;
       const hz = (present(rateValue) ? rateValue : 0) / 60;
-      for (let x = Math.floor(start); x < end; x++) {
+      // One pixel is 1/SWEEP_PX_PER_SEC seconds of trace, so summing this over
+      // the frame's pixels integrates to exactly hz * dt.
+      const phasePerPx = hz / SWEEP_PX_PER_SEC;
+      for (let x = firstPx; x < lastPx; x++) {
         const i = ((x % this.traceW) + this.traceW) % this.traceW;
-        trace.phase = (trace.phase + (hz * dt) / Math.max(advance, 0.0001)) % 1;
+        trace.phase = (trace.phase + phasePerPx) % 1;
         trace.buf[i] = trace.spec.gen(trace.phase);
       }
     }
+    this.needsSeed = false;
     this.cursor = end % this.traceW;
+  }
+
+  /**
+   * One-shot paint for contexts with no animation loop (reduced motion, or a
+   * frozen/stale view). Seeds the traces first if they hold no samples yet,
+   * because setVitals() rebuilds buffers zero-filled and step() is the only
+   * thing that writes them — without this, a lane that becomes available
+   * mid-session would draw as a flat line for the rest of the session.
+   * Waveform state stays renderer-owned; the caller only asks for a paint.
+   */
+  drawStatic(): void {
+    if (this.needsSeed) this.step(SEED_SECONDS);
+    this.draw();
   }
 
   draw(): void {
