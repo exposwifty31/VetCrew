@@ -173,14 +173,16 @@ TEST_DATABASE_URL=postgres://${host}/${db.test}
 `;
 }
 
-async function createDb(client: Client, name: string): Promise<void> {
+/** Returns true only if this call created the database (false = reused a stale one). */
+async function createDb(client: Client, name: string): Promise<boolean> {
   const exists = await client.query("select 1 from pg_database where datname = $1", [name]);
   if ((exists.rowCount ?? 0) > 0) {
     console.warn(`  ! database ${name} already exists (stale from a previous worktree) — reusing`);
-    return;
+    return false;
   }
   await client.query(`create database ${safeDbIdentifier(client, name)}`);
   console.log(`  + created database ${name}`);
+  return true;
 }
 
 async function cmdNew(name: string): Promise<void> {
@@ -199,17 +201,21 @@ async function cmdNew(name: string): Promise<void> {
   const slugTaken = listWorktrees().some((w) => w.name !== null && slugify(w.name) === slug);
   if (slugTaken) throw new Error(`slug "${slug}" collides with an existing worktree`);
 
-  // Preflight BEFORE any mutation, so failure leaves no half-created state.
+  // Preflight BEFORE any mutation, so a dead Postgres leaves nothing behind.
   const client = await adminClient();
+  // What THIS invocation created, so a failure can be compensated precisely. A
+  // stale database we merely reused is not ours to drop.
+  const made = { worktree: false, dbs: [] as string[] };
   try {
     const slot = withSlotLock(() => {
       const s = allocateSlot();
       git(["worktree", "add", wtPath, "-b", name]);
+      made.worktree = true;
       writeFileSync(join(wtPath, ".env"), envFile(name, slug, s));
       return s;
     });
-    await createDb(client, db.test);
-    await createDb(client, db.e2e);
+    if (await createDb(client, db.test)) made.dbs.push(db.test);
+    if (await createDb(client, db.e2e)) made.dbs.push(db.e2e);
 
     console.log(`  installing dependencies (shared pnpm store)…`);
     execFileSync("pnpm", ["install", "--frozen-lockfile"], { cwd: wtPath, stdio: "inherit" });
@@ -224,19 +230,90 @@ worktree ready:
   dbs      ${db.e2e} (dev/e2e) · ${db.test} (integration, dropped per run)
 
 run from inside it:  pnpm dev:server   and   pnpm dev`);
+  } catch (error) {
+    // Compensate in reverse. Without this, a failed `pnpm install` (stale
+    // lockfile, network blip) left the worktree, branch and .env behind, and the
+    // obvious retry — `worktree new <same name>` — then failed on "already
+    // exists", stranding the user in a state only manual git surgery could fix.
+    console.error(`\n  provisioning failed — rolling back what this run created`);
+    for (const name of made.dbs) {
+      try {
+        await client.query(`drop database if exists ${safeDbIdentifier(client, name)} with (force)`);
+        console.error(`  - rolled back database ${name}`);
+      } catch (cleanupError) {
+        console.error(`  ! could not drop ${name}: ${String(cleanupError).split("\n")[0]}`);
+      }
+    }
+    if (made.worktree) {
+      // --force because the tree is half-provisioned by definition; the generated
+      // .env goes with it.
+      try {
+        git(["worktree", "remove", "--force", wtPath]);
+        git(["worktree", "prune"]);
+        console.error(`  - rolled back worktree ${wtPath}`);
+      } catch (cleanupError) {
+        console.error(`  ! could not remove ${wtPath}: ${String(cleanupError).split("\n")[0]}`);
+      }
+      try {
+        git(["branch", "-D", name]);
+        console.error(`  - rolled back branch ${name}`);
+      } catch {
+        // branch already gone with the worktree, or never created
+      }
+    }
+    throw error;
   } finally {
     await client.end();
   }
 }
 
-async function cmdRm(name: string, force: boolean): Promise<void> {
+/**
+ * Order matters and is the whole point of this function.
+ *
+ * Databases are dropped only AFTER the worktree is confirmed managed and
+ * successfully removed. The reverse order — which this script originally had —
+ * destroys data ahead of the check that would have stopped it: `rm` on a worktree
+ * with uncommitted work dropped its databases, then `git worktree remove` refused
+ * and aborted, leaving a worktree that still existed but could never run again.
+ * A mistyped name was the same hazard aimed at whatever slug it happened to hit.
+ *
+ * So: resolve → verify registered → remove (abort if it fails) → drop → prune.
+ * Cleaning up databases whose worktree is already gone is a real need, but it is
+ * a different operation and needs `--orphan` to say so out loud.
+ */
+async function cmdRm(name: string, force: boolean, orphan: boolean): Promise<void> {
   const slug = slugify(name);
   const wtPath = join(dirname(mainRoot), `vetcrew-${name}`);
   const db = dbNames(slug);
 
+  const registered = listWorktrees().find((w) => w.path === wtPath && !w.isMain);
+
+  if (registered === undefined) {
+    if (!orphan) {
+      throw new Error(
+        `no managed worktree at ${wtPath}. Nothing was deleted.\n` +
+          `If its databases are left over from a worktree removed by hand, re-run with --orphan ` +
+          `to drop ${db.test} and ${db.e2e} without touching git.`,
+      );
+    }
+    console.log(`  (--orphan) no worktree at ${wtPath}; cleaning databases only`);
+  } else {
+    // Must succeed before anything destructive happens to the databases.
+    try {
+      git(["worktree", "remove", ...(force ? ["--force"] : []), wtPath]);
+      console.log(`  - removed worktree ${wtPath}`);
+    } catch (error) {
+      throw new Error(
+        `git worktree remove failed, so nothing was deleted — databases are intact.\n` +
+          `  ${String(error).split("\n")[0]}\n` +
+          `Uncommitted work? Commit or stash it, or re-run with --force to discard it.`,
+      );
+    }
+  }
+
   const client = await adminClient();
   try {
-    // WITH (FORCE) terminates live connections (dev server still attached).
+    // WITH (FORCE) terminates live connections (a dev server may still be attached).
     // safeDbIdentifier re-validates the scheme, so a DROP can never reach a name
     // this script did not derive — the Security Master rule from the plan.
     await client.query(`drop database if exists ${safeDbIdentifier(client, db.test)} with (force)`);
@@ -246,15 +323,6 @@ async function cmdRm(name: string, force: boolean): Promise<void> {
     await client.end();
   }
 
-  try {
-    git(["worktree", "remove", ...(force ? ["--force"] : []), wtPath]);
-    console.log(`  - removed worktree ${wtPath}`);
-  } catch (error) {
-    console.warn(
-      `  ! git worktree remove failed (${String(error).split("\n")[0]}) — pruning stale entries; ` +
-        `uncommitted work? re-run with --force`,
-    );
-  }
   git(["worktree", "prune"]);
   try {
     git(["branch", "-d", name]);
@@ -319,8 +387,8 @@ async function main(): Promise<void> {
       await cmdNew(name);
       break;
     case "rm":
-      if (!name) throw new Error("usage: pnpm worktree rm <name> [--force]");
-      await cmdRm(name, force);
+      if (!name) throw new Error("usage: pnpm worktree rm <name> [--force] [--orphan]");
+      await cmdRm(name, force, process.argv.includes("--orphan"));
       break;
     case "list":
     case undefined:

@@ -8,10 +8,28 @@ concurrently across worktrees with zero collisions.
 ## Commands
 
 ```bash
-pnpm worktree new <name>   # create ../vetcrew-<name> + branch <name> + .env + DBs
-pnpm worktree list         # slots, ports, DBs, liveness
-pnpm worktree rm <name>    # drop its DBs, remove worktree, prune, delete branch
+pnpm worktree new <name>            # create ../vetcrew-<name> + branch + .env + DBs
+pnpm worktree list                  # slots, ports, DBs, liveness
+pnpm worktree rm  <name>            # remove worktree, then drop its DBs, prune, delete branch
+pnpm worktree rm  <name> --force    # same, discarding uncommitted work
+pnpm worktree rm  <name> --orphan   # DBs only, for a worktree already removed by hand
 ```
+
+**`rm` removes the worktree *before* it drops any database, and aborts if that
+fails.** The order is deliberate: dropping first meant a worktree with uncommitted
+work lost its databases and *then* had the removal refused, leaving a checkout that
+existed but could never run. If `rm` refuses, nothing has been deleted — commit,
+stash, or pass `--force`.
+
+`rm` also refuses a name with no registered worktree, so a typo cannot reach
+another worktree's data. Cleaning up databases whose worktree is already gone is a
+real need but a different operation: that is what `--orphan` is for.
+
+**`new` rolls itself back.** If database creation or `pnpm install` fails, the
+worktree, branch, `.env`, and any database *this run created* are removed, so the
+obvious retry (`worktree new <same name>`) works instead of failing on "already
+exists". A stale database it merely reused is left alone — it was not this run's to
+delete.
 
 ## Shared vs isolated
 
@@ -32,8 +50,8 @@ The main checkout is implicitly **slot 0** on the defaults (3001/5173,
    born and die together.
 2. Work entirely inside the worktree; open the PR from its branch.
 3. After merge: `pnpm worktree rm <name>`.
-4. Never plain `git worktree remove` — it orphans the two databases. If you did:
-   `pnpm worktree rm <name>` afterwards is idempotent (`DROP IF EXISTS`, prune).
+4. Never plain `git worktree remove` — it orphans the two databases. If you did,
+   `pnpm worktree rm <name> --orphan` cleans them up.
 
 ## Rules for agents
 
