@@ -23,7 +23,8 @@
     "test:e2e": "playwright test",
     "i18n:check": "tsx scripts/check-i18n-parity.ts",
     "guard:deps": "tsx scripts/check-boundaries.ts",
-    "guard:dead": "knip"
+    "guard:dead": "knip",
+    "worktree": "tsx scripts/worktree.ts"
   },
   "dependencies": {
     "@clerk/backend": "^3.13.0",
