@@ -175,5 +175,9 @@
   "aar.rating.incomplete": "יש למלא שם מדרג, לדרג כל ממד ולסמן לו לפחות אירוע עדות אחד",
   "aar.ratings.heading": "דירוגים שנשמרו",
   "aar.ratings.row": "{domain}: {score}/5",
-  "aar.ratings.by": "מדרג: {rater}"
+  "aar.ratings.by": "מדרג: {rater}",
+  "station.task.code.do": "ביצוע",
+  "station.task.code.report": "דיווח",
+  "station.task.code.timed": "מתוזמן",
+  "station.task.code.approval": "אישור"
 }
