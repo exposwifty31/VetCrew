@@ -17,6 +17,16 @@ Both are on screen simultaneously, driven by one `MonitorRenderer` instance.
 
 ## Result: **PASS** (desktop-verified)
 
+> **Known bug in `src/monitor.js`, found 2026-07-30 — fix before reviving this spike.**
+> `step()` loops `x = Math.floor(start); x < end`, so with a fractional cursor it
+> rewrites the pixel drawn last frame and emits ~1 extra sample per frame. Phase
+> advances per sample, so **every trace beats faster than the vital it displays** —
+> at 60fps a stated HR of 92 renders at ~116. The production port
+> (`src/monitor/renderer.ts`) fixed this by iterating `ceil(start) → ceil(end)` and
+> stepping phase by `hz / SWEEP_PX_PER_SEC` per pixel, which integrates to exactly
+> `hz * dt`. The "sweep rendering works" tick below still stands — the geometry was
+> right, only the rate was wrong, which is why desktop review missed it.
+
 Verified in-browser at `http://localhost:5173`:
 
 - ✅ Sweep rendering works — traces are erased and rewritten by a moving cursor with a blanking gap, not scrolled. Reads as an instrument, not a chart.

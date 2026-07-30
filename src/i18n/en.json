@@ -175,5 +175,9 @@
   "aar.rating.incomplete": "Enter a rater name, rate every domain, and mark at least one evidence event for each",
   "aar.ratings.heading": "Saved ratings",
   "aar.ratings.row": "{domain}: {score}/5",
-  "aar.ratings.by": "Rater: {rater}"
+  "aar.ratings.by": "Rater: {rater}",
+  "station.task.code.do": "Do",
+  "station.task.code.report": "Report",
+  "station.task.code.timed": "Timed",
+  "station.task.code.approval": "Approval"
 }

@@ -4,14 +4,16 @@ import type { ClientIntent, RoleViewWire } from "@vetcrew/shared";
 
 import { CompactAuthBanner } from "../components/AuthBar.js";
 import { ConnectionPill } from "../components/ConnectionPill.js";
+import { PatientMonitor } from "../components/PatientMonitor.js";
 import {
   e2eOrNoBearerToken,
   hasClerkPublishableKey,
   useClerkBearerToken,
 } from "../hooks/useBearerToken.js";
-import { t } from "../i18n";
+import { t, type MessageKey } from "../i18n";
 import { rejectMessageKey } from "../live/rejectMessage.js";
 import { useSession } from "../live/useSession.js";
+import type { MonitorVitals } from "../monitor/renderer.js";
 
 const VITAL_META: Record<string, { label: string; cssVar: string; fallback: string }> = {
   hr: { label: "HR", cssVar: "--ch-hr", fallback: "#00FF66" },
@@ -20,6 +22,23 @@ const VITAL_META: Record<string, { label: string; cssVar: string; fallback: stri
   sys_bp: { label: "SYS", cssVar: "--ch-art", fallback: "#FF3B30" },
   dia_bp: { label: "DIA", cssVar: "--ch-art", fallback: "#FF3B30" },
 };
+
+/**
+ * Task-surface CODE colours signal task type and live only inside the task
+ * panel (§4). The code itself is user-facing text, so it goes through i18n —
+ * a bare "do"/"report" is English leaking onto a Hebrew-first screen.
+ */
+const TASK_CODE_KEY: Record<string, MessageKey> = {
+  do: "station.task.code.do",
+  report: "station.task.code.report",
+  timed: "station.task.code.timed",
+  approval: "station.task.code.approval",
+};
+
+function taskCodeLabel(code: string): string {
+  const key = TASK_CODE_KEY[code];
+  return key === undefined ? code : t(key);
+}
 
 type Props = { readonly sessionId: string };
 
@@ -203,6 +222,13 @@ function MonitorZone({
     return Object.entries(roleView.vitals);
   }, [roleView]);
 
+  // The monitor draws only channels the engine actually supplies (see
+  // monitor/renderer.ts) — an unmodelled vital stays absent, never invented.
+  const monitorVitals = useMemo<MonitorVitals>(
+    () => (roleView === null ? {} : (roleView.vitals as MonitorVitals)),
+    [roleView],
+  );
+
   return (
     <section
       aria-label={t("station.monitor.label")}
@@ -223,6 +249,15 @@ function MonitorZone({
         <p role="status" style={{ marginTop: 0, fontWeight: 700 }}>
           {t("station.monitor.stale")}
         </p>
+      )}
+      {roleView !== null && (
+        <div style={{ marginBlockEnd: 12 }}>
+          <PatientMonitor
+            vitals={monitorVitals}
+            species={roleView.species}
+            frozen={stale || roleView.phase !== "running"}
+          />
+        </div>
       )}
       <div
         style={{
@@ -318,7 +353,7 @@ function TaskPanel({
                 focus?.id === task.id ? "2px solid var(--action-accent, #008080)" : undefined,
             }}
           >
-            <strong style={{ marginInlineEnd: 6 }}>{task.code}</strong>
+            <strong style={{ marginInlineEnd: 6 }}>{taskCodeLabel(task.code)}</strong>
             {task.titleHe}
           </span>
         ))}
@@ -380,7 +415,9 @@ function TaskWorkspace({
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <div>
-        <div style={{ fontSize: 13, color: "var(--text-secondary, #9aa7b8)" }}>{task.code}</div>
+        <div style={{ fontSize: 13, color: "var(--text-secondary, #9aa7b8)" }}>
+          {taskCodeLabel(task.code)}
+        </div>
         <h2 style={{ margin: "4px 0", fontSize: 22 }}>{task.titleHe}</h2>
         <p style={{ margin: 0, color: "var(--text-secondary, #9aa7b8)" }}>{task.instructionHe}</p>
       </div>
