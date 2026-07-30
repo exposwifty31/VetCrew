@@ -1,5 +1,17 @@
 import { defineConfig } from "@playwright/test";
 
+// Ports come from the worktree's own .env so this config, the Vite server and the
+// API server all agree by construction (docs/worktrees.md). No .env → today's
+// defaults, so CI is unchanged.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // no .env — defaults below
+}
+
+const apiPort = Number(process.env["PORT"] ?? 3001);
+const webPort = Number(process.env["VETCREW_WEB_PORT"] ?? 5173);
+
 /**
  * E2E suite (plan Phase 4): full instructor-run -> AAR flow + a11y scan.
  * Run explicitly via `pnpm test:e2e`; not part of `pnpm test`.
@@ -10,13 +22,13 @@ export default defineConfig({
   timeout: 60_000,
   fullyParallel: false,
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: `http://localhost:${webPort}`,
     screenshot: "only-on-failure",
   },
   webServer: [
     {
       command: "pnpm dev:server",
-      url: "http://localhost:3001/api/health",
+      url: `http://localhost:${apiPort}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       env: {
@@ -26,7 +38,7 @@ export default defineConfig({
     },
     {
       command: "pnpm dev",
-      url: "http://localhost:5173",
+      url: `http://localhost:${webPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
