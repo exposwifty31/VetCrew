@@ -11,8 +11,9 @@ import {
   authoredScenarioSchema,
   engineEventBodySchema,
   engineEventSchema,
+  type EngineEventBody,
 } from "@vetcrew/shared";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
@@ -20,6 +21,7 @@ import {
   readAuth,
   type AuthReader,
   type AuthSnapshot,
+  type VetcrewRole,
 } from "../auth.js";
 import type { Db } from "../db/client.js";
 import {
@@ -32,6 +34,70 @@ import {
 import { attestEvidenceSeqs, loadEventLogRows } from "../evidence-attest.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { compileScenario } from "../scenarios.js";
+
+/** Escape hatch for unreviewed scenarios — CI/local only; never production. */
+function allowUnreviewedScores(): boolean {
+  return (
+    process.env.VETCREW_ALLOW_UNREVIEWED_SCORES === "1" &&
+    process.env.NODE_ENV !== "production"
+  );
+}
+
+function isRaterRole(role: VetcrewRole | null): boolean {
+  return role === "instructor" || role === "manager";
+}
+
+type RestEventAuthz =
+  | { ok: true; bodies: EngineEventBody[] }
+  | { ok: false; message: string };
+
+/**
+ * REST append is the test/admin harness beside the live socket path.
+ * Instructors/managers may seed any bodies; trainees may only send their own
+ * intents, with actorId stamped from auth (mirrors socket authorizeIntent).
+ */
+function authorizeRestEventBodies(
+  auth: AuthSnapshot,
+  authEnabled: boolean,
+  bodies: readonly EngineEventBody[],
+  assignedRoles: readonly string[],
+): RestEventAuthz {
+  if (!authEnabled) {
+    return { ok: true, bodies: [...bodies] };
+  }
+  if (isRaterRole(auth.role)) {
+    return { ok: true, bodies: [...bodies] };
+  }
+  if (auth.role !== "trainee" || auth.userId === null) {
+    return { ok: false, message: "forbidden" };
+  }
+  const stamped: EngineEventBody[] = [];
+  for (const body of bodies) {
+    switch (body.type) {
+      case "injection":
+      case "phase_change":
+      case "tick":
+        return {
+          ok: false,
+          message: "trainee cannot inject, change session phase, or emit ticks",
+        };
+      case "action":
+      case "task_start":
+      case "task_submit": {
+        if (!assignedRoles.includes(body.role)) {
+          return { ok: false, message: `trainee is not assigned role "${body.role}"` };
+        }
+        stamped.push({ ...body, actorId: auth.userId });
+        break;
+      }
+      default: {
+        const exhaustive: never = body;
+        throw new Error(`Unhandled event body: ${JSON.stringify(exhaustive)}`);
+      }
+    }
+  }
+  return { ok: true, bodies: stamped };
+}
 
 function readAuthIfEnabled(req: Request, authEnabled: boolean, readAuthFn: AuthReader): AuthSnapshot {
   if (!authEnabled) {
@@ -243,7 +309,44 @@ export function createSessionRouter(
   const readAuthFn = options.readAuth ?? readAuth;
   const router = Router();
 
-  router.get("/", async (_req: Request, res: Response) => {
+  router.get("/", async (req: Request, res: Response) => {
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    const conditions = [eq(simSessions.tenantId, tenantId)];
+    if (authEnabled) {
+      const role = auth.role;
+      switch (role) {
+        case "manager":
+        case "instructor":
+          break;
+        case "trainee":
+        case null: {
+          if (auth.userId === null) {
+            res.json({ sessions: [] });
+            return;
+          }
+          const assigned = await db
+            .select({ sessionId: roleStations.sessionId })
+            .from(roleStations)
+            .where(
+              and(
+                eq(roleStations.tenantId, tenantId),
+                eq(roleStations.assignedUserId, auth.userId),
+              ),
+            );
+          const sessionIds = assigned.map((row) => row.sessionId);
+          if (sessionIds.length === 0) {
+            res.json({ sessions: [] });
+            return;
+          }
+          conditions.push(inArray(simSessions.id, sessionIds));
+          break;
+        }
+        default: {
+          const exhaustive: never = role;
+          throw new Error(`Unhandled role: ${JSON.stringify(exhaustive)}`);
+        }
+      }
+    }
     const rows = await db
       .select({
         id: simSessions.id,
@@ -256,7 +359,7 @@ export function createSessionRouter(
       })
       .from(simSessions)
       .innerJoin(scenarios, eq(scenarios.id, simSessions.scenarioId))
-      .where(eq(simSessions.tenantId, tenantId))
+      .where(and(...conditions))
       .orderBy(desc(simSessions.createdAt));
     res.json({ sessions: rows });
   });
@@ -342,10 +445,33 @@ export function createSessionRouter(
     }
     const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
     const allowed = await assertSessionAccess(db, tenantId, id, auth, authEnabled);
+    if (!allowed) {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+    let assignedRoles: string[] = [];
+    if (authEnabled && auth.role === "trainee" && auth.userId !== null) {
+      const stations = await db
+        .select({ role: roleStations.role })
+        .from(roleStations)
+        .where(
+          and(
+            eq(roleStations.tenantId, tenantId),
+            eq(roleStations.sessionId, id),
+            eq(roleStations.assignedUserId, auth.userId),
+          ),
+        );
+      assignedRoles = stations.map((row) => row.role);
+    }
+    const authz = authorizeRestEventBodies(auth, authEnabled, parsed.data.events, assignedRoles);
+    if (!authz.ok) {
+      res.status(403).json({ error: authz.message });
+      return;
+    }
     const result = await appendSessionEvents(db, {
       tenantId,
       sessionId: id,
-      bodies: parsed.data.events,
+      bodies: authz.bodies,
     });
     switch (result.kind) {
       case "not_found":
@@ -444,6 +570,11 @@ export function createSessionRouter(
       res.status(403).json({ error: "forbidden" });
       return;
     }
+    // ANTS is instructor/manager formative feedback — trainees must not self-rate.
+    if (authEnabled && !isRaterRole(auth.role)) {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
     const raterId = authEnabled ? auth.userId : parsed.data.raterId;
     if (raterId === null || raterId === undefined || raterId.length === 0) {
       res.status(400).json({ error: "raterId required" });
@@ -463,10 +594,7 @@ export function createSessionRouter(
       res.status(500).json({ error: "session references missing scenario" });
       return;
     }
-    if (
-      !scenarioRow.clinicallyReviewed &&
-      process.env.VETCREW_ALLOW_UNREVIEWED_SCORES !== "1"
-    ) {
+    if (!scenarioRow.clinicallyReviewed && !allowUnreviewedScores()) {
       res.status(403).json({ error: "scenario_not_clinically_reviewed" });
       return;
     }
@@ -478,6 +606,7 @@ export function createSessionRouter(
       | { kind: "wrong_phase"; phase: string }
       | { kind: "no_time_in_training" }
       | { kind: "unknown_evidence"; seqs: number[] }
+      | { kind: "non_role_attributed"; seqs: number[] }
       | { kind: "ok" };
     const result: RatingsResult = await db.transaction(async (tx) => {
       const rows = await tx
@@ -493,8 +622,8 @@ export function createSessionRouter(
       // Scoring gate: time-in-training must exist before a session can be
       // scored — it is the progression axis and cannot be backfilled (§4).
       if (session.traineeTimeInTrainingDays === null) return { kind: "no_time_in_training" };
-      // Evidence must point at events that actually exist in THIS session —
-      // a rating with fabricated evidence is worse than no rating (§2.3).
+      // Evidence must point at role-attributed human acts in THIS session —
+      // a rating with fabricated or tick-only evidence is worse than no rating (§2.3).
       // Freeze log head (seq + hash) before appending phase=scored.
       const logRows = await loadEventLogRows(tx, session.id);
       const allEvidenceSeqs = parsed.data.ratings.flatMap((rating) => rating.evidenceEventSeqs);
@@ -504,6 +633,9 @@ export function createSessionRouter(
       }
       if (attested.kind === "unknown_evidence") {
         return { kind: "unknown_evidence", seqs: attested.seqs };
+      }
+      if (attested.kind === "non_role_attributed") {
+        return { kind: "non_role_attributed", seqs: attested.seqs };
       }
       const { logHeadSeq, logHeadHash } = attested.attestation;
       await tx.insert(antsRatings).values(
@@ -543,6 +675,11 @@ export function createSessionRouter(
       case "unknown_evidence":
         res.status(422).json({
           error: `evidence references events not in this session: ${result.seqs.join(", ")}`,
+        });
+        return;
+      case "non_role_attributed":
+        res.status(422).json({
+          error: `evidence must cite role-attributed human acts (action/task_start/task_submit): ${result.seqs.join(", ")}`,
         });
         return;
       case "ok":

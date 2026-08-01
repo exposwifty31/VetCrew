@@ -34,14 +34,19 @@ export function hashEventLog(rows: readonly EventLogRow[]): string {
   return createHash("sha256").update(eventLogPreimage(rows), "utf8").digest("hex");
 }
 
+/** Human-act event types that may bind an ANTS rating (role + actor required). */
+const ROLE_ATTRIBUTED_EVIDENCE_TYPES = new Set(["action", "task_start", "task_submit"]);
+
 export type AttestOutcome =
   | { kind: "ok"; attestation: EvidenceAttestation }
   | { kind: "unknown_evidence"; seqs: number[] }
+  | { kind: "non_role_attributed"; seqs: number[] }
   | { kind: "empty_evidence" };
 
 /**
- * Verify every evidence seq exists in the session log and freeze the current
- * head (seq + sha256) for the rating row. Call before appending phase=scored.
+ * Verify every evidence seq exists in the session log, is a role-attributed
+ * human act (§2.3 / event taxonomy), and freeze the current head (seq + sha256)
+ * for the rating row. Call before appending phase=scored.
  */
 export function attestEvidenceSeqs(
   rows: readonly EventLogRow[],
@@ -51,9 +56,22 @@ export function attestEvidenceSeqs(
     return { kind: "empty_evidence" };
   }
   const bySeq = new Map(rows.map((row) => [row.seq, row]));
-  const unknown = [...new Set(evidenceSeqs.filter((seq) => !bySeq.has(seq)))];
+  const unique = [...new Set(evidenceSeqs)];
+  const unknown = unique.filter((seq) => !bySeq.has(seq));
   if (unknown.length > 0) {
     return { kind: "unknown_evidence", seqs: unknown };
+  }
+  const nonRoleAttributed = unique.filter((seq) => {
+    const row = bySeq.get(seq);
+    if (row === undefined) return true;
+    return (
+      !ROLE_ATTRIBUTED_EVIDENCE_TYPES.has(row.type) ||
+      row.role === null ||
+      row.actorId === null
+    );
+  });
+  if (nonRoleAttributed.length > 0) {
+    return { kind: "non_role_attributed", seqs: nonRoleAttributed };
   }
   const head = rows[rows.length - 1];
   return {

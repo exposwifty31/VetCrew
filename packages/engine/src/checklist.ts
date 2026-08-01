@@ -1,4 +1,4 @@
-import type { EngineEvent } from "./events.js";
+import type { EngineEvent, SessionPhase } from "./events.js";
 
 /**
  * Technical checklist — a weighted, rule-based query over the event log.
@@ -56,11 +56,38 @@ function collectActions(events: readonly EngineEvent[]): TimedAction[] {
   const ordered = [...events].sort((a, b) => a.seq - b.seq);
   const actions: TimedAction[] = [];
   let timeMs = 0;
+  // Mirror the reducer: actions outside `running` have no effect, so they
+  // must not satisfy (or violate) a technical checklist item.
+  let phase: SessionPhase = "draft";
   for (const event of ordered) {
-    if (event.type === "tick") {
-      timeMs += event.dtMs;
-    } else if (event.type === "action") {
-      actions.push({ seq: event.seq, timeMs, action: event.action, role: event.role });
+    switch (event.type) {
+      case "tick":
+        // Physiology clock advances only while running; checklist time matches.
+        if (phase === "running") {
+          timeMs += event.dtMs;
+        }
+        break;
+      case "phase_change":
+        phase = event.phase;
+        break;
+      case "action":
+        if (phase === "running") {
+          actions.push({
+            seq: event.seq,
+            timeMs,
+            action: event.action,
+            role: event.role,
+          });
+        }
+        break;
+      case "injection":
+      case "task_start":
+      case "task_submit":
+        break;
+      default: {
+        const exhaustive: never = event;
+        throw new Error(`Unhandled event: ${JSON.stringify(exhaustive)}`);
+      }
     }
   }
   return actions;

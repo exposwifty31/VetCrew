@@ -277,7 +277,7 @@ describe("score -> source-event traceability", () => {
       method: "POST",
       body: JSON.stringify({
         raterId: "it-rater",
-        ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [4] }],
+        ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [5] }],
       }),
     });
     expect(res.status).toBe(422);
@@ -311,9 +311,9 @@ describe("score -> source-event traceability", () => {
       body: JSON.stringify({
         raterId: "it-rater",
         ratings: [
-          { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-          { domain: "situation_awareness", score: 3, evidenceEventSeqs: [4] },
-          { domain: "decision_making", score: 2, evidenceEventSeqs: [7] },
+          { domain: "task_management", score: 4, evidenceEventSeqs: [5, 9] },
+          { domain: "situation_awareness", score: 3, evidenceEventSeqs: [5] },
+          { domain: "decision_making", score: 2, evidenceEventSeqs: [9] },
         ],
       }),
     });
@@ -331,7 +331,7 @@ describe("score -> source-event traceability", () => {
     expect(body.aar.finalPhase).toBe("scored");
     expect(body.ratings).toHaveLength(3);
     const tm = body.ratings.find((r) => r.domain === "task_management");
-    expect(tm?.evidenceEventSeqs).toEqual([4, 7]);
+    expect(tm?.evidenceEventSeqs).toEqual([5, 9]);
 
     const attested = await pool.query<{ log_head_seq: number; log_head_hash: string }>(
       `select log_head_seq, log_head_hash from vc_ants_ratings where session_id = $1 limit 1`,

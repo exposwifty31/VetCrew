@@ -49,6 +49,11 @@ describe("evidence attestation", () => {
     expect(attestEvidenceSeqs(rows, []).kind).toBe("empty_evidence");
   });
 
+  test("rejects tick/phase evidence that is not a role-attributed human act", () => {
+    const result = attestEvidenceSeqs(rows, [1, 4]);
+    expect(result).toEqual({ kind: "non_role_attributed", seqs: [1] });
+  });
+
   test("ok attestation freezes head seq and hash", () => {
     const result = attestEvidenceSeqs(rows, [4]);
     expect(result.kind).toBe("ok");
