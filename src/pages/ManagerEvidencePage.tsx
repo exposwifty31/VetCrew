@@ -205,10 +205,10 @@ function ManagerEvidenceBody({
     );
   }
 
+  const internalSessionCount = evidence.sessions.filter((s) => !s.clinicallyReviewed).length;
   const visibleSessions = showInternal
     ? evidence.sessions
     : evidence.sessions.filter((s) => s.clinicallyReviewed);
-  const hiddenInternalCount = evidence.sessions.length - visibleSessions.length;
 
   return (
     <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
@@ -288,14 +288,14 @@ function ManagerEvidenceBody({
       <section style={card}>
         <h2 id="evidence-h">{t("manager.evidence.heading")}</h2>
         <p style={{ color: "var(--text-secondary)" }}>{t("manager.evidence.blurb")}</p>
-        {hiddenInternalCount > 0 && (
+        {internalSessionCount > 0 && (
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginBlock: 12 }}>
             <input
               type="checkbox"
               checked={showInternal}
               onChange={(e) => setShowInternal(e.target.checked)}
             />
-            {t("manager.evidence.showInternal", { count: hiddenInternalCount })}
+            {t("manager.evidence.showInternal", { count: internalSessionCount })}
           </label>
         )}
         {visibleSessions.length === 0 ? (
