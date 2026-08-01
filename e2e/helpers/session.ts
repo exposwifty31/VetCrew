@@ -64,9 +64,9 @@ export async function scoreSession(
     },
     data: {
       ratings: [
-        { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-        { domain: "situation_awareness", score: 4, evidenceEventSeqs: [4] },
-        { domain: "decision_making", score: 4, evidenceEventSeqs: [7] },
+        { domain: "task_management", score: 4, evidenceEventSeqs: [5, 9] },
+        { domain: "situation_awareness", score: 4, evidenceEventSeqs: [5] },
+        { domain: "decision_making", score: 4, evidenceEventSeqs: [9] },
       ],
     },
   });

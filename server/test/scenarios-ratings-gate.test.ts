@@ -53,7 +53,7 @@ async function createAndRateSession(): Promise<{ sessionId: string; rateRes: Res
     method: "POST",
     body: JSON.stringify({
       raterId: "gate-rater",
-      ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [4] }],
+      ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [5] }],
     }),
   });
   return { sessionId: session.id, rateRes };
@@ -119,5 +119,23 @@ describe("unreviewed scenario ratings gate", () => {
     process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = "1";
     const { rateRes } = await createAndRateSession();
     expect(rateRes.status).toBe(201);
+  });
+
+  test("allow flag is ignored when NODE_ENV=production", async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.VETCREW_ALLOW_UNREVIEWED_SCORES = "1";
+    process.env.NODE_ENV = "production";
+    try {
+      const { rateRes } = await createAndRateSession();
+      expect(rateRes.status).toBe(403);
+      const body = (await rateRes.json()) as { error: string };
+      expect(body.error).toBe("scenario_not_clinically_reviewed");
+    } finally {
+      if (originalNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    }
   });
 });

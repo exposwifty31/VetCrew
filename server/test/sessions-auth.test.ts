@@ -199,7 +199,7 @@ describe("session REST ownership", () => {
     expect(res.status).toBe(403);
   });
 
-  test("assigned trainee can read AAR and append events", async () => {
+  test("assigned trainee can read AAR but cannot append phase changes", async () => {
     const traineeId = "aar-trainee";
     const sessionId = await createAsInstructor(traineeId);
     const aar = await api(`/api/sessions/${sessionId}/aar`, {
@@ -213,7 +213,82 @@ describe("session REST ownership", () => {
       headers: authHeader(traineeId, "trainee"),
       body: JSON.stringify({ events }),
     });
+    expect(append.status).toBe(403);
+  });
+
+  test("unassigned trainee cannot append events", async () => {
+    const sessionId = await createAsInstructor("bound-for-append");
+    const append = await api(`/api/sessions/${sessionId}/events`, {
+      method: "POST",
+      headers: authHeader("stranger", "trainee"),
+      body: JSON.stringify({
+        events: [{ type: "action", role: "technician", actorId: "stranger", action: "oxygen_on" }],
+      }),
+    });
+    expect(append.status).toBe(403);
+  });
+
+  test("assigned trainee can append own action with actor stamped from auth", async () => {
+    const traineeId = "action-trainee";
+    const sessionId = await createAsInstructor(traineeId);
+    await api(`/api/sessions/${sessionId}/events`, {
+      method: "POST",
+      headers: authHeader("inst-owner", "instructor"),
+      body: JSON.stringify({
+        events: [
+          { type: "phase_change", phase: "briefing" },
+          { type: "phase_change", phase: "running" },
+        ],
+      }),
+    });
+    const append = await api(`/api/sessions/${sessionId}/events`, {
+      method: "POST",
+      headers: authHeader(traineeId, "trainee"),
+      body: JSON.stringify({
+        events: [
+          {
+            type: "action",
+            role: "technician",
+            actorId: "client-spoof-should-be-ignored",
+            action: "oxygen_on",
+          },
+        ],
+      }),
+    });
     expect(append.status).toBe(201);
+    const body = (await append.json()) as {
+      events: { actorId: string; type: string }[];
+    };
+    expect(body.events[0]?.actorId).toBe(traineeId);
+  });
+
+  test("trainee cannot submit ANTS ratings", async () => {
+    const traineeId = "self-rater";
+    const sessionId = await createAsInstructor(traineeId);
+    await api(`/api/sessions/${sessionId}/events`, {
+      method: "POST",
+      headers: authHeader("inst-owner", "instructor"),
+      body: JSON.stringify({ events: buildDemoEvents(traineeId) }),
+    });
+    const rateRes = await api(`/api/sessions/${sessionId}/ratings`, {
+      method: "POST",
+      headers: authHeader(traineeId, "trainee"),
+      body: JSON.stringify({
+        ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [5] }],
+      }),
+    });
+    expect(rateRes.status).toBe(403);
+  });
+
+  test("trainee session list is scoped to assigned stations", async () => {
+    const mine = await createAsInstructor("list-trainee");
+    await createAsInstructor("other-trainee");
+    const res = await api("/api/sessions", {
+      headers: authHeader("list-trainee", "trainee"),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { sessions: { id: string }[] };
+    expect(body.sessions.map((s) => s.id)).toEqual([mine]);
   });
 
   test("manager can access any session AAR", async () => {
@@ -252,7 +327,7 @@ describe("ratings stamp raterId from auth", () => {
       headers: authHeader("inst-rater", "instructor"),
       body: JSON.stringify({
         raterId: "client-should-be-ignored",
-        ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [4] }],
+        ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [5] }],
       }),
     });
     expect(rateRes.status).toBe(201);

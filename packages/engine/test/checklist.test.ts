@@ -121,6 +121,21 @@ describe("checklist evaluation", () => {
     expect(result.percent).toBe(50);
   });
 
+  test("actions outside running do not satisfy or violate checklist items", () => {
+    const events: EngineEvent[] = [
+      { seq: 1, type: "phase_change", phase: "running" },
+      { seq: 2, type: "phase_change", phase: "paused" },
+      act(3, "oxygen_on"),
+      act(4, "give_drug_iv_wrong_route"),
+      { seq: 5, type: "phase_change", phase: "running" },
+      act(6, "airway_pulses_check"),
+    ];
+    const result = evaluateChecklist(events, ITEMS);
+    expect(result.items.find((item) => item.id === "fast-oxygen")?.passed).toBe(false);
+    expect(result.items.find((item) => item.id === "no-route-error")?.passed).toBe(true);
+    expect(result.items.find((item) => item.id === "airway-first")?.passed).toBe(true);
+  });
+
   // The AAR is the Hebrew-first evidence surface (§4). Dropping labelHe here is
   // what made the checklist render in English on the pitch screen.
   test("every result carries the Hebrew label through, on pass and on fail", () => {

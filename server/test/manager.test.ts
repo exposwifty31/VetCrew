@@ -63,10 +63,10 @@ async function scoreSession(sessionId: string, score: number): Promise<void> {
     body: JSON.stringify({
       raterId: "manager-test-rater",
       ratings: [
-        { domain: "task_management", score, evidenceEventSeqs: [4, 7] },
-        { domain: "situation_awareness", score, evidenceEventSeqs: [4] },
-        { domain: "decision_making", score, evidenceEventSeqs: [7] },
-        { domain: "team_working", score, evidenceEventSeqs: [4] },
+        { domain: "task_management", score, evidenceEventSeqs: [5, 9] },
+        { domain: "situation_awareness", score, evidenceEventSeqs: [5] },
+        { domain: "decision_making", score, evidenceEventSeqs: [9] },
+        { domain: "team_working", score, evidenceEventSeqs: [5] },
       ],
     }),
   });

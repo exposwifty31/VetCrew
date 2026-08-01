@@ -14,13 +14,15 @@ import { rejectMessageKey } from "../live/rejectMessage.js";
 import { useInstructorSession } from "../live/useInstructorSession.js";
 import type { ConnectionStatus } from "../live/useSession.js";
 
+/** Cuff BP is NIBP identity colour — never arterial (`--ch-art`). */
 const VITAL_META: Record<string, { label: string; cssVar: string; fallback: string }> = {
   hr: { label: "HR", cssVar: "--ch-hr", fallback: "#00FF66" },
   spo2: { label: "SpO₂", cssVar: "--ch-spo2", fallback: "#00CCFF" },
+  etco2: { label: "EtCO₂", cssVar: "--ch-etco2", fallback: "#FFFFFF" },
   rr: { label: "RR", cssVar: "--ch-rr", fallback: "#FFCC00" },
   temp: { label: "Temp", cssVar: "--ch-temp", fallback: "#FFFFFF" },
-  sys_bp: { label: "SYS", cssVar: "--ch-art", fallback: "#FF3B30" },
-  dia_bp: { label: "DIA", cssVar: "--ch-art", fallback: "#FF3B30" },
+  sys_bp: { label: "SYS", cssVar: "--ch-nibp", fallback: "#FFFFFF" },
+  dia_bp: { label: "DIA", cssVar: "--ch-nibp", fallback: "#FFFFFF" },
 };
 
 type Props = { readonly sessionId: string };
@@ -394,7 +396,10 @@ function LiveStateColumn({
               {member.stationKind === "instructor"
                 ? t("instructor.roles.instructor")
                 : t("instructor.roles.trainee", { role: member.role })}{" "}
-              · {member.status}
+              ·{" "}
+              {member.status === "connected"
+                ? t("instructor.roles.status.connected")
+                : t("instructor.roles.status.disconnected")}
             </li>
           ))}
         </ul>
@@ -456,13 +461,13 @@ function InjectionDeck({
             }}
           >
             <div>{item.labelHe}</div>
-            <div style={{ fontWeight: 400, fontSize: 13, color: "var(--text-secondary, #9aa7b8)" }}>
-              {item.fired
-                ? t("instructor.injections.fired", {
-                    at: item.firedAtMs === null ? "—" : formatFiredAt(item.firedAtMs),
-                  })
-                : item.label}
-            </div>
+            {item.fired && (
+              <div style={{ fontWeight: 400, fontSize: 13, color: "var(--text-secondary, #9aa7b8)" }}>
+                {t("instructor.injections.fired", {
+                  at: item.firedAtMs === null ? "—" : formatFiredAt(item.firedAtMs),
+                })}
+              </div>
+            )}
           </button>
         ))
       )}

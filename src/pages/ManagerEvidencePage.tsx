@@ -166,10 +166,8 @@ function ManagerEvidenceBody({
         if (cancelled) return;
         setEvidence(ev);
         setTrend(tr);
-        // Pitch reality: nothing is clinically reviewed yet — surface internal
-        // rows with the badge rather than an empty desk.
-        const hasReviewed = ev.sessions.some((s) => s.clinicallyReviewed);
-        if (!hasReviewed && ev.sessions.length > 0) setShowInternal(true);
+        // Unreviewed sessions stay hidden until the manager explicitly opts in —
+        // automatic exposure on the evidence desk is the wrong default (§2.5).
       } catch (err) {
         if (cancelled) return;
         setLoadError(errorMessageKeyFromUnknown(err));
@@ -207,10 +205,10 @@ function ManagerEvidenceBody({
     );
   }
 
+  const internalSessionCount = evidence.sessions.filter((s) => !s.clinicallyReviewed).length;
   const visibleSessions = showInternal
     ? evidence.sessions
     : evidence.sessions.filter((s) => s.clinicallyReviewed);
-  const hiddenInternalCount = evidence.sessions.length - visibleSessions.length;
 
   return (
     <main style={{ maxWidth: 720, marginInline: "auto", padding: 24 }}>
@@ -290,14 +288,14 @@ function ManagerEvidenceBody({
       <section style={card}>
         <h2 id="evidence-h">{t("manager.evidence.heading")}</h2>
         <p style={{ color: "var(--text-secondary)" }}>{t("manager.evidence.blurb")}</p>
-        {hiddenInternalCount > 0 && (
+        {internalSessionCount > 0 && (
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginBlock: 12 }}>
             <input
               type="checkbox"
               checked={showInternal}
               onChange={(e) => setShowInternal(e.target.checked)}
             />
-            {t("manager.evidence.showInternal", { count: hiddenInternalCount })}
+            {t("manager.evidence.showInternal", { count: internalSessionCount })}
           </label>
         )}
         {visibleSessions.length === 0 ? (
