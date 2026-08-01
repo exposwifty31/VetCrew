@@ -12,6 +12,12 @@ test("manager evidence desk lists scored sessions with internal badge", async ({
 
   await expect(page.getByRole("heading", { name: "שולחן ראיות" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "סשנים מדורגים" })).toBeVisible();
+  // Unreviewed sessions stay hidden until the manager opts in (§2.5).
+  const showInternal = page.getByRole("checkbox", {
+    name: /סשנים לבדיקה פנימית/,
+  });
+  await expect(showInternal).toBeVisible();
+  await showInternal.check();
   await expect(page.getByText("פנימי בלבד").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "פתיחת תחקיר" }).first()).toBeVisible();
 
