@@ -166,10 +166,8 @@ function ManagerEvidenceBody({
         if (cancelled) return;
         setEvidence(ev);
         setTrend(tr);
-        // Pitch reality: nothing is clinically reviewed yet — surface internal
-        // rows with the badge rather than an empty desk.
-        const hasReviewed = ev.sessions.some((s) => s.clinicallyReviewed);
-        if (!hasReviewed && ev.sessions.length > 0) setShowInternal(true);
+        // Unreviewed sessions stay hidden until the manager explicitly opts in —
+        // automatic exposure on the evidence desk is the wrong default (§2.5).
       } catch (err) {
         if (cancelled) return;
         setLoadError(errorMessageKeyFromUnknown(err));

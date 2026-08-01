@@ -15,12 +15,18 @@ import { rejectMessageKey } from "../live/rejectMessage.js";
 import { useSession } from "../live/useSession.js";
 import type { MonitorVitals } from "../monitor/renderer.js";
 
+/**
+ * Numeric tile colours follow monitor channel identity (§4). Cuff pressure is
+ * NIBP (white), never arterial red — Art means an invasive line.
+ */
 const VITAL_META: Record<string, { label: string; cssVar: string; fallback: string }> = {
   hr: { label: "HR", cssVar: "--ch-hr", fallback: "#00FF66" },
+  spo2: { label: "SpO₂", cssVar: "--ch-spo2", fallback: "#00CCFF" },
+  etco2: { label: "EtCO₂", cssVar: "--ch-etco2", fallback: "#FFFFFF" },
   rr: { label: "RR", cssVar: "--ch-rr", fallback: "#FFCC00" },
   temp: { label: "Temp", cssVar: "--ch-temp", fallback: "#FFFFFF" },
-  sys_bp: { label: "SYS", cssVar: "--ch-art", fallback: "#FF3B30" },
-  dia_bp: { label: "DIA", cssVar: "--ch-art", fallback: "#FF3B30" },
+  sys_bp: { label: "SYS", cssVar: "--ch-nibp", fallback: "#FFFFFF" },
+  dia_bp: { label: "DIA", cssVar: "--ch-nibp", fallback: "#FFFFFF" },
 };
 
 /**
