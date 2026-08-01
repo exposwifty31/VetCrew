@@ -38,12 +38,12 @@ pnpm guard:deps
 - Optional: `CORS_ORIGIN=https://<your-domain>` (defaults to `https://$RAILWAY_PUBLIC_DOMAIN`).
 - Health: `GET /api/health` (503 while DB is starting).
 
-### Auth & pitch-only env
+### Auth & internal/test env
 
 | Variable | Where | Purpose |
 |---|---|---|
 | `VETCREW_TEST_AUTH=1` | CI / local e2e only | Enables `Authorization: Bearer test:<userId>:<role>` where `<role>` is `manager`, `instructor`, or `trainee`. **Never set in production Railway.** |
-| `VETCREW_ALLOW_UNREVIEWED_SCORES=1` | CI / local pitch demos | Allows ratings on scenarios with `clinically_reviewed: false`. Unset in production — server returns 403 `scenario_not_clinically_reviewed`. |
+| `VETCREW_ALLOW_UNREVIEWED_SCORES=1` | CI / local only (`NODE_ENV !== "production"`) | Allows ratings on scenarios with `clinically_reviewed: false`. Ignored in production even if set — server returns 403 `scenario_not_clinically_reviewed`. |
 
 Production roles: Clerk `user.publicMetadata.vetcrewRole` (`manager` \| `instructor` \| `trainee`). Live socket join is allowlisted by `role_stations.assigned_user_id`.
 

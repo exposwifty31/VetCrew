@@ -76,9 +76,9 @@ Tracker today uses Wayfinder labels, not Matt Pocock triage roles. **Decision lo
 
 | Item | Category | State | Rationale |
 |---|---|---|---|
-| [#12](https://github.com/exposwifty31/VetCrew/issues/12) Clinical stamp | enhancement | **ready-for-human** | CTO 2026-07-26: pipeline work continues; `VETCREW_ALLOW_UNREVIEWED_SCORES=1` local+CI; prod unset; stamp remains HITL |
-| [#10](https://github.com/exposwifty31/VetCrew/issues/10) SRS Option (a) countersign | enhancement | **ready-for-human** | Option (a) confirmed for active dev until memo countersign |
-| [#9](https://github.com/exposwifty31/VetCrew/issues/9) Wayfinder map | enhancement | **ready-for-human** | Close after pitch-readiness checklist |
+| [#12](https://github.com/exposwifty31/VetCrew/issues/12) Clinical stamp | enhancement | **paused-pivot** | Pitch shelved 2026-07-30; stamp remains HITL when pitch resumes; `VETCREW_ALLOW_UNREVIEWED_SCORES` is CI/local-only (never production) |
+| [#10](https://github.com/exposwifty31/VetCrew/issues/10) SRS Option (a) countersign | enhancement | **paused-pivot** | Pitch shelved; Option (a) still the active scenario posture when work resumes |
+| [#9](https://github.com/exposwifty31/VetCrew/issues/9) Wayfinder map | enhancement | **paused-pivot** | Pitch shelved; close when pitch-readiness checklist resumes |
 | [PR #16](https://github.com/exposwifty31/VetCrew/pull/16) Mountain C memo | documentation | **done (merged)** | `f5c528c` |
 
 Triage labels applied 2026-07-26. Phase C → [#17](https://github.com/exposwifty31/VetCrew/pull/17). Phase D → [#18](https://github.com/exposwifty31/VetCrew/pull/18).
@@ -143,6 +143,8 @@ This hardens the evidence product competitors cannot casually copy; it does not 
 ---
 
 ## Phase E — Explain the future (doctrine, not build yet)
+
+> **Superseded for execution (2026-08-01 founder review).** Pitch track is shelved; worktree infra (#23) shipped; current milestone is **product work** per root `CLAUDE.md`. Do not treat this phase as the next agent task. The forward claims below remain true when the pitch resumes — they are dormant, not cancelled.
 
 Write a short forward brief (repo doc or pitch appendix) that states:
 
