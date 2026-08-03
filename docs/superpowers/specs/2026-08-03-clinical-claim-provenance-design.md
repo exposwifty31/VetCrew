@@ -97,10 +97,11 @@ Consequences worth stating because they were decided rather than inherited:
 Several assertions are arithmetic rather than judgment and belong in schema validation, never on a scarce reviewer's desk:
 
 - `expectedMl` must equal `doseMg / concentrationMgPerMl`, compared with a relative tolerance of `1e-9` so authored decimals such as `0.1` do not fail on binary float representation.
-- The expected fluids rate must follow from `orderedMlPerHr × dropsPerMl / 60`.
 - `expectedRouteId` must never appear in `criticalRouteIds`.
 - `expectedMin` must not exceed `expectedMax`.
-- `expectedOptionId` must exist among that step's `options`.
+- `expectedOptionId` must exist among that step's `options`; `expectedOptionIds` and `expectedOrder` must all resolve; `expectedSetId` must resolve to one of `sets`.
+
+**Correction, found while verifying against the shipped scenario.** An earlier draft listed a fluids arithmetic check — "the expected rate must follow from `orderedMlPerHr × dropsPerMl / 60`." There is nothing to check: `fluids_setup` stores no expected drops-per-minute, because the answer is derived at evaluation time from `expectedSetId` and the ordered rate. The checkable invariant is resolution of `expectedSetId`, which is what the list above now says. All checks above pass on both shipped scenarios today, verified before this spec was written.
 
 Catching an authoring slip in CI rather than in her inbox matters when the reviewer is one person who does not work here.
 
@@ -167,7 +168,11 @@ Separating the token from the metadata is what lets a dead URL be fixed without 
 
 ### 3.4 Where the schemas live
 
-The source union and the `claimSources` map are plain Zod and belong in `packages/shared` beside `authoredScenarioSchema`, so client and server validate identically. Claim extraction, hashing, and status derivation are server-only — nothing in the client needs them, and hashing needs `node:crypto`, which must not enter a package the React bundle imports.
+The source union and the `claimSources` map are plain Zod and belong in `packages/shared` beside `authoredScenarioSchema`, so client and server validate identically.
+
+**Claim extraction also lives in `packages/shared`,** which corrects an earlier draft that placed it server-side. The mandatory-provenance rule is a set equality between extracted claim references and `claimSources` keys, and that check belongs inside `authoredScenarioSchema.superRefine` where every other structural rule already lives — which means extraction has to be importable from there. It is pure, needs no crypto, and is a few dozen lines.
+
+Hashing and status derivation stay server-only: hashing needs `node:crypto`, which must not enter a package the React bundle imports.
 
 ---
 
@@ -189,11 +194,13 @@ The record's honest claim is *"Dan recorded, on the 5th, that Reviewer X approve
 
 ### 4.3 File-first, append-only
 
-Sign-offs arrive as a committed data file, synced to the database at boot like scenarios and sources. No UI, no API, no onboarding — which is what keeps the workflow unblocked. She signs something out-of-band, the artifact is referenced, and the transcription lands in a pull request where the diff is legible and git records authorship.
+Sign-offs arrive as a committed data file. No UI, no API, no onboarding — which is what keeps the workflow unblocked. She signs something out-of-band, the artifact is referenced, and the transcription lands in a pull request where the diff is legible and git records authorship.
 
-The database copy exists because the gate and future surfaces must query it, not because it is the source of truth.
+**Correction: no database tables, and no forbid-mutation trigger.** An earlier draft had both registries synced to Postgres like scenarios, with the event log's append-only trigger applied to reviews. Those two requirements contradict each other — a boot-time sync has to upsert rows that already exist, which an append-only trigger would reject, so the server would fail to start on its second boot. Resolving it in favour of the trigger would mean abandoning sync; resolving it in favour of sync would mean an append-only guarantee that only holds until the next deploy.
 
-The registry is **append-only**, carrying the same forbid-mutation trigger the event log uses. A review is evidence about evidence. A changed mind is a new row; the latest row for a given reference and hash wins. A rejection is exactly as durable as an approval and cannot be quietly dropped without the diff showing it.
+Neither is necessary. Scenarios are in Postgres because sessions carry a foreign key to them; sources and reviews have no such need, nothing queries them outside the gate, and the gate runs in-process. Both registries load at boot from their files and are held in memory, passed to the session router as options. **Append-only-ness comes from git**, which is stronger than a database trigger for this purpose: it records who made each change, when, and in what pull request, and a deleted approval shows up as a red line in a diff rather than as an absence nobody notices.
+
+The append-only *discipline* is unchanged. A changed mind is a new entry appended to the file; the last entry for a given reference and hash wins. A rejection is exactly as durable as an approval and cannot be quietly dropped without the diff showing it.
 
 Sign-off fields: `scenarioSlug`, `claimRef`, `claimHash`, `decision` (`approved` or `rejected`), optional `note`, `reviewerName`, `reviewerCredential`, `reviewedAt`, `attestationRef`, optional `validUntil`, and `recordedByUserId`.
 
@@ -249,7 +256,8 @@ Weighted toward where this design can silently rot.
 - **Validation tests.** Source cannot be omitted (set-equality against extracted refs); an orphaned `claimSources` key fails; a short rationale fails; an unresolvable `sourceId` fails; a withdrawn source fails at load; and the §2.5 arithmetic checks.
 - **Status derivation** across all six states, with `stale_content` given its own test proving an edited claim is distinguishable from one never reviewed.
 - **Gate tests.** A rejected claim blocks even when the boolean is `true`; the boolean still blocks on its own; `allowUnreviewedScores()` still works outside production.
-- **Append-only enforcement.** `UPDATE` and `DELETE` against the review registry table are refused at the database layer.
+- **Last-entry-wins resolution.** Two entries for the same reference and hash resolve to the later one, so an appended reversal supersedes an earlier decision without the earlier one being deleted.
+- **Registry loading.** A malformed sources or reviews file fails boot loudly, matching how `loadScenarioFiles` already treats an invalid scenario.
 
 ---
 
@@ -275,7 +283,7 @@ Both dependencies are on the evidence-integrity work, which is sequenced first, 
 
 **`allowUnreviewedScores()`** (that spec's Task 1), which replaces the inline `process.env.VETCREW_ALLOW_UNREVIEWED_SCORES` read in the ratings route and refuses the escape hatch in production. §5 assumes the gate reads that helper rather than the environment directly.
 
-The database migration for the two new tables follows `0007` and `0008` from that spec.
+No database migration is needed — see the correction in §4.3. Both registries are in-memory, loaded at boot from committed files.
 
 ---
 
@@ -288,7 +296,7 @@ The database migration for the two new tables follows `0007` and `0008` from tha
 5. A superseded source moves every dependent claim to `stale_source` with no file edit.
 6. A rejected claim makes a scenario unscoreable even with `clinicallyReviewed: true`.
 7. `replay()` output and `EngineState` are unchanged by the presence of provenance data.
-8. `UPDATE` and `DELETE` on the review registry are refused by the database.
+8. An appended reversal supersedes an earlier decision for the same reference and hash, without the earlier entry being removed.
 9. The provenance report prints per-scenario counts by kind.
 10. `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm i18n:check`, `pnpm guard:deps`, and `pnpm guard:dead` all pass.
 
