@@ -134,10 +134,39 @@ Crew mode slots in after 3 and can precede 5.
 
 ---
 
-## 6. Decisions needed before step 2 can be specified
+## 6. Decisions — all three answered 2026-08-04
 
-**D1 — What replaces time-in-training?** The gate currently prevents any session being scored. Options: remove it outright for candidate assessment; or keep a nullable column and let practice-session count serve as the axis for the practice platform only. The second must not smuggle the metric back into candidate assessment, where a single session makes it meaningless.
+Step 2 of §5 is unblocked. Each answer forces something beyond the obvious change, recorded here because the derived requirements are where the work actually is.
 
-**D2 — What makes a rating set complete?** Needed to decouple rating submission from the `debrief → scored` transition. Do all three raters have to submit before the session becomes `scored`, or a quorum? Must every rater cover all four ANTS domains?
+### D1 — Remove time-in-training entirely for candidate assessment. ANSWERED
 
-**D3 — Is mode a property of the session or of the scenario?** A scenario authored for assessment could carry the mode intrinsically, matching Elbit's model where training and qualification scenarios are different content. Alternatively one scenario could be runnable in either mode. These produce different schemas and different authoring rules.
+**This is not a one-line change.** The field is load-bearing in seven places, and two of them fail *harder* once the ratings gate is removed:
+
+| Site | What it does | Effect of removal |
+|---|---|---|
+| `server/routes/sessions.ts:495` | 422 `no_time_in_training` gate | The change itself |
+| `server/routes/manager.ts:138-140`, `228-230` | **Throws** for any scored session with a null value | **500 on both manager endpoints** unless fixed in the same change |
+| `packages/shared/src/scoring-surfaces.ts:19,48` | `traineeTimeInTrainingDays` and `timeInTrainingDays` are non-nullable `z.number()` | Response cannot serialize |
+| `packages/shared/src/entities.ts:49-52` | Refinement rejecting a `scored` session with a null value | The entity schema itself forbids the new state |
+| `packages/engine/src/scoring-surfaces.ts:86-87` | **Sorts the trend series by `timeInTrainingDays`** | The within-person trend loses its ordering basis |
+| `src/pages/ManagerEvidencePage.tsx:265,329`; `src/pages/AarPage.tsx:332` | Renders it | Dead UI plus two orphaned i18n keys (`manager.evidence.tit`, `aar.header.timeInTraining`) |
+
+**The derived decision is the trend's replacement sort key.** `createdAtMs` already exists in `trendPointSchema:47`, so the trend survives — but the axis changes meaning, from "progress against accumulated experience" to "progress over calendar time." For this product that is the more honest axis anyway, since the 30 shifts were never visible to the system.
+
+### D2 — All three raters must submit, each covering all four ANTS domains. ANSWERED
+
+Twelve rating rows per session (3 raters × 4 domains), and the `debrief → scored` transition fires when the set is complete.
+
+**The derived requirement: the system has to know which three raters.** "All three have submitted" is uncheckable against `antsRatings.raterId` alone, which is free text stamped from auth — any three people could satisfy a bare count of distinct raters, including the candidate's mentor.
+
+So D2 implies **per-session rater assignment**, following the existing `vc_role_stations` pattern: rows naming the three assigned raters at session creation. That table is also the only place the §1.6 mentor-exclusion rule can actually be enforced rather than merely intended.
+
+### D3 — Mode is declared on the scenario file, assessment-only. ANSWERED
+
+Elbit's model: training scenarios and qualification scenarios are different content, not one scenario in two settings.
+
+**Implementation precedent already exists.** `clinicallyReviewed` is exactly this shape: an authored field, mirrored to a column on `vc_scenarios`, read where needed, and never entering the engine. Mode should follow it — which keeps `ScenarioDef` and `EngineState` untouched, and that matters, because provenance was deliberately kept out of `EngineState` so content metadata could never alter replay.
+
+One wiring detail: `authorizeIntent` receives the `SessionRoom`, and the room holds the *compiled* `ScenarioDef`. So the mode has to be passed into `SessionRoom.hydrate` explicitly, alongside `seed` and `scenario`, rather than read off the compiled scenario.
+
+**Two consequences worth naming.** The separate-scenario-banks boundary becomes free — the bank *is* the mode field, and an assessment scenario simply cannot be opened in practice mode. And the merged first assessment scenario from §3.9 will therefore be assessment-only, so **practice content has to be authored separately rather than reusing it.** More authoring work, and it is the correct cost: it is what stops the exam measuring rehearsal.
