@@ -1,17 +1,21 @@
 # VetCrew — Project Context for Claude Code
 
-**Status:** pre-v1 pitch package — deterministic engine; **shipped:** trainee station, instructor console (live inject/pause), manager evidence desk, AAR/ANTS; auth-bound live join via Clerk + `role_stations`; CI/e2e test-auth seam (`VETCREW_TEST_AUTH`). Solo build (Dan), AI-agent-driven.
-**Last updated:** 2026-07-30 (pitch track shelved by founder decision; milestone is now parallel-worktree dev infrastructure)
+**Status:** pre-v1 — deterministic engine; **shipped:** trainee station, instructor console (live inject/pause), manager evidence desk, AAR/ANTS; auth-bound live join via Clerk + `role_stations`; CI/e2e test-auth seam (`VETCREW_TEST_AUTH`). Solo build (Dan), AI-agent-driven.
+**Last updated:** 2026-08-04 (product model settled: internal hospital tool, two platforms, tutorial-first; see §1 and `docs/design-alignment-2026-08-04.md`)
 
-**Current milestone: parallel-worktree development infrastructure.** Multiple agents plus Dan, each in an isolated git worktree, all able to run the full verification pyramid concurrently. See `docs/worktrees.md`.
+**⚠️ THIS IS AN INTERNAL TOOL FOR ONE HOSPITAL, NOT A PRODUCT FOR STRANGERS — founder clarification 2026-08-04.** Dan works at a veterinary hospital in Israel. **The department manager commissioned this work** as a task: improve how the hospital evaluates technicians applying for jobs, because the current method is not good enough. It is built for colleagues Dan sees every day. If it later grows into something the hospital or others adopt as an enterprise offering, good — that is not the driving force. **Consequence: most of the competitive analysis below (SimX, iSimulate, market positioning) is context, not strategy. There is no buyer to persuade.**
 
-**⏸ THE PITCH TRACK IS SHELVED — founder decision 2026-07-30.** The Reviewer meeting and the manager's §6 question are **paused**, not pending: do not schedule them, do not do demo-prep engineering, and do not treat #9/#10/#12 as actionable (they are labelled `paused-pivot`). Everything below about the pitch remains *true* and is kept for when it resumes — it is dormant, not wrong. Nothing in the build ever gated that meeting; the pitch package was complete (CI green on master; the full station → instructor → AAR → manager path passing e2e).
+**Adoption is mandated, which relocates the §2.4 risk.** Assessment is **mandatory** for candidates and both replaces and supplements the written exam. [A4]'s zero-uptake finding was specifically about *voluntary* programmes, and its authors concluded leadership mandate is the precondition — this is the mandated case. The friction risk now applies only to the voluntary practice platform, where the mitigation is that the tool has to be good enough that technicians choose it.
 
-**Stated premise and stop condition.** Asked how much parallelism exists today, Dan's answer was **1–2 agents with rare collisions**. The pivot is therefore a **forward investment, not a response to measured pain** — recorded plainly so a future review can check the premise instead of re-arguing it from memory. **Stop condition: zero further worktree-infra investment beyond the initial PR unless observed collision pain at ≥3 concurrent agents is recorded with a concrete example.** The next unit of work after that PR is product work.
+**Current milestone: making the assessment path support what the design requires.** Session mode, three-rater scoring, and the time-in-training decision — see §1.6 and the audit. Parallel-worktree infrastructure is done (`docs/worktrees.md`); its stop condition stands.
 
-**Shipped (pitch package, dormant but complete):** station + instructor + manager under auth-bound join; floor deep-link station entry, trainee never creates ([#17](https://github.com/exposwifty31/VetCrew/pull/17)); tamper-evident ANTS evidence attestation — every rating binds to verified evidence seqs plus a frozen `log_head_seq`/`log_head_hash` ([#18](https://github.com/exposwifty31/VetCrew/pull/18)); AAR checklist rendering Hebrew and the patient monitor wired into the station ([#22](https://github.com/exposwifty31/VetCrew/pull/22)). **Open HITL, dormant:** clinical review stamp ([#12](https://github.com/exposwifty31/VetCrew/issues/12)) — no real-person scores without it; code gates only. **Future:** full crew multi-station. No hiring verdicts until N + three raters.
+**Shipped:** station + instructor + manager under auth-bound join; floor deep-link station entry, trainee never creates ([#17](https://github.com/exposwifty31/VetCrew/pull/17)); tamper-evident ANTS evidence attestation — every rating binds to verified evidence seqs plus a frozen `log_head_seq`/`log_head_hash` ([#18](https://github.com/exposwifty31/VetCrew/pull/18)); AAR checklist rendering Hebrew and the patient monitor wired into the station ([#22](https://github.com/exposwifty31/VetCrew/pull/22)).
 
-**Known pitch-demo constraint (dormant — applies when the pitch resumes):** the two scenarios are capability-disjoint by design (`scenario-srs-divergence-memo.md`, Option (a), countersign paused in [#10](https://github.com/exposwifty31/VetCrew/issues/10)) — `base-rung-stepped-tasks` has 7 tasks and **0 injections**; `base-rung-resp-distress` has 2 injections and **0 tasks**. Consequence: no single session demonstrates a trainee acting *and* an instructor injecting, so the instructor console's injection panel is empty on the session the station runs. Plan the demo as two sessions, or author injections onto Scenario #2.
+**Open HITL:** clinical review stamp ([#12](https://github.com/exposwifty31/VetCrew/issues/12)) — no real-person scores without it; code gates only. The ask is now scoped: **thirteen scoring claims on a printed Hebrew review sheet**, not a whole-file boolean. See `docs/superpowers/specs/2026-08-03-clinical-claim-provenance-design.md`.
+
+**Outstanding record: ADR-002.** ADR-001's first revisit trigger *fired* on a motor-skill argument (femoral pulse, TPR, catheter placement genuinely cannot be assessed on a screen) and the revisit resolved **against** headset VR — Quest 3 fingertip tracking error is 1.73 cm against a 3 mm canine cephalic vein, and AVMA CVTEA requires live-animal assessment for exactly those skills while permitting simulation only for emergency protocols and CPR. Motor skills, if ever pursued, go via an instrumented physical trainer feeding the same log. **Write this down or §7 gets re-litigated from memory.**
+
+**Known content constraint:** the two scenarios are capability-disjoint by design (`scenario-srs-divergence-memo.md`, Option (a), countersign in [#10](https://github.com/exposwifty31/VetCrew/issues/10)) — `base-rung-stepped-tasks` has 7 tasks and **0 injections**; `base-rung-resp-distress` has 2 injections and **0 tasks**. This is no longer only a demo problem: **an assessment scenario needs both halves** — the tasks that score, and the pressure paper cannot test. The first assessment scenario is a merge of the two.
 
 Read this file before writing any code. It encodes decisions that are expensive to reverse and marks the ones that are cheap. Do not silently re-litigate anything under "Frozen for v1"; do raise it explicitly if you think it's wrong.
 
@@ -23,9 +27,63 @@ A crew trainer for veterinary ER / internal-medicine hospital staff — conceptu
 
 An authoritative sim server runs a deterministic, evolving patient (vitals, labs, timed phases, intervention effects). Role-specific stations act on it under time pressure. An instructor console injects events live. Everything is logged, replayable, and scored.
 
-Two products from one engine:
-- **Refresher training** — for fresh and veteran staff, targeted by skill drift.
-- **Readiness assessment** — pre-hire screening and onboarding ("is this person ready for the floor, given time-in-training").
+**The problem it replaces.** Candidates ("Trainee Technicians") complete at least 30 shadowing shifts and then sit a written exam the Reviewer herself wrote years ago. It reaches theory — dosage arithmetic, drop rates, which fluid set for a 10 kg dog — and stops. It cannot see what a technician does when an owner walks into the treatment area shouting mid-task, or when blood pressure crashes while they are occupied, or whether they escalate rather than improvise. Underneath the task is a conviction that a hospital which refuses to compromise on hiring builds a reputation that draws strong people rather than deterring them.
+
+### 1.1 Two platforms, one record (structure taken from Elbit trainer systems)
+
+| | Practice | Assessment |
+|---|---|---|
+| Purpose | Learning, skill-building, confidence | Certification, scoring, comparability |
+| Instructor | Full flexibility — pause, adapt difficulty, inject at will, coach mid-run | **Observer only.** No pause, no inject, no intervention |
+| Events | Dynamic and personalised to observed weakness | Pre-set at fixed time points, identical for the cohort |
+| Feedback | Immediate, during the run | Only at the end |
+| Mistakes | The point | Not correctable |
+
+**The mode must be a capability the system withholds, not a policy someone follows.** In assessment mode, pause and inject intents are refused at the transport layer the way a trainee's injection attempt already is (`authorizeIntent`, `server/live/socket.ts`). Both underlying mechanisms already exist: time-triggered events (`{ kind: "time", atMs }`) for assessment, the live injection menu for practice.
+
+**Mode is declared on the scenario file, not on the session — founder decision 2026-08-04 (D3).** Elbit's model: training and qualification scenarios are *different content*, not one scenario in two settings. Implementation follows the `clinicallyReviewed` precedent exactly — an authored field, mirrored to a column on `vc_scenarios`, read where needed, **never entering the engine** (provenance was kept out of `EngineState` for the same reason: content metadata must not be able to alter replay). `authorizeIntent` gets the mode via `SessionRoom.hydrate`, alongside `seed` and `scenario`.
+
+Two consequences: the separate-scenario-banks boundary becomes free, because the bank *is* the mode field and an assessment scenario cannot be opened in practice mode; and **practice content must be authored separately rather than reused from the assessment bank.** That is the cost that stops the exam measuring rehearsal.
+
+### 1.2 Three populations
+
+- **Trainee technicians** — the original brief. Assessment, mandatory, **one long session**.
+- **Existing technicians** — voluntary practice on realistic cases without an animal paying for mistakes, alone or with colleagues. Motivation is **personal bests and personal trend lines, never leaderboards** — ranking colleagues in a building where the same tool decides hiring is a social hazard.
+- **Veterinarians** — observed on the thing nobody in Israel tests: event management, triage, performance under pressure, and **managing the technicians under them**. Not a gate and not a separate build: they appear in crew practice sessions as the lead, proactively or as a side effect, and ANTS is applied to the lead role. This lands exactly on the §2.1 axis with the highest-leverage person in the room.
+
+### 1.3 The candidate path
+
+Optional practice with a shadowing mentor during the 30 shifts → **a short standard unscored familiarisation run immediately before assessment, identical for everyone** → one locked assessment session → three raters → an evidence packet the manager acts on.
+
+The familiarisation run is not polish. Practice is the mentor's choice, so candidates arrive with unequal interface fluency, and simulator fluency contaminates simulation scores by enough to reorder candidates (application-specific familiarisation, d = 0.67; generic familiarity does not help). A fixed pre-assessment run puts everyone over the same threshold. **The count of prior practice sessions is recorded and surfaced in the evidence packet** rather than hidden inside a score.
+
+### 1.4 Content: written questions become lived situations
+
+A written question names a situation; putting the candidate inside it changes what it measures. "Do you know dexmedetomidine causes bradycardia" becomes "the monitor drops to 45 — do you correctly *not* escalate." Almost anything embodies this way. Pure mechanism-of-action questions do not. Image identification does but needs assets the engine cannot render.
+
+Deciding what each embodied version measures is **clinical judgment**, which makes the Reviewer part of authoring rather than a stamp at the end.
+
+**Practice scenarios are a difficulty ladder** — stable patient, then mild abnormality, then a live clock, then equipment failure, then conflicting priorities, then a second patient, then role asymmetry, then full crew. **Assessment scenarios must be difficulty-*matched*, not ordered:** a candidate takes one session, so comparability requires equivalent load. Expand the assessment set only for anti-memorisation, and author siblings of the same weight.
+
+### 1.5 The tutorial is the first thing built
+
+Not because it is easy — because it is the only scenario that **needs no clinical review** (so it is not gated on the Reviewer, the scarcest resource in the project), it **is** the fairness gate of §1.3, everyone touches it, and it is the safe place to build the coaching machinery before pointing that machinery at clinical content.
+
+**Design rule: tutorial tasks have their answers visible on screen.** The trainee transcribes rather than decides — "the monitor reads HR 92, enter 92". That teaches the interface while testing no clinical knowledge, needs no sign-off, and gives nobody an exam advantage.
+
+Elbit's five tutorial phases translate rather than port (gaze tracking, haptics and invisible walls are driver-trainer affordances): guided discovery becomes one task chip revealed at a time; micro-steps are what tasks already are; fading scaffolds is the same task with decreasing help across attempts; the protected sandbox is a scenario with flat vitals and no scoring; and the gatekeeper **is** the familiarisation gate.
+
+### 1.6 Who judges
+
+The technical half scores itself from the log. The non-technical half does not compute and needs **three raters** (§6.3): **a vet, the Reviewer, and a senior technician who is deliberately not the mentor.** Ten senior technicians are available, so the third seat is easy to staff.
+
+**A rating set is complete when all three raters have submitted all four ANTS domains — founder decision 2026-08-04 (D2).** Twelve rows per session, and only then does the session transition `debrief → scored`. Today the *first* submission makes that transition, which locks raters two and three out with a 409 (`server/routes/sessions.ts:492`, `523-527`) — the single blocking contradiction between this doctrine and the code.
+
+**Derived requirement: the system must know which three.** "All three submitted" is uncheckable against `antsRatings.raterId` alone, since it is free text stamped from auth and any three people would satisfy a bare distinct-count — including the mentor. So per-session **rater assignment** is required, following the `vc_role_stations` pattern. Mentor exclusion from that list is **procedural** (hospital process), not API-enforced — see `docs/superpowers/specs/2026-08-04-assessment-path-design.md` §3.4.
+
+Excluding the mentor removes a conflict *and* creates a signal — if one mentor's trainees consistently come out weak in the same domain, that is about the shadowing. Real, and unusable for years at a few candidates annually: **record mentor attribution now, use it when N exists.** Treating two data points as evidence about a mentor would be the unfounded verdict this project refuses everywhere else. If mentor quality becomes readable, mentors should be told so up front.
+
+The mentor still contributes, and better than a testimonial: their contribution is whatever practice record accumulated during shadowing. Data from the person best placed to produce it, judgment from people without a stake.
 
 ---
 
@@ -37,6 +95,7 @@ These come out of competitive research and drive most decisions below. If a tech
 Technical checklist scoring is commoditized (VetBloom, Honen, any LMS competency tracker does it). Nobody scores veterinary crew *communication, situational awareness, closed-loop callouts, leadership, decision-making*. That axis is the product. Protect it in the data model and the AAR, not as a feature bolted on later.
 
 **2.2 — The two use cases have different evidentiary bars.**
+*(These are now two distinct platforms with different rules, not two settings of one thing — see §1.1.)*
 Refresher = within-person comparison. Needs no norms, no defensibility. Can ship immediately.
 Readiness/hiring = cross-person judgment. Needs a score distribution that does not exist yet, and needs to survive being challenged by HR, a rejected candidate, or a manager.
 **Consequence: the hiring gate is the output of the pilot, not a feature of it.** Build the data capture for it; do not ship a "not ready for the floor" verdict until there is N.
@@ -53,7 +112,7 @@ Any score that could influence a hiring decision must be traceable to specific t
 Target segment (ER/specialty) runs ~79% technician turnover and is chronically understaffed. Understaffed floors struggle to release 4–5 people simultaneously for a co-located session. Expect the solo base rung to be what actually gets used, and expect that to pull the product toward the commoditized end. Do not let it become the only tested path.
 
 **Friction is the measured risk, and it is severe (research run A, high confidence).** A fully built, **resident-requested** competency-progression curriculum (15 institution-specific EPAs, one assessment per resident per month) produced **zero completed assessments and zero supervisor evaluations three months after launch.** The cause was not rejection of the framework — both residents and supervisors endorsed it — it was that **clinical service demand systematically outranks structured training** in the daily workflow. Participants concluded that a *voluntary* progression ladder is not viable and that leadership-mandated, quantified completion is a precondition.
-**Consequence: the first rung must be near-zero-friction or leadership-mandated. A "nice-to-have solo trainer" is the exact profile that got zero uptake.** This is why the base rung inherits the colour-coded task mental model technicians already use every shift — familiarity is the friction reduction.
+**Consequence: the first rung must be near-zero-friction or leadership-mandated. A "nice-to-have solo trainer" is the exact profile that got zero uptake.** **Resolved 2026-08-04 for the assessment path: it *is* leadership-mandated** — the department manager commissioned the work and a session is a required step in hiring (see the header). The finding still binds the **voluntary practice platform**, where nothing is mandated and the only defence is that the tool is good enough to be chosen. This is why the base rung inherits the colour-coded task mental model technicians already use every shift — familiarity is the friction reduction.
 
 **Do not solo-ize the non-technical axis.** FAA CRM guidance (AC 120-51E, active) treats the individual/classroom tier as a "necessary first step" that alone does not change behaviour, and recommends recurrent crew exercises run with **a complete crew, each member in their normal position**. Segmenting by individual position is appropriate for seat-dependent technical skills and explicitly inappropriate for most crew-skill training. So: the base rung trains **individual technical** competence; **team/non-technical competence belongs at the summit** and must not be reduced to a solo exercise.
 
@@ -139,7 +198,9 @@ The reducer is pure. Inside it:
 - Injections are a **menu the instructor triggers live**, not an authored branching tree. Conditional auto-triggers stay rare and legible.
 - Hebrew-first UI, RTL, all strings through a single i18n module (same convention as VetTrack).
 - WCAG 2.1 AA baseline; color-blind-safe severity coding for vitals/criticality.
-- **Time-in-training is captured on every scored session from the first one**, even before scoring surfaces exist — it is the axis the whole progression is measured against, and it cannot be backfilled.
+- ~~**Time-in-training is captured on every scored session from the first one**, even before scoring surfaces exist — it is the axis the whole progression is measured against, and it cannot be backfilled.~~ **UNFROZEN 2026-08-04 — founder decision: there is no time-in-training metric.** The 30 shadowing shifts are not visible to the system, and a candidate takes one session, so they have no longitudinal axis at all. **Resolved 2026-08-04 (D1): removed entirely for candidate assessment.** It is not a one-line change — the field is load-bearing in seven places, and two of them get *worse* once the ratings gate goes: `server/routes/manager.ts` **throws** for any scored session with a null value, and `evidenceSessionSchema`/`trendPointSchema` declare it non-nullable, so the response cannot serialize. `packages/shared/src/entities.ts` also carries a refinement forbidding a `scored` session without it. Full site list in `docs/design-alignment-2026-08-04.md` §6.
+
+**The derived decision:** `packages/engine/src/scoring-surfaces.ts` sorts the within-person trend *by* time-in-training, so removing it costs the trend its ordering basis. Replacement is `createdAtMs`, which `trendPointSchema` already carries. The axis changes meaning from "progress against accumulated experience" to "progress over calendar time" — the more honest axis here, since the 30 shifts were never visible to the system.
 - **The base rung's task inventory maps onto the existing national standard**, not an invented one: AVMA CVTEA mandates that every graduate complete the centrally-defined *Veterinary Technology Student Essential and Recommended Skills List*, each skill individually evaluated and dated. Map to it; do not reinvent it. (It standardizes *what* is checked off, not mastery level or method — which is the gap VetCrew fills.)
 - **Two colour systems, hard-contained.** Patient-monitor **channel colours** signal parameter identity (always on, never severity). Task-surface **code colours** signal task type and live only inside the task panel. Neither may appear in the other's zone. Severity/alarm is a third, redundantly-coded layer (flash + frame + shape + label + audio) riding on top. Full-screen critical-alarm framing is the only permitted crossing.
 - **The patient monitor's own face is exempt from Hebrew-first (founder ruling 2026-07-30).** `HR`, `SpO₂`, `EtCO₂`, `RR`, `NIBP`, `Temp` and the device header render in Latin instrument notation and do **not** go through i18n. This is deliberate and narrow: the monitor simulates a real uMEC12-Vet, and the notation above is what a technician actually reads on the floor — localizing it would make the trainer less faithful to the equipment being learned. The exemption covers **device-face text only**; every other string in `src/**`, including task chips and all UI chrome around the monitor, goes through i18n as normal.
@@ -194,7 +255,9 @@ Free, and it determines whether the hiring gate is viable at all.
 
 **The Reviewer exists and is singular (2026-07-25).** Exactly one technician in the hospital holds a US veterinary-technician degree (not recognized as a degree title in Israel). She is the only viable Reviewer, and that will not change while she holds the credential. Consequences: (a) she is the pitch audience — the product must be presentable end-to-end, UI/UX included, for her to evaluate the concept; (b) a one-Reviewer reality reinforces §2.2 — a second live rater does not exist, so anything consequential rests on recorded, replayable sessions reviewed asynchronously, exactly what the event-sourced record provides.
 
-**Consequence for any "two raters, ICC ≥ 0.75" target (2026-07-30).** External guidance proposes exactly that as the gate before a scoring rubric ships. **It is unreachable at this pilot site as stated** — there is one qualified rater, and §6.3's own reliability logic is what makes a second one necessary rather than optional. So the rubric-validation gate is not "recruit a second live rater"; it is **recorded sessions scored asynchronously by raters sourced from outside the hospital** (other ECC-credentialed technicians, remote). Anyone proposing an inter-rater target must say where the second and third raters come from, or the target is decoration.
+**Consequence for any "two raters, ICC ≥ 0.75" target (2026-07-30).** External guidance proposes exactly that as the gate before a scoring rubric ships. **It is unreachable at this pilot site as stated** — there is one qualified rater, and §6.3's own reliability logic is what makes a second one necessary rather than optional. So the rubric-validation gate is not "recruit a second live rater"; it is recorded sessions scored asynchronously by additional raters. Anyone proposing an inter-rater target must say where the second and third raters come from, or the target is decoration.
+
+**CORRECTED 2026-08-04 — raters are internal, and the pool was never one person.** An earlier version of this section concluded the raters must come from *outside* the hospital. That rested on a conflation: the US veterinary-technician degree matters for judging whether scenario *content* is clinically correct (§2.5, the Reviewer's job), and has little to do with judging whether a candidate managed a deteriorating patient competently. ANTS is designed for domain experts, not for holders of a specific credential. Founder decision: external raters are neither necessary nor desirable — applicant data should not leave the hospital, and internal raters know the floor. **The three are a vet, the Reviewer, and a senior technician who is not the candidate's mentor;** there are ten senior technicians. The one constraint that stays is the separation of duties in §1.6: the mentor supplies data, not scores.
 
 ---
 
@@ -203,6 +266,8 @@ Free, and it determines whether the hiring gate is viable at all.
 3D / Unity · VR headsets · voice (TTS + push-to-talk STT) · LLM-generated dialogue · multi-tenant SaaS onboarding · authored branching decision trees · ML-derived scoring · mobile/native app.
 
 **3D/VR is now a decided question, not an open one — see ADR-001 in §3.** It was formally evaluated against the expanded simulator spec and deferred, with a WebXR (not Unity) path preserved and explicit revisit triggers. Do not re-open it without hitting one of those triggers.
+
+**A trigger fired and the revisit closed — 2026-08-04.** ADR-001's first revisit trigger ("a pedagogical requirement that genuinely cannot be assessed in 2D — motor skill, not knowledge") was legitimately hit: femoral pulse palpation, TPR, and IV/jugular catheter placement cannot be assessed on a screen, and they are required items on the CVTEA skills list §4 commits to. **The revisit resolved against headset VR**, on three grounds. Quest 3 fingertip tracking error is 1.73 cm best case against a canine cephalic vein of ~3 mm — the noise floor is four to six times the target, which is a hardware limit no rubric can recover from. No validated haptic-free VR psychomotor assessment instrument exists; all 26 studies in the 2025 review were formative and none reached Miller's "does" level. And CVTEA states "skill assessment is expected to be performed on live animals," with exactly one carve-out — *"Apply established emergency protocols (simulation acceptable): … perform first aid and cardiopulmonary resuscitation"* — which is the domain VetCrew already occupies. **Adopted remedy: an instrumented physical trainer feeding raw telemetry into the same event log, never a headset.** Also relevant if VR is ever revisited: simulator fluency is a measured confound in simulation-based assessment (d = 0.67), so a headset would add construct-irrelevant variance on top of everything above. **This belongs in ADR-002 and is not yet written.**
 
 Data model stays SaaS-shaped (tenant-scoped) so multi-tenancy is not a rewrite — but only one hospital exists in v1.
 
