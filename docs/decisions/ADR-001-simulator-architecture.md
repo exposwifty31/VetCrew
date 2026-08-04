@@ -23,6 +23,9 @@
 > **CLAUDE.md updated 2026-07-24** — §3 records this ADR, §7 marks 3D/VR a decided question with
 > revisit triggers, §8 restates the seam as a discipline rather than an abstraction.
 **Supersedes/affects:** CLAUDE.md §3 (stack), §4 (frozen), §7 (out of v1), §8 (no 3D abstraction)
+**Related (open proposal, not yet decided):** [`vr-first-and-local-appliance-proposal.md`](vr-first-and-local-appliance-proposal.md)
+— reviews a VR-first pivot against the four revisit triggers below (finds none fired, so this
+ADR stands), and answers the deployment question deferred in the last action item.
 
 ---
 
