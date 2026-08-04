@@ -1,6 +1,6 @@
 # Design-to-code alignment audit — 2026-08-04
 
-**Status:** findings of record. Three founder decisions are outstanding (§6) and block the next unit of work.
+**Status:** findings of record. Decisions D1–D3 answered (§6). Assessment-path design written in `docs/superpowers/specs/2026-08-04-assessment-path-design.md`.
 
 This audit cross-references the product model settled with the founder on 2026-08-03/04 — recorded in [`CLAUDE.md`](../CLAUDE.md) §1 — against the code that actually exists. It is not a build plan. It is an evidence list, so that the gaps are argued from file references rather than from memory.
 
@@ -159,7 +159,7 @@ Twelve rating rows per session (3 raters × 4 domains), and the `debrief → sco
 
 **The derived requirement: the system has to know which three raters.** "All three have submitted" is uncheckable against `antsRatings.raterId` alone, which is free text stamped from auth — any three people could satisfy a bare count of distinct raters, including the candidate's mentor.
 
-So D2 implies **per-session rater assignment**, following the existing `vc_role_stations` pattern: rows naming the three assigned raters at session creation. That table is also the only place the §1.6 mentor-exclusion rule can actually be enforced rather than merely intended.
+So D2 implies **per-session rater assignment**, following the existing `vc_role_stations` pattern: rows naming the three assigned raters at session creation. Mentor exclusion from that list is procedural (hospital process), not API-enforced — settled in the assessment-path design §3.4.
 
 ### D3 — Mode is declared on the scenario file, assessment-only. ANSWERED
 
