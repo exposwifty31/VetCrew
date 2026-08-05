@@ -268,9 +268,18 @@ describe("D2: the set is complete only when every assigned rater covers every de
       "select score, archived_reason from vc_ants_ratings_archive where session_id = $1 and rater_id = $2",
       [id, ASSESSMENT_RATERS[0]],
     );
-    // ...and the superseded score is still readable rather than gone.
+    // ...and the superseded score is still readable rather than gone, carrying
+    // WHY it was superseded — the reason is what distinguishes a rater's own
+    // correction from a row the 0008 migration collapsed, and an archive that
+    // cannot tell those apart is not much of an audit trail.
     expect(archived.rows).toHaveLength(ASSESSMENT_DOMAINS.length);
-    expect(archived.rows.every((r) => r.score === 2)).toBe(true);
+    expect(
+      archived.rows.every(
+        (r) =>
+          r.score === 2 &&
+          r.archived_reason === "superseded by a later submission from the same rater",
+      ),
+    ).toBe(true);
   });
 
   test("a domain the scenario does not declare is refused", async () => {
