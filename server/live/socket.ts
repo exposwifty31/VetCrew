@@ -28,7 +28,7 @@ export const INSTRUCTOR_DEMO_SCENARIO_SLUG = "base-rung-resp-distress";
 const TRAINEE_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
 const INSTRUCTOR_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
 
-type SocketBinding = {
+export type SocketBinding = {
   readonly sessionId: string;
   readonly role: string;
   readonly actorId: string;
@@ -142,11 +142,22 @@ function emitPresence(socket: Socket, sessionId: string, room: SessionRoom): voi
   socket.emit(LIVE_EVENTS.presence, payload);
 }
 
-function authorizeIntent(
+export function authorizeIntent(
   binding: SocketBinding,
   intent: ClientIntent,
   room: SessionRoom,
 ): { ok: true } | { ok: false; code: "role_bound" | "validation"; message: string } {
+  // `scored` is server-derived only — the ratings route appends it after the
+  // rating set is complete, which does not pass through here. No client may
+  // assert it, in any mode or role. (Dropping the time-in-training DB check
+  // removes the constraint that used to block this at the storage layer.)
+  if (intent.type === "phase_change" && intent.phase === "scored") {
+    return {
+      ok: false,
+      code: "validation",
+      message: "scored is set by the server when the rating set is complete, not by a client",
+    };
+  }
   if (binding.stationKind === "instructor") {
     if (intent.type === "task_start" || intent.type === "task_submit" || intent.type === "action") {
       return { ok: false, code: "role_bound", message: "instructor cannot send trainee intents" };

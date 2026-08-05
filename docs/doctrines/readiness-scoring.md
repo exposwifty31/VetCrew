@@ -70,10 +70,13 @@ anything consequential.
 - Cross-person readiness bands: the manager API returns `cohort_insufficient` and the
   UI never shows a band. No normative distribution exists (§6.2); a verdict without N
   is an opinion with a number attached.
-- The **within-person** axis (a technician against their own earlier sessions and
-  time-in-training) needs no norms and serves the refresher use case immediately.
-  `trainee_time_in_training_days` is captured on every scored session from the first,
-  because the axis cannot be backfilled (§4).
+- The **within-person** axis (a technician against their own earlier sessions,
+  ordered chronologically) needs no norms and serves the refresher use case
+  immediately. There is **no time-in-training axis** — it was unfrozen on
+  2026-08-05 (§4, D1): a candidate takes a single assessment session, so there is
+  no longitudinal metric to measure against. The `trainee_time_in_training_days`
+  column is retained but dormant (nullable, unread); the scored-needs-TiT check
+  constraint was dropped in migration 0007.
 
 ## Clinical gate
 

@@ -22,7 +22,6 @@ async function runSession(request: Parameters<typeof createSession>[0]): Promise
   const sessionId = await createSession(request, {
     scenarioSlug: SCENARIO_SLUG,
     traineeId: E2E_TRAINEE,
-    traineeTimeInTrainingDays: 120,
   });
   await appendDemoRun(request, sessionId, E2E_TRAINEE);
   return sessionId;

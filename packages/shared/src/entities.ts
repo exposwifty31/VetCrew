@@ -31,31 +31,15 @@ export const scenarioSchema = z
 
 export type Scenario = z.infer<typeof scenarioSchema>;
 
-export const simSessionSchema = z
-  .object({
-    id: z.uuid(),
-    tenantId: z.uuid(),
-    scenarioId: z.uuid(),
-    scenarioVersion: z.string().min(1),
-    /** PRNG seed — u32, stored per session for reproducible replay. */
-    seed: z.number().int().nonnegative().max(4294967295),
-    phase: sessionPhaseSchema,
-    /**
-     * Time-in-training of the trainee at session start, in days.
-     * Captured on every scored session from the first one — it is the axis
-     * the whole progression is measured against and cannot be backfilled
-     * (CLAUDE.md §4).
-     */
-    traineeTimeInTrainingDays: z.number().int().nonnegative().nullable(),
-  })
-  .superRefine((session, ctx) => {
-    if (session.phase === "scored" && session.traineeTimeInTrainingDays === null) {
-      ctx.addIssue({
-        code: "custom",
-        message: "a scored session must carry time-in-training (CLAUDE.md §4)",
-      });
-    }
-  });
+export const simSessionSchema = z.object({
+  id: z.uuid(),
+  tenantId: z.uuid(),
+  scenarioId: z.uuid(),
+  scenarioVersion: z.string().min(1),
+  /** PRNG seed — u32, stored per session for reproducible replay. */
+  seed: z.number().int().nonnegative().max(4294967295),
+  phase: sessionPhaseSchema,
+});
 
 export type SimSession = z.infer<typeof simSessionSchema>;
 

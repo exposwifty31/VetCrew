@@ -145,7 +145,6 @@ describe("manager evidence + trend", () => {
         sessionId: string;
         technicalPercent: number;
         overallAnts: number | null;
-        traineeTimeInTrainingDays: number;
         clinicallyReviewed: boolean;
         logHeadSeq: number | null;
         logHeadHash: string | null;
@@ -170,10 +169,11 @@ describe("manager evidence + trend", () => {
     const trend = (await trendRes.json()) as {
       bandStatus: string;
       overallDrift: string;
-      series: { sessionId: string; timeInTrainingDays: number }[];
+      series: { sessionId: string }[];
     };
     expect(trend.bandStatus).toBe("cohort_insufficient");
-    expect(trend.series.map((p) => p.timeInTrainingDays)).toEqual([30, 90]);
+    // Ordering is chronological now that there is no time-in-training axis (§4, D1).
+    expect(trend.series.map((p) => p.sessionId)).toEqual([early.id, later.id]);
     expect(trend.overallDrift).toMatch(/none|up|down/);
   });
 

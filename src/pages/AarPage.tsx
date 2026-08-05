@@ -329,7 +329,6 @@ function AarPageBody({
       <h1 style={{ marginBlockEnd: 0 }}>{scenario.titleHe}</h1>
       <p style={{ color: "var(--text-secondary)", marginBlockStart: 4 }}>
         {t(`phase.${session.phase}`)} · {t("aar.header.trainee", { id: session.traineeId ?? "—" })} ·{" "}
-        {t("aar.header.timeInTraining", { days: session.traineeTimeInTrainingDays ?? 0 })} ·{" "}
         {t("aar.header.scenarioVersion", { version: session.scenarioVersion })} ·{" "}
         {t("aar.header.seed", { seed: session.seed })}
       </p>

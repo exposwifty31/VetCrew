@@ -51,8 +51,6 @@ const createSessionSchema = z.object({
   /** u32 — matches the engine PRNG and the DB check constraint. */
   seed: z.number().int().nonnegative().max(4294967295).optional(),
   traineeId: z.string().min(1).optional(),
-  /** The progression axis — cannot be backfilled (CLAUDE.md §4). */
-  traineeTimeInTrainingDays: z.number().int().nonnegative().optional(),
 });
 
 /** Bodies only — the server stamps contiguous seqs (Sprint 3 seq authority). */
@@ -316,7 +314,6 @@ export function createSessionRouter(
         scenarioVersion: scenario.version,
         seed: input.seed ?? randomInt(1, 2 ** 31),
         traineeId: bindings.sessionTraineeId,
-        traineeTimeInTrainingDays: input.traineeTimeInTrainingDays ?? null,
       })
       .returning();
     const session = inserted[0];
@@ -415,7 +412,6 @@ export function createSessionRouter(
         phase: session.phase,
         seed: session.seed,
         traineeId: session.traineeId,
-        traineeTimeInTrainingDays: session.traineeTimeInTrainingDays,
         scenarioVersion: session.scenarioVersion,
       },
       scenario: {
@@ -485,7 +481,6 @@ export function createSessionRouter(
     type RatingsResult =
       | { kind: "not_found" }
       | { kind: "wrong_phase"; phase: string }
-      | { kind: "no_time_in_training" }
       | { kind: "unknown_evidence"; seqs: number[] }
       | { kind: "ok" };
     const result: RatingsResult = await db.transaction(async (tx) => {
@@ -499,9 +494,6 @@ export function createSessionRouter(
       // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
       // session in any other phase cannot be rated.
       if (session.phase !== "debrief") return { kind: "wrong_phase", phase: session.phase };
-      // Scoring gate: time-in-training must exist before a session can be
-      // scored — it is the progression axis and cannot be backfilled (§4).
-      if (session.traineeTimeInTrainingDays === null) return { kind: "no_time_in_training" };
       // Evidence must point at events that actually exist in THIS session —
       // a rating with fabricated evidence is worse than no rating (§2.3).
       // Freeze log head (seq + hash) before appending phase=scored.
@@ -545,9 +537,6 @@ export function createSessionRouter(
         res.status(409).json({
           error: `session is in phase "${result.phase}"; ratings are submitted from debrief`,
         });
-        return;
-      case "no_time_in_training":
-        res.status(422).json({ error: "session has no trainee time-in-training; cannot score" });
         return;
       case "unknown_evidence":
         res.status(422).json({

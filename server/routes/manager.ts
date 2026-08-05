@@ -96,7 +96,6 @@ export function createManagerRouter(
         scenarioSlug: scenarios.slug,
         scenarioVersion: simSessions.scenarioVersion,
         clinicallyReviewed: scenarios.clinicallyReviewed,
-        traineeTimeInTrainingDays: simSessions.traineeTimeInTrainingDays,
         seed: simSessions.seed,
         createdAt: simSessions.createdAt,
         definition: scenarios.definition,
@@ -135,9 +134,6 @@ export function createManagerRouter(
         .where(and(eq(antsRatings.tenantId, tenantId), eq(antsRatings.sessionId, row.sessionId)));
       const scores = ratings.map((r) => r.score);
       const head = ratings[0];
-      if (row.traineeTimeInTrainingDays === null) {
-        throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
-      }
       const rawHash = head?.logHeadHash ?? null;
       const rawSeq = head?.logHeadSeq ?? null;
       const attested =
@@ -151,8 +147,6 @@ export function createManagerRouter(
         scenarioSlug: row.scenarioSlug,
         scenarioVersion: row.scenarioVersion,
         clinicallyReviewed: row.clinicallyReviewed,
-        // Scored sessions are DB-gated to have TiT — never invent day-0.
-        traineeTimeInTrainingDays: row.traineeTimeInTrainingDays,
         technicalPercent: technicalPercent(checklist, tasks),
         overallAnts: overallAnts(scores),
         ratedDomainCount: scores.length,
@@ -194,7 +188,6 @@ export function createManagerRouter(
         sessionId: simSessions.id,
         seed: simSessions.seed,
         createdAt: simSessions.createdAt,
-        traineeTimeInTrainingDays: simSessions.traineeTimeInTrainingDays,
         clinicallyReviewed: scenarios.clinicallyReviewed,
         definition: scenarios.definition,
       })
@@ -225,13 +218,9 @@ export function createManagerRouter(
         if (domain.success) domainScores[domain.data] = rating.score;
       }
       const scores = ratings.map((r) => r.score);
-      if (row.traineeTimeInTrainingDays === null) {
-        throw new Error(`scored session ${row.sessionId} missing traineeTimeInTrainingDays`);
-      }
       points.push({
         sessionId: row.sessionId,
         createdAtMs: row.createdAt.getTime(),
-        timeInTrainingDays: row.traineeTimeInTrainingDays,
         technicalPercent: technicalPercent(checklist, tasks),
         overallAnts: overallAnts(scores),
         domainScores,
@@ -251,7 +240,6 @@ export function createManagerRouter(
       series: model.series.map((p) => ({
         sessionId: p.sessionId,
         createdAtMs: p.createdAtMs,
-        timeInTrainingDays: p.timeInTrainingDays,
         technicalPercent: p.technicalPercent,
         overallAnts: p.overallAnts,
         clinicallyReviewed: p.clinicallyReviewed,

@@ -42,7 +42,6 @@ test.describe("API authz", () => {
       data: {
         scenarioSlug: "base-rung-stepped-tasks",
         traineeId: E2E_TRAINEE,
-        traineeTimeInTrainingDays: 60,
       },
     });
     expect(created.status()).toBe(201);

@@ -31,7 +31,6 @@ export interface AarResponse {
     phase: SessionPhase;
     seed: number;
     traineeId: string | null;
-    traineeTimeInTrainingDays: number | null;
     scenarioVersion: string;
   };
   scenario: {
@@ -83,7 +82,6 @@ export async function createSession(
   input: {
     scenarioSlug: string;
     traineeId?: string;
-    traineeTimeInTrainingDays?: number;
     seed?: number;
   },
   token?: string | null,

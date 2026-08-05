@@ -270,7 +270,10 @@ describe("score -> source-event traceability", () => {
     expect(body.error).toContain("999");
   });
 
-  test("a session without time-in-training cannot be scored", async () => {
+  test("a session without time-in-training can still be scored (§4, D1: axis removed)", async () => {
+    // There is no longitudinal time-in-training axis (§4, D1) — a candidate
+    // takes one session — so scoring no longer gates on it. The old 422
+    // no_time_in_training path and its DB constraint were both removed.
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
     await appendEvents(session.id, demoEvents());
     const res = await api(`/api/sessions/${session.id}/ratings`, {
@@ -280,7 +283,7 @@ describe("score -> source-event traceability", () => {
         ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [4] }],
       }),
     });
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(201);
   });
 
   test("a session that is not in debrief cannot be rated", async () => {
@@ -396,10 +399,16 @@ describe("integrity constraints (migrations 0002/0003)", () => {
     ).rejects.toThrow(/vc_sim_sessions_seed_u32/);
   });
 
-  test("a session cannot enter the scored phase without time-in-training", async () => {
+  test("a session may enter the scored phase without time-in-training (§4, D1: axis removed)", async () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
-    await expect(
-      pool.query("update vc_sim_sessions set phase = 'scored' where id = $1", [session.id]),
-    ).rejects.toThrow(/vc_sim_sessions_scored_needs_time_in_training/);
+    // The scored-needs-TiT constraint was dropped in migration 0007 — a
+    // candidate takes one session, so there is no longitudinal axis to gate on.
+    await pool.query("update vc_sim_sessions set phase = 'scored' where id = $1", [session.id]);
+    const { rows } = await pool.query<{ phase: string; trainee_time_in_training_days: number | null }>(
+      "select phase, trainee_time_in_training_days from vc_sim_sessions where id = $1",
+      [session.id],
+    );
+    expect(rows[0]?.phase).toBe("scored");
+    expect(rows[0]?.trainee_time_in_training_days).toBeNull();
   });
 });

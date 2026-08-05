@@ -89,7 +89,6 @@ async function main() {
       seed: DEMO_SEED,
       phase: "draft",
       traineeId: "demo-trainee",
-      traineeTimeInTrainingDays: 180,
       startedAt: new Date(),
     })
     .returning({ id: simSessions.id });

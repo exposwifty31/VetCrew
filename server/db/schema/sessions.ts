@@ -8,8 +8,11 @@ import { tenants } from "./tenancy.js";
  * One authoritative engine per session; lifecycle is an explicit FSM
  * (draft→briefing→running⇄paused→debrief→scored→archived, CLAUDE.md §4).
  * seed is stored so replay reproduces every PRNG draw.
- * trainee_time_in_training_days is captured from the FIRST scored session —
- * it is the progression axis and cannot be backfilled (§4).
+ * trainee_time_in_training_days is a dormant nullable column: the metric was
+ * unfrozen on 2026-08-05 (§4, D1 — a candidate takes one session, so there is
+ * no longitudinal axis). No code reads or writes it. The column is retained
+ * (rather than dropped) so no data is destroyed and the removal stays a pure
+ * read-path change; the scored-needs-TiT check constraint is dropped in 0007.
  */
 export const simSessions = vcTable("sim_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),

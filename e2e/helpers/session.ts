@@ -15,7 +15,6 @@ export async function createSession(
   input: {
     scenarioSlug: string;
     traineeId: string;
-    traineeTimeInTrainingDays?: number;
     asUser?: { userId: string; role: "manager" | "instructor" | "trainee" };
   },
 ): Promise<string> {
@@ -28,7 +27,6 @@ export async function createSession(
     data: {
       scenarioSlug: input.scenarioSlug,
       traineeId: input.traineeId,
-      traineeTimeInTrainingDays: input.traineeTimeInTrainingDays ?? 90,
     },
   });
   expect(created.status()).toBe(201);
