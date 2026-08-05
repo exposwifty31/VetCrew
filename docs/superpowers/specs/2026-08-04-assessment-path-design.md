@@ -1,7 +1,7 @@
 # Assessment path — design
 
 **Date:** 2026-08-04
-**Status:** design approved by founder section by section; awaiting review of this written spec before an implementation plan is written
+**Status:** ⚠️ **DO NOT IMPLEMENT AS WRITTEN.** Design approved section by section, then a product-strategist review on 2026-08-05 found four defects that make it non-functional or dishonest — **two of them false claims inside this document**, corrected inline below and marked. Read [`docs/design-alignment-2026-08-05.md`](../../design-alignment-2026-08-05.md) §2 first. That review also recommends splitting this unit in two (its §6); three founder decisions are open (its §7).
 **Scope owner:** Dan (solo)
 
 ---
@@ -184,9 +184,17 @@ The fix is one line: `debrief: ["scored", "archived"]`. It is **mode-blind**, so
 
 **One consequence to accept deliberately.** This also makes `debrief → archived` legal for an *assessment* session, so an examiner could archive one before it is scored. That is a real operational need — a candidate falls ill, a fire alarm, an aborted run — and the alternative is an aborted assessment with nowhere to go. It is also, in principle, a way to bury a session that went badly.
 
-I recommend allowing it rather than refusing it, because the archive is itself an event: the log records that the session was archived unscored, by whom, at what time, and the evidence packet can say so. That is the same absence-plus-declaration reasoning as §2.7, and it is more honest than a gate that forces every started assessment to produce a score.
+~~I recommend allowing it rather than refusing it, because the archive is itself an event: the log records that the session was archived unscored, by whom, at what time, and the evidence packet can say so.~~
 
-`scored` therefore becomes a reliable marker that a session was a real assessment — the manager evidence desk can filter on phase without consulting mode, and a practice score physically cannot appear in an evidence packet because practice sessions never acquire one.
+> **❌ CORRECTED 2026-08-05 — this justification was false.** The log does **not** record "by whom." `PhaseChangeEvent` has no actor field, and `server/live/event-append.ts:73-75` writes `actor_id = null` for every event type except `action`/`task_start`/`task_submit`. The archive event records a phase and a timestamp and nothing else, so the load-bearing half of the argument does not exist.
+>
+> In a hiring tool used on colleagues, an unattributed, unexplained, uncounted exit from a run that was going badly is the affordance you cannot have. **Before accepting the allowance:** populate `actor_id` on `phase_change` from the authenticated caller; require a reason on an assessment archived from `debrief`, stored on the event payload; and surface, per candidate on the manager desk, the count of assessment sessions started and never scored. The last one is what actually deters — a buried session that is invisible is a burial; one that shows as "2 assessments started, 1 scored" is a fact the manager sees. See `docs/design-alignment-2026-08-05.md` §3.2.
+
+~~`scored` therefore becomes a reliable marker that a session was a real assessment — the manager evidence desk can filter on phase without consulting mode, and a practice score physically cannot appear in an evidence packet because practice sessions never acquire one.~~
+
+> **❌ CORRECTED 2026-08-05 — false, and §3.5 above is what makes it false.** `server/routes/manager.ts:25` is `const EVIDENCE_PHASES = ["scored", "archived"]`, used at `:110`. The evidence desk keys on **archived**, not scored. That is safe today only because `archived` is reachable solely through `scored`. The moment §3.5's `debrief: ["scored", "archived"]` lands, `archived` stops implying scored — and every archived practice session appears on the manager's desk, carrying an "overall ANTS" computed from whatever partial formative ratings §3.3 lets anyone attach.
+>
+> So the third problem §1 says this spec fixes is re-opened through a door the same spec opens. **Fix:** snapshot `mode` onto `vc_sim_sessions` at creation and filter the desk on `mode = 'assessment' AND phase IN ('scored','archived')`, with a negative test that an archived practice session carrying ratings does not appear. See `docs/design-alignment-2026-08-05.md` §2.2.
 
 ---
 
