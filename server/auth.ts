@@ -14,7 +14,16 @@ export type AuthReader = (req: Request) => AuthSnapshot;
 
 const TEST_BEARER_RE = /^test:([^:]+):(manager|instructor|trainee)$/;
 
-function isTestAuthEnabled(): boolean {
+/**
+ * Defence in depth. `loadEnv` refuses to boot production with this flag set,
+ * but `parseTestBearer` is reachable directly from tests and could be reached
+ * by a future entry point that never calls `loadEnv` — so the guarantee lives
+ * in the module that owns the behaviour, not only at boot.
+ */
+export function isTestAuthEnabled(): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
   return process.env.VETCREW_TEST_AUTH === "1";
 }
 

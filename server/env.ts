@@ -11,9 +11,18 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url().optional(),
   CLERK_SECRET_KEY: z.string().min(1).optional(),
   CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  // Declared only so the production gate below can see them. Both are CI/local
+  // escape hatches; either one live in production is a complete bypass
+  // (VETCREW_TEST_AUTH accepts `Bearer test:anyone:manager`,
+  // VETCREW_ALLOW_UNREVIEWED_SCORES scores a real person on unreviewed content).
+  VETCREW_TEST_AUTH: z.string().optional(),
+  VETCREW_ALLOW_UNREVIEWED_SCORES: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
+
+/** Escape hatches that must never be live in production (CLAUDE.md §2.5, §8). */
+const BYPASS_FLAGS = ["VETCREW_TEST_AUTH", "VETCREW_ALLOW_UNREVIEWED_SCORES"] as const;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = envSchema.safeParse(source);
@@ -27,6 +36,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     );
     if (missing.length > 0) {
       throw new Error(`Missing required production env vars: ${missing.join(", ")}`);
+    }
+    // Refuse to start rather than start compromised. Only the literal "1"
+    // enables a bypass anywhere in the code, so only "1" blocks the boot.
+    const enabled = BYPASS_FLAGS.filter((key) => env[key] === "1");
+    if (enabled.length > 0) {
+      throw new Error(
+        `Refusing to boot: production must never enable a bypass. Unset: ${enabled.join(", ")}`,
+      );
     }
   }
   return env;

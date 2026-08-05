@@ -80,4 +80,5 @@ anything consequential.
 No scenario scores a real person until it carries `clinically_reviewed: true` with an
 identifiable reviewer (DB-enforced: `vc_scenarios_reviewer_required`). The
 `VETCREW_ALLOW_UNREVIEWED_SCORES` escape hatch is CI/local-only and must never be set
-in production (§2.5, §8).
+in production (§2.5, §8) — enforced at boot since 2026-08: `loadEnv` refuses to start a
+production server carrying this flag, and the ratings route ignores it in production.

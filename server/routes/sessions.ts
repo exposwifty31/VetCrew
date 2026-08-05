@@ -79,6 +79,18 @@ function paramId(req: Request): string | null {
   return typeof value === "string" && z.uuid().safeParse(value).success ? value : null;
 }
 
+/**
+ * CI/local escape hatch for scoring `clinically_reviewed: false` scenarios.
+ * Never honoured in production (CLAUDE.md §2.5, §8); `loadEnv` also refuses to
+ * boot production with the flag set, so this is defence in depth.
+ */
+function allowUnreviewedScores(): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+  return process.env.VETCREW_ALLOW_UNREVIEWED_SCORES === "1";
+}
+
 async function loadSession(db: Db, tenantId: string, id: string) {
   const rows = await db
     .select()
@@ -463,10 +475,7 @@ export function createSessionRouter(
       res.status(500).json({ error: "session references missing scenario" });
       return;
     }
-    if (
-      !scenarioRow.clinicallyReviewed &&
-      process.env.VETCREW_ALLOW_UNREVIEWED_SCORES !== "1"
-    ) {
+    if (!scenarioRow.clinicallyReviewed && !allowUnreviewedScores()) {
       res.status(403).json({ error: "scenario_not_clinically_reviewed" });
       return;
     }

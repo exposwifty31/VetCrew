@@ -42,8 +42,8 @@ pnpm guard:deps
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `VETCREW_TEST_AUTH=1` | CI / local e2e only | Enables `Authorization: Bearer test:<userId>:<role>` where `<role>` is `manager`, `instructor`, or `trainee`. **Never set in production Railway.** |
-| `VETCREW_ALLOW_UNREVIEWED_SCORES=1` | CI / local pitch demos | Allows ratings on scenarios with `clinically_reviewed: false`. Unset in production — server returns 403 `scenario_not_clinically_reviewed`. |
+| `VETCREW_TEST_AUTH=1` | CI / local e2e only | Enables `Authorization: Bearer test:<userId>:<role>` where `<role>` is `manager`, `instructor`, or `trainee`. **Enforced:** the server refuses to boot when `NODE_ENV=production` and this is set, and `parseTestBearer` returns null in production regardless. |
+| `VETCREW_ALLOW_UNREVIEWED_SCORES=1` | CI / local only | Allows ratings on scenarios with `clinically_reviewed: false`. **Enforced:** the server refuses to boot when `NODE_ENV=production` and this is set; the ratings route otherwise returns 403 `scenario_not_clinically_reviewed`. |
 
 Production roles: Clerk `user.publicMetadata.vetcrewRole` (`manager` \| `instructor` \| `trainee`). Live socket join is allowlisted by `role_stations.assigned_user_id`.
 

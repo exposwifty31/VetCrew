@@ -12,6 +12,7 @@
   "shell.server.ok": "מחובר",
   "shell.server.down": "לא זמין",
   "shell.server.auth.clerk": "אימות: Clerk",
+  "shell.server.auth.test": "אימות: טוקן בדיקה",
   "shell.server.auth.dev-bypass": "אימות: מעקף פיתוח",
   "shell.server.db.ready": "בסיס נתונים: מוכן",
   "shell.server.db.starting": "בסיס נתונים: עולה…",

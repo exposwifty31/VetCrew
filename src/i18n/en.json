@@ -12,6 +12,7 @@
   "shell.server.ok": "Connected",
   "shell.server.down": "Unavailable",
   "shell.server.auth.clerk": "Auth: Clerk",
+  "shell.server.auth.test": "Auth: test bearer",
   "shell.server.auth.dev-bypass": "Auth: dev bypass",
   "shell.server.db.ready": "Database: ready",
   "shell.server.db.starting": "Database: starting…",

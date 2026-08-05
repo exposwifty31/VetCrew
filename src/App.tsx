@@ -37,7 +37,7 @@ function LazyRoute({ children }: { children: ReactNode }) {
 
 interface Health {
   ok: boolean;
-  auth: "clerk" | "dev-bypass";
+  auth: "clerk" | "test" | "dev-bypass";
   db: "ready" | "starting" | "not-configured";
 }
 
