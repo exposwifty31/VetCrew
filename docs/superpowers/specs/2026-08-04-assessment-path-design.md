@@ -102,7 +102,9 @@ Nullable `mentor_id text` on `vc_sim_sessions`, matching how `trainee_id` alread
 
 Add a unique constraint on `vc_ants_ratings (session_id, rater_id, domain)`. It prevents a double-submission from creating eight rows for one rater, and it collapses the completion check to counting distinct `rater_id` — four is then the only quantity a rater can have.
 
-**The cost is that a rating cannot be amended.** A rater who mis-clicks has no correction path short of direct database access. I am proposing that deliberately rather than by omission: it matches the append-only posture everywhere else, and doing amendment properly means latest-wins ordering plus a story about what the evidence packet shows when a score changed. Recorded as a known v1 limitation, to be revisited the first time it actually happens rather than guessed at now.
+~~**The cost is that a rating cannot be amended.** A rater who mis-clicks has no correction path short of direct database access. I am proposing that deliberately rather than by omission: it matches the append-only posture everywhere else, and doing amendment properly means latest-wins ordering plus a story about what the evidence packet shows when a score changed. Recorded as a known v1 limitation, to be revisited the first time it actually happens rather than guessed at now.~~
+
+**Superseded by what shipped (2026-08-05): ratings ARE amendable, and the prior value is archived rather than lost.** "No correction path short of direct database access" was the wrong trade — an unlogged, unattributed `psql` edit to a hiring record is strictly worse for auditability than the amendment it was avoiding. There is one live rating per `(session, rater, domain)`; a re-submission copies the previous row — score, `evidence_event_seqs`, and its log-head attestation — into `vc_ants_ratings_archive` before overwriting. Completion counts the live rows, and the superseded ones stay readable.
 
 ### 2.5 What assessment mode withholds
 
@@ -319,7 +321,7 @@ If the evidence-spine integrity work lands separately and claims `0007` for its 
 | Merged assessment scenario, and restoring the `manager-evidence` e2e assertion | Content work; needs clinical review |
 | Tutorial behaviour — sequential reveal, coach projection, completion gate | Its own unit; `tutorial` mode is reserved here |
 | Practice-session count in the evidence packet | Computable after this; the packet does not exist |
-| Rating amendment | §2.4 — revisit when it actually bites |
+| ~~Rating amendment~~ | **Shipped instead** — see §2.4: one live rating per (session, rater, domain), prior value archived |
 | Session forking for practice reruns | Not needed until practice rewind ships |
 | `CLAUDE.md §4` lifecycle amendment | The fork in §3.4 and the FSM widening in §3.5 both change a frozen rule and must be recorded there |
 | Recording the settled product model in `CLAUDE.md` | This tree's `CLAUDE.md` still describes an external pitch product; §1's premises are not written down anywhere in the repository |
