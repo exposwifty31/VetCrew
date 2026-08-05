@@ -1,5 +1,10 @@
 import { expect, type APIRequestContext } from "@playwright/test";
 
+import {
+  ASSESSMENT_DOMAINS,
+  ASSESSMENT_RATERS,
+  ASSESSMENT_SLUG,
+} from "../../server/test/fixtures/assessment-scenario.js";
 import { demoEvents } from "../../server/test/fixtures/demo-events.js";
 import { authHeaders } from "./auth.js";
 
@@ -50,28 +55,70 @@ export async function appendDemoRun(
   expect(appended.status()).toBe(201);
 }
 
+/** Submit one rater's full set of the declared domains. */
 export async function scoreSession(
   request: APIRequestContext,
   sessionId: string,
   asUser = { userId: E2E_INSTRUCTOR, role: "instructor" as const },
-): Promise<void> {
+): Promise<{ complete: boolean }> {
   const rated = await request.post(`/api/sessions/${sessionId}/ratings`, {
     headers: {
       ...authHeaders(asUser.userId, asUser.role),
       "Content-Type": "application/json",
     },
     data: {
-      ratings: [
-        { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-        { domain: "situation_awareness", score: 4, evidenceEventSeqs: [4] },
-        { domain: "decision_making", score: 4, evidenceEventSeqs: [7] },
-      ],
+      ratings: ASSESSMENT_DOMAINS.map((domain) => ({
+        domain,
+        score: 4,
+        evidenceEventSeqs: [4, 7],
+      })),
     },
   });
   expect(rated.status()).toBe(201);
+  return (await rated.json()) as { complete: boolean };
 }
 
-export async function createScoredRespDistressSession(
+export async function assignRaters(
+  request: APIRequestContext,
+  sessionId: string,
+  raterUserIds: readonly string[] = ASSESSMENT_RATERS,
+): Promise<void> {
+  const res = await request.put(`/api/sessions/${sessionId}/raters`, {
+    headers: {
+      ...authHeaders(E2E_INSTRUCTOR, "instructor"),
+      "Content-Type": "application/json",
+    },
+    data: { raterUserIds },
+  });
+  expect(res.status()).toBe(200);
+}
+
+/**
+ * Drive an assessment session all the way to `scored` — roster of three, run to
+ * debrief, then every assigned rater covers every declared domain (D2).
+ */
+export async function createScoredAssessmentSession(
+  request: APIRequestContext,
+  traineeId: string,
+): Promise<string> {
+  const sessionId = await createSession(request, {
+    scenarioSlug: ASSESSMENT_SLUG,
+    traineeId,
+  });
+  await assignRaters(request, sessionId);
+  await appendDemoRun(request, sessionId, traineeId);
+  for (const [index, raterId] of ASSESSMENT_RATERS.entries()) {
+    const { complete } = await scoreSession(request, sessionId, {
+      userId: raterId,
+      role: "instructor",
+    });
+    expect(complete).toBe(index === ASSESSMENT_RATERS.length - 1);
+  }
+  return sessionId;
+}
+
+/** A practice run taken to debrief — never scored, so never on the desk. */
+export async function createDebriefedRespDistressSession(
   request: APIRequestContext,
   traineeId: string,
 ): Promise<string> {
@@ -80,7 +127,6 @@ export async function createScoredRespDistressSession(
     traineeId,
   });
   await appendDemoRun(request, sessionId, traineeId);
-  await scoreSession(request, sessionId);
   return sessionId;
 }
 

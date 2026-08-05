@@ -1,6 +1,7 @@
 {
   "slug": "base-rung-stepped-tasks",
   "version": "0.1.0",
+  "mode": "practice",
   "title": "Stable hospitalised patient — base rung (seven tasks)",
   "titleHe": "מטופל מאושפז יציב — שלב בסיס (שבע משימות)",
   "species": "dog",

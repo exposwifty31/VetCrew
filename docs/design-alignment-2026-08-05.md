@@ -1,6 +1,6 @@
 # Design-to-code alignment — 2026-08-05
 
-**Status:** findings of record. Four blockers are unresolved and one founder decision (§4) has no answer yet.
+**Status:** findings of record. The four blockers in §2 and the three open decisions in §7 are **resolved and implemented** (Units A and B, 2026-08-05) — §7 records what shipped and what was deliberately left. §2/§3 are kept as written, as the reasoning behind those choices.
 
 This cross-references the product model in [`CLAUDE.md`](../CLAUDE.md) §1 against the code that exists, with file:line evidence. It is not a build plan. Every claim below was verified by reading the cited code, not inferred.
 
@@ -154,8 +154,24 @@ Crew mode slots in after 3 and can precede 5; it needs content plus a two-role s
 
 ---
 
-## 7. Open decisions
+## 7. Open decisions — ANSWERED 2026-08-05, and implemented
 
-1. **Does D2 become "every domain the scenario declares"?** §2.3 says all-four is unsatisfiable and structurally wrong for a solo session.
-2. **Is the rater roster amendable before `debrief`?** §3.4 says creation-time immutability costs a stranded candidate and buys nothing.
-3. **Is proxied rating entry acceptable, recorded honestly?** §3.5 — the Reviewer will never log in, and this cannot be retrofitted.
+All three went the way the findings above argued. Each was the only option that lets a real solo assessment run at all; the alternatives were self-defeating (422-forever, stranded candidate, false packet claim).
+
+1. **D2 becomes "every domain the scenario declares."** ✅ Plus a schema refinement: an assessment scenario must declare **at least three** domains, named deliberately — because completion is now measured against the declared set, which makes that set load-bearing.
+2. **The rater roster is amendable while phase < `debrief`.** ✅ Set at creation, replaceable until anyone has seen the run; the scoring-time invariant (three distinct assigned raters with complete sets) is unchanged. This is also what removes the need for archive-unscored on an assessment — a stuck session is fixed by swapping a rater, not by burying the candidate's run.
+3. **Proxied entry is recorded, not hidden.** ✅ `submitted_by_user_id` sits alongside `rater_id`, defaulting to it. Only a **manager** may submit under another rater's name — otherwise the field would be a forgery affordance rather than an honesty one.
+
+### What shipped with them
+
+Unit A (already merged separately): time-in-training removal + the client-`scored` refusal.
+
+Unit B, in one change: scenario `mode` (authored, mirrored to a column, **snapshotted onto the session** per §3.3) · mode enforced at both the socket and REST transports (§1.1) · assessment pins its seed (§3.1) · FSM widened with the desk's mode filter (§2.2) · `vc_session_raters` + `assertSessionAccess` admitting raters (§2.4) · the D2 completion rule replacing first-submission-wins · AAR rater blinding until scored (§2.1) · assessment cannot be archived from debrief (§3.2, closed by construction rather than by attribution).
+
+### Still open, deliberately deferred
+
+- **Actor attribution on `phase_change`** (§3.2 a/b) and the manager desk's started-vs-scored count (§3.2 c). Not needed to close the burial hole — assessment simply cannot archive from debrief — but still the right thing for the log.
+- **Rating amendment history** (§4). The unique constraint on `(session, rater, domain)` plus upsert means a rater can correct themselves before the set completes, but the prior value is overwritten rather than superseded.
+- **Rater notification / "awaiting 2 of 3"** (§4). The ratings response now returns `ratersSubmitted` / `ratersAssigned`, so the data exists; nothing surfaces it yet.
+- **A UI that creates an assessment session** (§4) — still curl-only, including the roster picker and the user directory it needs.
+- **Familiarisation-run record** (§4) and the within-person trend's post-fork content question.

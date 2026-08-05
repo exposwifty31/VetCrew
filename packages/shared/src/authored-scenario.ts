@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { antsDomainSchema } from "./entities.js";
+import { antsDomainSchema, scenarioModeSchema } from "./entities.js";
 import { triggerDefSchema, vitalParamsSchema } from "./scenario.js";
 import { taskDefSchema } from "./tasks.js";
 
@@ -53,6 +53,20 @@ export const authoredScenarioSchema = z
   .object({
     slug: z.string().min(1),
     version: z.string().min(1),
+    /**
+     * Which platform this content belongs to (CLAUDE.md §1.1, D3). Defaults to
+     * `practice` so authoring an assessment is always a deliberate act — the
+     * locked mode is never something a file falls into by omission.
+     */
+    mode: scenarioModeSchema.default("practice"),
+    /**
+     * Fixed PRNG seed. REQUIRED for assessment (see the refinement below):
+     * the reducer draws jitter per vital per tick, so a per-session random seed
+     * would give two candidates different vitals traces on the same scenario —
+     * different numbers to read and call out, at different moments. Cohort
+     * comparability is the entire point of the locked platform.
+     */
+    seed: z.number().int().nonnegative().max(4294967295).optional(),
     title: z.string().min(1),
     titleHe: z.string().min(1),
     species: z.string().min(1),
@@ -86,6 +100,29 @@ export const authoredScenarioSchema = z
         code: "custom",
         message: "a scenario must define at least one action or one task",
       });
+    }
+    if (scenario.mode === "assessment") {
+      // D2, as amended 2026-08-05: scoring requires every assigned rater to
+      // cover every domain the scenario DECLARES, rather than all four ANTS
+      // domains. That makes the declared set load-bearing, so an assessment
+      // may not declare a token one or two — three is the floor, named
+      // deliberately. (All-four was unsatisfiable: no shipped scenario
+      // declares team_working, and a solo candidate session generates no
+      // events to cite for it; CLAUDE.md §2.4 forbids solo-izing that axis.)
+      if (scenario.scoringDimensions.length < 3) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "an assessment scenario must declare at least 3 ANTS domains — the declared set is what every rater must complete (CLAUDE.md §1.6, D2)",
+        });
+      }
+      if (scenario.seed === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "an assessment scenario must carry a fixed seed so every candidate faces an identical run (CLAUDE.md §1.1)",
+        });
+      }
     }
     const vitalNames = new Set(Object.keys(scenario.engine.vitals));
     const actionIds = new Set(scenario.actions.map((a) => a.id));

@@ -1,10 +1,22 @@
+import type { SessionPhase } from "@vetcrew/engine";
 import type { ClientIntent } from "@vetcrew/shared";
 import { describe, expect, test } from "vitest";
 
 import type { SessionRoom } from "../live/session-room.js";
 import { authorizeIntent, type SocketBinding } from "../live/socket.js";
 
-const room = { injectionMenuIds: () => ["owner_distressed"] } as unknown as SessionRoom;
+function makeRoom(
+  mode: "assessment" | "practice" | "tutorial" = "practice",
+  phase: SessionPhase = "running",
+): SessionRoom {
+  return {
+    injectionMenuIds: () => ["owner_distressed"],
+    mode,
+    phase,
+  } as unknown as SessionRoom;
+}
+
+const room = makeRoom();
 
 function binding(stationKind: "instructor" | "trainee"): SocketBinding {
   return {
@@ -66,5 +78,62 @@ describe("authorizeIntent — legitimate phase changes still pass", () => {
     expect(
       authorizeIntent(binding("trainee"), { type: "phase_change", phase: "running" }, room).ok,
     ).toBe(false);
+  });
+});
+
+describe("assessment mode is enforced at the transport layer", () => {
+  // The whole difference between the two platforms has to be a capability the
+  // system withholds, not a rule the examiner is trusted to follow (§1.1) —
+  // and it binds the INSTRUCTOR, who in assessment is the examiner.
+  test("the examiner cannot inject during an assessment", () => {
+    const result = authorizeIntent(
+      binding("instructor"),
+      { type: "injection", injection: "owner_distressed" },
+      makeRoom("assessment"),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toContain("pre-set");
+  });
+
+  test("the examiner cannot pause an assessment", () => {
+    const result = authorizeIntent(
+      binding("instructor"),
+      { type: "phase_change", phase: "paused" },
+      makeRoom("assessment"),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  test("the examiner cannot bury a bad assessment run by archiving it from debrief", () => {
+    const result = authorizeIntent(
+      binding("instructor"),
+      { type: "phase_change", phase: "archived" },
+      makeRoom("assessment", "debrief"),
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  test("the same instructor may do all of that in practice mode", () => {
+    expect(
+      authorizeIntent(
+        binding("instructor"),
+        { type: "injection", injection: "owner_distressed" },
+        makeRoom("practice"),
+      ).ok,
+    ).toBe(true);
+    expect(
+      authorizeIntent(
+        binding("instructor"),
+        { type: "phase_change", phase: "paused" },
+        makeRoom("practice"),
+      ).ok,
+    ).toBe(true);
+    expect(
+      authorizeIntent(
+        binding("instructor"),
+        { type: "phase_change", phase: "archived" },
+        makeRoom("practice", "debrief"),
+      ).ok,
+    ).toBe(true);
   });
 });

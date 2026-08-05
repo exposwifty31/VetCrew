@@ -1,6 +1,7 @@
 {
   "slug": "base-rung-resp-distress",
   "version": "0.1.0",
+  "mode": "practice",
   "title": "Canine respiratory distress — base rung (single role)",
   "titleHe": "מצוקה נשימתית בכלב — שלב בסיס (תפקיד יחיד)",
   "species": "canine",

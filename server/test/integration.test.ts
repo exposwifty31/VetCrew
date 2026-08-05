@@ -13,6 +13,12 @@ import { createManagerRouter } from "../routes/manager.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { compileScenario, loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
+import {
+  ASSESSMENT_DOMAINS,
+  ASSESSMENT_RATERS,
+  ASSESSMENT_SLUG,
+  seedAssessmentScenario,
+} from "./fixtures/assessment-scenario.js";
 import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
 /**
@@ -89,6 +95,7 @@ beforeAll(async () => {
   await runMigrations(pool);
   tenantId = await ensurePilotTenant(db);
   await syncScenarios(db, tenantId, loadScenarioFiles());
+  await seedAssessmentScenario(db, tenantId);
 
   const app = express();
   app.use(express.json());
@@ -188,12 +195,24 @@ describe("event-log persistence + replay round-trip", () => {
 
   test("an illegal phase jump stays in the log but the projection refuses it", async () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
-    // draft -> scored is not a legal transition; the event is recorded, the
+    // draft -> debrief is not a legal transition; the event is recorded, the
     // session's projected phase must remain draft (FSM, CLAUDE.md §4).
-    await appendEvents(session.id, [{ type: "phase_change", phase: "scored" }]);
+    await appendEvents(session.id, [{ type: "phase_change", phase: "debrief" }]);
     const list = await api("/api/sessions");
     const listing = (await list.json()) as { sessions: { id: string; phase: string }[] };
     expect(listing.sessions.find((s) => s.id === session.id)?.phase).toBe("draft");
+  });
+
+  test("a client cannot assert scored over REST, in any mode", async () => {
+    // `scored` is server-derived: the ratings route appends it once the rating
+    // set is complete. The socket already refuses it; the REST append path has
+    // to refuse it too, or the rule is one curl away from being bypassed.
+    const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
+    const res = await api(`/api/sessions/${session.id}/events`, {
+      method: "POST",
+      body: JSON.stringify({ events: [{ type: "phase_change", phase: "scored" }] }),
+    });
+    expect(res.status).toBe(409);
   });
 });
 
@@ -304,23 +323,34 @@ describe("score -> source-event traceability", () => {
   });
 
   test("a valid evidence-linked rating is stored and the session becomes scored", async () => {
-    const session = await createSession({
-      scenarioSlug: SCENARIO_SLUG,
-      traineeTimeInTrainingDays: 365,
+    const session = await createSession({ scenarioSlug: ASSESSMENT_SLUG });
+    await api(`/api/sessions/${session.id}/raters`, {
+      method: "PUT",
+      body: JSON.stringify({ raterUserIds: ASSESSMENT_RATERS }),
     });
     await appendEvents(session.id, demoEvents());
-    const res = await api(`/api/sessions/${session.id}/ratings`, {
-      method: "POST",
-      body: JSON.stringify({
-        raterId: "it-rater",
-        ratings: [
-          { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-          { domain: "situation_awareness", score: 3, evidenceEventSeqs: [4] },
-          { domain: "decision_making", score: 2, evidenceEventSeqs: [7] },
-        ],
-      }),
-    });
-    expect(res.status).toBe(201);
+
+    // D2: the set completes only when EVERY assigned rater has covered EVERY
+    // declared domain. Raters one and two must be accepted and must NOT score
+    // the session — the old behaviour flipped it to `scored` on the first
+    // submission and then 409'd the other two out entirely.
+    for (const [index, raterId] of ASSESSMENT_RATERS.entries()) {
+      const partial = await api(`/api/sessions/${session.id}/ratings`, {
+        method: "POST",
+        body: JSON.stringify({
+          raterId,
+          ratings: [
+            { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
+            { domain: "situation_awareness", score: 3, evidenceEventSeqs: [4] },
+            { domain: "decision_making", score: 2, evidenceEventSeqs: [7] },
+          ],
+        }),
+      });
+      expect(partial.status).toBe(201);
+      const progress = (await partial.json()) as { complete: boolean; ratersSubmitted: number };
+      expect(progress.ratersSubmitted).toBe(index + 1);
+      expect(progress.complete).toBe(index === ASSESSMENT_RATERS.length - 1);
+    }
 
     const aar = await api(`/api/sessions/${session.id}/aar`);
     const body = (await aar.json()) as {
@@ -332,7 +362,9 @@ describe("score -> source-event traceability", () => {
     // The scored transition went THROUGH the log: replay agrees with the
     // projection column (audit F-b — no derived state without a source event).
     expect(body.aar.finalPhase).toBe("scored");
-    expect(body.ratings).toHaveLength(3);
+    // Three raters × three declared domains, and once scored the AAR stops
+    // blinding raters from each other — comparison is the point at that stage.
+    expect(body.ratings).toHaveLength(ASSESSMENT_RATERS.length * ASSESSMENT_DOMAINS.length);
     const tm = body.ratings.find((r) => r.domain === "task_management");
     expect(tm?.evidenceEventSeqs).toEqual([4, 7]);
 

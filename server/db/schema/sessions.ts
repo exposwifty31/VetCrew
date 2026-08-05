@@ -1,4 +1,4 @@
-import { bigint, integer, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, integer, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { vcTable } from "./_table.js";
 import { scenarios } from "./scenarios.js";
@@ -21,11 +21,47 @@ export const simSessions = vcTable("sim_sessions", {
   scenarioVersion: text("scenario_version").notNull(),
   seed: bigint("seed", { mode: "number" }).notNull(),
   phase: text("phase").notNull().default("draft"),
+  /**
+   * Mode resolved from the scenario at creation and FROZEN here, like
+   * scenario_version. Scenario rows are re-upserted from disk on every boot,
+   * so reading mode from the live scenario row would let a file edit restate
+   * the mode of every past session that used it — and mode is what the whole
+   * "the examiner could not intervene" claim rests on.
+   */
+  mode: text("mode").notNull().default("practice"),
   traineeId: text("trainee_id"),
   traineeTimeInTrainingDays: integer("trainee_time_in_training_days"),
   startedAt: timestamp("started_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Per-session rater assignment (CLAUDE.md §1.6). "All three raters submitted"
+ * is uncheckable against `ants_ratings.rater_id` alone — it is free text, so a
+ * bare distinct-count would admit any three people, including the mentor whose
+ * exclusion is the entire point of the separation of duties. The roster names
+ * which three.
+ *
+ * Amendable while phase < debrief (founder decision 2026-08-05). The invariant
+ * that matters — scored requires three distinct assigned raters with complete
+ * sets — is enforced at scoring time and is untouched by when the roster is
+ * set. Freezing it at creation only bought a permanently unscorable session
+ * the first time a rater went on leave, with a re-sit for the candidate.
+ *
+ * Mentor exclusion is procedural, not API-enforced (§1.6).
+ */
+export const sessionRaters = vcTable(
+  "session_raters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    sessionId: uuid("session_id").notNull().references(() => simSessions.id),
+    /** Clerk subject id of the assigned rater. */
+    raterUserId: text("rater_user_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique("vc_session_raters_session_rater").on(table.sessionId, table.raterUserId)],
+);
 
 /** Role stations are thin clients with genuinely partial views (§4). */
 export const roleStations = vcTable("role_stations", {

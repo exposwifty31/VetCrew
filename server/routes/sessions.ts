@@ -2,17 +2,20 @@ import { randomInt } from "node:crypto";
 
 import {
   buildAar,
+  canTransition,
   evaluateChecklist,
   evaluateTasks,
   type EngineEvent,
+  type SessionPhase,
 } from "@vetcrew/engine";
 import {
   antsDomainSchema,
   authoredScenarioSchema,
   engineEventBodySchema,
   engineEventSchema,
+  scenarioModeSchema,
 } from "@vetcrew/shared";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
@@ -27,10 +30,12 @@ import {
   roleStations,
   scenarios,
   sessionEvents,
+  sessionRaters,
   simSessions,
 } from "../db/schema/index.js";
 import { attestEvidenceSeqs, loadEventLogRows } from "../evidence-attest.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
+import { isScorable, refuseClientPhaseChange, refuseInjection } from "../mode-policy.js";
 import { compileScenario } from "../scenarios.js";
 
 function readAuthIfEnabled(req: Request, authEnabled: boolean, readAuthFn: AuthReader): AuthSnapshot {
@@ -58,7 +63,23 @@ const appendEventsSchema = z.object({
   events: z.array(engineEventBodySchema).min(1),
 });
 
+/**
+ * Consequential (hiring) judgments need three raters — the threshold the CPR
+ * reliability literature and AVECCTN's own practice independently converge on
+ * (CLAUDE.md §2.2). A vet, the Reviewer, and a senior technician who is not the
+ * candidate's mentor.
+ */
+const REQUIRED_RATERS = 3;
+
+const setRatersSchema = z.object({
+  raterUserIds: z.array(z.string().min(1)).max(16),
+});
+
 const submitRatingsSchema = z.object({
+  /**
+   * Whose judgment this is. Omitted for the ordinary self-rating case; supplied
+   * only when a manager enters an off-system rater's scores (see the route).
+   */
   raterId: z.string().min(1).optional(),
   ratings: z
     .array(
@@ -210,7 +231,37 @@ export async function assertRoleStationBinding(
   return row !== undefined && row.assignedUserId === userId;
 }
 
-/** REST ownership — manager/instructor see all; trainees only assigned stations. */
+/** Is this user on the session's rater roster? */
+async function isAssignedRater(
+  db: Db,
+  tenantId: string,
+  sessionId: string,
+  userId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ raterUserId: sessionRaters.raterUserId })
+    .from(sessionRaters)
+    .where(
+      and(
+        eq(sessionRaters.tenantId, tenantId),
+        eq(sessionRaters.sessionId, sessionId),
+        eq(sessionRaters.raterUserId, userId),
+      ),
+    );
+  return rows.length > 0;
+}
+
+/**
+ * REST ownership — manager/instructor see all; trainees only assigned stations;
+ * assigned raters get read + rate on the session they were asked to rate.
+ *
+ * The rater clause is load-bearing: a vet and a senior technician are neither
+ * manager/instructor nor holders of a `role_stations` row, so without it every
+ * rater but the instructor is 403'd off both the AAR and the ratings route —
+ * and the only workaround would be handing all three the `instructor` Clerk
+ * role, which also lets them create and run sessions. That is not a permission
+ * model (design-alignment §2.4).
+ */
 async function assertSessionAccess(
   db: Db,
   tenantId: string,
@@ -241,7 +292,10 @@ async function assertSessionAccess(
     .select({ assignedUserId: roleStations.assignedUserId })
     .from(roleStations)
     .where(and(eq(roleStations.tenantId, tenantId), eq(roleStations.sessionId, sessionId)));
-  return rows.some((row) => row.assignedUserId === auth.userId);
+  if (rows.some((row) => row.assignedUserId === auth.userId)) {
+    return true;
+  }
+  return isAssignedRater(db, tenantId, sessionId, auth.userId);
 }
 
 export function createSessionRouter(
@@ -306,13 +360,24 @@ export function createSessionRouter(
       return;
     }
     const authored = authoredScenarioSchema.parse(scenario.definition);
+    // Identical conditions is a hard product rule for the locked platform: the
+    // reducer draws jitter per vital per tick, so a random per-session seed
+    // would give two candidates different vitals traces on the same scenario.
+    // An assessment therefore runs on the seed pinned in the scenario file and
+    // ignores any client-supplied one (the schema already requires it there).
+    const seed =
+      authored.mode === "assessment"
+        ? (authored.seed ?? randomInt(1, 2 ** 31))
+        : (input.seed ?? randomInt(1, 2 ** 31));
     const inserted = await db
       .insert(simSessions)
       .values({
         tenantId,
         scenarioId: scenario.id,
         scenarioVersion: scenario.version,
-        seed: input.seed ?? randomInt(1, 2 ** 31),
+        // Resolved from the scenario and frozen, exactly like scenarioVersion.
+        mode: authored.mode,
+        seed,
         traineeId: bindings.sessionTraineeId,
       })
       .returning();
@@ -351,6 +416,34 @@ export function createSessionRouter(
     }
     const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
     const allowed = await assertSessionAccess(db, tenantId, id, auth, authEnabled);
+    if (!allowed) {
+      // This result was previously computed and then never read, so the route
+      // authorized nobody — every other session route enforces it.
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+    // Mode is withheld capability, not honour system (CLAUDE.md §1.1) — the
+    // REST append path has to refuse exactly what the socket refuses, or the
+    // locked platform is one curl away from being unlocked.
+    const mode = scenarioModeSchema.parse(session.mode);
+    let phase = session.phase as SessionPhase;
+    for (const body of parsed.data.events) {
+      if (body.type !== "phase_change") continue;
+      const refusal = refuseClientPhaseChange(mode, phase, body.phase);
+      if (refusal !== null) {
+        res.status(409).json({ error: refusal });
+        return;
+      }
+      if (canTransition(phase, body.phase)) phase = body.phase;
+    }
+    for (const body of parsed.data.events) {
+      if (body.type !== "injection") continue;
+      const refusal = refuseInjection(mode);
+      if (refusal !== null) {
+        res.status(409).json({ error: refusal });
+        return;
+      }
+    }
     const result = await appendSessionEvents(db, {
       tenantId,
       sessionId: id,
@@ -402,14 +495,31 @@ export function createSessionRouter(
     const aar = buildAar(session.seed, events, compiled);
     const checklist = evaluateChecklist(events, authored.checklist);
     const tasks = evaluateTasks(session.seed, events, compiled);
-    const ratings = await db
+    // Rater blinding (design-alignment §2.1). The whole justification for three
+    // raters is inter-rater agreement; if rater 2 opens the AAR and sees that
+    // rater 1 gave a 2 on decision-making before entering her own, that is one
+    // judgment and two anchorings — and the packet would still claim three.
+    // So while an assessment is still being rated, each rater sees only their
+    // own rows. Once the set is complete and the session is scored, the whole
+    // picture opens up: comparison is the point at that stage.
+    const sessionMode = scenarioModeSchema.parse(session.mode);
+    const blindRatings =
+      isScorable(sessionMode) && session.phase !== "scored" && session.phase !== "archived";
+    const ratingRows = await db
       .select()
       .from(antsRatings)
       .where(eq(antsRatings.sessionId, session.id));
+    const ratings =
+      blindRatings && authEnabled
+        ? ratingRows.filter(
+            (row) => auth.userId !== null && row.submittedByUserId === auth.userId,
+          )
+        : ratingRows;
     res.json({
       session: {
         id: session.id,
         phase: session.phase,
+        mode: sessionMode,
         seed: session.seed,
         traineeId: session.traineeId,
         scenarioVersion: session.scenarioVersion,
@@ -435,6 +545,91 @@ export function createSessionRouter(
     });
   });
 
+  router.get("/:id/raters", async (req: Request, res: Response) => {
+    const id = paramId(req);
+    const session = id === null ? undefined : await loadSession(db, tenantId, id);
+    if (session === undefined || id === null) {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    if (!(await assertSessionAccess(db, tenantId, id, auth, authEnabled))) {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+    const rows = await db
+      .select({ raterUserId: sessionRaters.raterUserId })
+      .from(sessionRaters)
+      .where(and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, id)))
+      .orderBy(asc(sessionRaters.createdAt));
+    res.json({
+      sessionId: id,
+      required: REQUIRED_RATERS,
+      raterUserIds: rows.map((row) => row.raterUserId),
+    });
+  });
+
+  /**
+   * Replace the rater roster. Amendable while the session is before `debrief`
+   * (founder decision 2026-08-05): the invariant that matters — scored requires
+   * three distinct assigned raters with complete sets — is enforced at scoring
+   * time and is untouched by when the roster is set. Freezing it at creation
+   * bought only a permanently unscorable session the first time a rater went on
+   * leave or the candidate objected to one, with a re-sit for the candidate and
+   * archive-unscored as the sole exit. Locking at `debrief` is what stops the
+   * roster being reshuffled once anyone has seen the run.
+   */
+  router.put("/:id/raters", async (req: Request, res: Response) => {
+    const parsed = setRatersSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues });
+      return;
+    }
+    const id = paramId(req);
+    if (id === null) {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    const auth = readAuthIfEnabled(req, authEnabled, readAuthFn);
+    if (authEnabled && auth.role !== "manager" && auth.role !== "instructor") {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+    const raterUserIds = [...new Set(parsed.data.raterUserIds)];
+    const outcome = await db.transaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(simSessions)
+        .where(and(eq(simSessions.tenantId, tenantId), eq(simSessions.id, id)))
+        .for("update");
+      const session = rows[0];
+      if (session === undefined) return { kind: "not_found" as const };
+      if (session.phase === "debrief" || session.phase === "scored" || session.phase === "archived") {
+        return { kind: "locked" as const, phase: session.phase };
+      }
+      await tx
+        .delete(sessionRaters)
+        .where(and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, id)));
+      if (raterUserIds.length > 0) {
+        await tx
+          .insert(sessionRaters)
+          .values(raterUserIds.map((raterUserId) => ({ tenantId, sessionId: id, raterUserId })));
+      }
+      return { kind: "ok" as const };
+    });
+    if (outcome.kind === "not_found") {
+      res.status(404).json({ error: "session not found" });
+      return;
+    }
+    if (outcome.kind === "locked") {
+      res.status(409).json({
+        error: `session is in phase "${outcome.phase}"; the rater roster is fixed from debrief onward`,
+      });
+      return;
+    }
+    res.json({ sessionId: id, required: REQUIRED_RATERS, raterUserIds });
+  });
+
   router.post("/:id/ratings", async (req: Request, res: Response) => {
     const parsed = submitRatingsSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -452,9 +647,26 @@ export function createSessionRouter(
       res.status(403).json({ error: "forbidden" });
       return;
     }
-    const raterId = authEnabled ? auth.userId : parsed.data.raterId;
-    if (raterId === null || raterId === undefined || raterId.length === 0) {
+    // Two distinct identities (design-alignment §3.5). `raterId` is WHOSE
+    // JUDGMENT this is; `submittedByUserId` is who physically typed it. They
+    // differ only for a proxied entry — the Reviewer is 65, non-technical, and
+    // will never log in, so the alternative was either losing her from the
+    // three-rater model entirely or recording her scores under someone else's
+    // name, which makes the packet's central claim false.
+    const submittedByUserId = authEnabled ? auth.userId : (parsed.data.raterId ?? "dev-rater");
+    if (submittedByUserId === null || submittedByUserId.length === 0) {
       res.status(400).json({ error: "raterId required" });
+      return;
+    }
+    const raterId = parsed.data.raterId ?? submittedByUserId;
+    if (raterId.length === 0) {
+      res.status(400).json({ error: "raterId required" });
+      return;
+    }
+    // Proxying is a manager action. Without this, any assigned rater could file
+    // scores under a colleague's name — forgery wearing an audit trail.
+    if (authEnabled && raterId !== submittedByUserId && auth.role !== "manager") {
+      res.status(403).json({ error: "only a manager may submit ratings on another rater's behalf" });
       return;
     }
     const sessionForGate = await loadSession(db, tenantId, id);
@@ -463,7 +675,10 @@ export function createSessionRouter(
       return;
     }
     const scenarioForGate = await db
-      .select({ clinicallyReviewed: scenarios.clinicallyReviewed })
+      .select({
+        clinicallyReviewed: scenarios.clinicallyReviewed,
+        definition: scenarios.definition,
+      })
       .from(scenarios)
       .where(eq(scenarios.id, sessionForGate.scenarioId));
     const scenarioRow = scenarioForGate[0];
@@ -475,14 +690,29 @@ export function createSessionRouter(
       res.status(403).json({ error: "scenario_not_clinically_reviewed" });
       return;
     }
+    const gateScenario = authoredScenarioSchema.parse(scenarioRow.definition);
+    const declaredDomains = gateScenario.scoringDimensions;
+    // D2 as amended: completion is measured against the domains the scenario
+    // DECLARES, so a rating outside that set can never count toward it and
+    // would sit in the record as an orphan.
+    const undeclared = parsed.data.ratings
+      .map((rating) => rating.domain)
+      .filter((domain) => !declaredDomains.includes(domain));
+    if (undeclared.length > 0) {
+      res.status(422).json({
+        error: `scenario does not declare ANTS domain(s): ${[...new Set(undeclared)].join(", ")}`,
+      });
+      return;
+    }
     // Phase guard, evidence check, and seq derivation all read session state,
     // so they run INSIDE the transaction under a row lock — a concurrent
     // append cannot make the debrief check stale or collide the scored seq.
     type RatingsResult =
       | { kind: "not_found" }
       | { kind: "wrong_phase"; phase: string }
+      | { kind: "not_assigned" }
       | { kind: "unknown_evidence"; seqs: number[] }
-      | { kind: "ok" };
+      | { kind: "ok"; complete: boolean; ratersSubmitted: number; ratersAssigned: number };
     const result: RatingsResult = await db.transaction(async (tx) => {
       const rows = await tx
         .select()
@@ -494,6 +724,23 @@ export function createSessionRouter(
       // FSM guard (audit F-d): scoring is the debrief -> scored transition; a
       // session in any other phase cannot be rated.
       if (session.phase !== "debrief") return { kind: "wrong_phase", phase: session.phase };
+      const mode = scenarioModeSchema.parse(session.mode);
+
+      const roster = await tx
+        .select({ raterUserId: sessionRaters.raterUserId })
+        .from(sessionRaters)
+        .where(
+          and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, session.id)),
+        );
+      const assigned = roster.map((row) => row.raterUserId);
+      // Assessment scores come only from the named three. "All three submitted"
+      // is otherwise uncheckable — rater_id is free text, so a distinct-count
+      // would be satisfied by any three people, including the mentor whose
+      // exclusion is the entire point of the separation of duties (§1.6).
+      if (isScorable(mode) && !assigned.includes(raterId)) {
+        return { kind: "not_assigned" };
+      }
+
       // Evidence must point at events that actually exist in THIS session —
       // a rating with fabricated evidence is worse than no rating (§2.3).
       // Freeze log head (seq + hash) before appending phase=scored.
@@ -507,27 +754,76 @@ export function createSessionRouter(
         return { kind: "unknown_evidence", seqs: attested.seqs };
       }
       const { logHeadSeq, logHeadHash } = attested.attestation;
-      await tx.insert(antsRatings).values(
-        parsed.data.ratings.map((rating) => ({
+      // Upsert: one live rating per (session, rater, domain). Completion is a
+      // query over these rows, so duplicates would make it unanswerable. A
+      // rater correcting their own entry before the set completes overwrites
+      // it; an amendment HISTORY is a follow-up (design-alignment §4).
+      await tx
+        .insert(antsRatings)
+        .values(
+          parsed.data.ratings.map((rating) => ({
+            tenantId,
+            sessionId: session.id,
+            raterId,
+            submittedByUserId,
+            domain: rating.domain,
+            score: rating.score,
+            evidenceEventSeqs: rating.evidenceEventSeqs,
+            logHeadSeq,
+            logHeadHash,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [antsRatings.sessionId, antsRatings.raterId, antsRatings.domain],
+          set: {
+            score: sql`excluded.score`,
+            submittedByUserId: sql`excluded.submitted_by_user_id`,
+            evidenceEventSeqs: sql`excluded.evidence_event_seqs`,
+            logHeadSeq: sql`excluded.log_head_seq`,
+            logHeadHash: sql`excluded.log_head_hash`,
+          },
+        });
+
+      // D2: the set is complete when EVERY assigned rater has covered EVERY
+      // domain the scenario declares — not when the first one submits. The old
+      // behaviour flipped the session to `scored` on submission one, which
+      // 409'd raters two and three out of the session they were assigned to
+      // and left the packet claiming three judgments it never collected.
+      const stored = await tx
+        .select({ raterId: antsRatings.raterId, domain: antsRatings.domain })
+        .from(antsRatings)
+        .where(and(eq(antsRatings.tenantId, tenantId), eq(antsRatings.sessionId, session.id)));
+      const byRater = new Map<string, Set<string>>();
+      for (const row of stored) {
+        const domains = byRater.get(row.raterId) ?? new Set<string>();
+        domains.add(row.domain);
+        byRater.set(row.raterId, domains);
+      }
+      const completeRaters = assigned.filter((rater) => {
+        const domains = byRater.get(rater);
+        return domains !== undefined && declaredDomains.every((domain) => domains.has(domain));
+      });
+      const complete =
+        isScorable(mode) &&
+        assigned.length >= REQUIRED_RATERS &&
+        completeRaters.length === assigned.length;
+
+      if (complete) {
+        // Scored transition goes THROUGH the log via the sole seq authority
+        // (audit F-b / Sprint 3) — no second INSERT path into vc_session_events.
+        const scored = await appendSessionEventsTx(tx, {
           tenantId,
           sessionId: session.id,
-          raterId,
-          domain: rating.domain,
-          score: rating.score,
-          evidenceEventSeqs: rating.evidenceEventSeqs,
-          logHeadSeq,
-          logHeadHash,
-        })),
-      );
-      // Scored transition goes THROUGH the log via the sole seq authority
-      // (audit F-b / Sprint 3) — no second INSERT path into vc_session_events.
-      const scored = await appendSessionEventsTx(tx, {
-        tenantId,
-        sessionId: session.id,
-        bodies: [{ type: "phase_change", phase: "scored" }],
-      });
-      if (scored.kind === "not_found") return { kind: "not_found" };
-      return { kind: "ok" };
+          bodies: [{ type: "phase_change", phase: "scored" }],
+        });
+        if (scored.kind === "not_found") return { kind: "not_found" };
+      }
+      return {
+        kind: "ok",
+        complete,
+        ratersSubmitted: completeRaters.length,
+        ratersAssigned: assigned.length,
+      };
     });
     switch (result.kind) {
       case "not_found":
@@ -538,13 +834,21 @@ export function createSessionRouter(
           error: `session is in phase "${result.phase}"; ratings are submitted from debrief`,
         });
         return;
+      case "not_assigned":
+        res.status(403).json({ error: "rater is not assigned to this session" });
+        return;
       case "unknown_evidence":
         res.status(422).json({
           error: `evidence references events not in this session: ${result.seqs.join(", ")}`,
         });
         return;
       case "ok":
-        res.status(201).json({ rated: parsed.data.ratings.length });
+        res.status(201).json({
+          rated: parsed.data.ratings.length,
+          complete: result.complete,
+          ratersSubmitted: result.ratersSubmitted,
+          ratersAssigned: result.ratersAssigned,
+        });
         return;
       default: {
         const exhaustive: never = result;

@@ -78,7 +78,11 @@ test("instructor reviews the AAR and submits an evidence-linked rating", async (
   // Server stamps raterId from auth when test auth is on.
   await expect(page.getByRole("heading", { name: "דירוגים שנשמרו" })).toBeVisible();
   await expect(page.getByText(E2E_INSTRUCTOR).first()).toBeVisible();
-  await expect(page.getByText("מדורג").first()).toBeVisible();
+  // This is a PRACTICE session, so the rating is a formative annotation and the
+  // session stays in debrief — practice never reaches "מדורג" (scored). Scoring
+  // belongs to assessment and needs a complete three-rater set (CLAUDE.md §4).
+  await expect(page.getByText("מדורג").first()).toBeHidden();
+  await expect(page.getByText("תחקיר").first()).toBeVisible();
 });
 
 test("an incomplete rating is rejected client-side", async ({ page, request }) => {

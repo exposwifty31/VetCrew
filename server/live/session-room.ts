@@ -11,7 +11,7 @@ import {
   type ScenarioDef,
   type SessionPhase,
 } from "@vetcrew/engine";
-import type { EngineEventBody, StationKind } from "@vetcrew/shared";
+import type { EngineEventBody, ScenarioMode, StationKind } from "@vetcrew/shared";
 
 import type { Db } from "../db/client.js";
 import { appendSessionEvents } from "./event-append.js";
@@ -55,6 +55,12 @@ export class SessionRoom {
     private readonly tenantId: string,
     private readonly sessionId: string,
     private readonly scenario: ScenarioDef,
+    /**
+     * The session's FROZEN mode, not the live scenario's — see
+     * `server/mode-policy.ts`. Deliberately held on the room rather than in
+     * `EngineState`: content metadata must never be able to alter replay (D3).
+     */
+    readonly mode: ScenarioMode,
     seed: number,
     events: readonly EngineEvent[],
   ) {
@@ -70,6 +76,7 @@ export class SessionRoom {
     readonly sessionId: string;
     readonly seed: number;
     readonly scenario: ScenarioDef;
+    readonly mode: ScenarioMode;
     readonly events: readonly EngineEvent[];
   }): SessionRoom {
     const room = new SessionRoom(
@@ -77,6 +84,7 @@ export class SessionRoom {
       args.tenantId,
       args.sessionId,
       args.scenario,
+      args.mode,
       args.seed,
       args.events,
     );

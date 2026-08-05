@@ -22,7 +22,18 @@ import type { Db } from "../db/client.js";
 import { antsRatings, scenarios, sessionEvents, simSessions } from "../db/schema/index.js";
 import { compileScenario } from "../scenarios.js";
 
+/**
+ * The evidence desk keys on `archived` as well as `scored`, which was safe only
+ * while `archived` was reachable exclusively THROUGH `scored`. Widening the FSM
+ * to `debrief → archived` (so practice sessions have a terminal state at all)
+ * breaks that implication: without the mode filter below, every archived
+ * practice session would surface on the hiring desk carrying an "overall ANTS"
+ * computed from whatever partial formative ratings someone attached to it.
+ *
+ * So both halves are required, together: assessment mode AND a terminal phase.
+ */
 const EVIDENCE_PHASES = ["scored", "archived"] as const;
+const EVIDENCE_MODE = "assessment";
 
 export type ManagerRouterOptions = {
   authEnabled: boolean;
@@ -106,6 +117,7 @@ export function createManagerRouter(
         and(
           eq(simSessions.tenantId, tenantId),
           eq(simSessions.traineeId, traineeId),
+          eq(simSessions.mode, EVIDENCE_MODE),
           inArray(simSessions.phase, [...EVIDENCE_PHASES]),
         ),
       )
@@ -177,6 +189,7 @@ export function createManagerRouter(
     const conditions = [
       eq(simSessions.tenantId, tenantId),
       eq(simSessions.traineeId, traineeId),
+      eq(simSessions.mode, EVIDENCE_MODE),
       inArray(simSessions.phase, [...EVIDENCE_PHASES]),
     ];
     if (scenarioSlug !== undefined) {

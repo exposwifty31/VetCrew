@@ -29,6 +29,8 @@ export interface AarResponse {
   session: {
     id: string;
     phase: SessionPhase;
+    /** Assessment blinds raters from each other until the session is scored. */
+    mode: "assessment" | "practice" | "tutorial";
     seed: number;
     traineeId: string | null;
     scenarioVersion: string;
@@ -52,7 +54,10 @@ export interface AarResponse {
   tasks: TaskEvaluation;
   ratings: {
     id: string;
+    /** Whose judgment it is. */
     raterId: string;
+    /** Who entered it — differs only for a proxied entry. */
+    submittedByUserId: string;
     domain: AntsDomain;
     score: number;
     evidenceEventSeqs: number[];
@@ -139,10 +144,15 @@ export async function submitRatings(
   ratings: { domain: AntsDomain; score: number; evidenceEventSeqs: number[] }[],
   token?: string | null,
 ): Promise<void> {
+  const authenticated = token !== null && token !== undefined && token.length > 0;
   const res = await fetch(`/api/sessions/${sessionId}/ratings`, {
     method: "POST",
     headers: jsonHeaders(token),
-    body: JSON.stringify({ raterId, ratings }),
+    // When signed in, identity comes from the token and the typed name is not
+    // sent: `raterId` on the wire now means "this is someone ELSE's judgment",
+    // which the server only accepts from a manager entering an off-system
+    // rater's scores. Sending a self-typed name would read as a proxy claim.
+    body: JSON.stringify(authenticated ? { ratings } : { raterId, ratings }),
   });
   if (!res.ok) throw new HttpError(res.status, "ratings");
 }

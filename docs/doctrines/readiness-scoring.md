@@ -59,11 +59,24 @@ anything consequential.
 - **One live rater = formative feedback only.** Never a hiring input.
 - **Consequential (hiring) judgments need three raters** — the threshold the CPR
   reliability literature and AVECCTN's own practice independently converge on.
-- **At the pilot site there is exactly one qualified rater.** Therefore any
-  inter-rater target (e.g. "two raters, ICC ≥ 0.75") is achievable only via
-  **recorded sessions scored asynchronously by raters sourced outside the hospital**
-  (other ECC-credentialed technicians, remote). A proposal that names an inter-rater
-  gate must name where raters two and three come from, or the gate is decoration.
+- **The three are internal: a vet, the Reviewer, and a senior technician who is
+  not the candidate's mentor** (corrected 2026-08-05; there are ten senior
+  technicians). An earlier version of this file said raters two and three had to
+  come from *outside* the hospital. That rested on a conflation: the US
+  veterinary-technician degree matters for judging whether scenario *content* is
+  clinically correct (§2.5, the Reviewer's job) and has little to do with judging
+  whether a candidate managed a deteriorating patient competently. ANTS is
+  designed for domain experts, not holders of a specific credential. External
+  raters are also undesirable — applicant data should not leave the hospital.
+  A proposal that names an inter-rater gate must still say who fills the seats.
+- **Enforced, not aspirational (2026-08-05).** Per-session rater assignment
+  (`vc_session_raters`) names which three; a session reaches `scored` only when
+  every assigned rater has rated every domain the scenario declares, and never
+  with fewer than three assigned. Raters see only their own rows until the set is
+  complete — three anchored judgments are not three judgments. Ratings carry
+  `submitted_by_user_id` beside `rater_id`, so a rating entered on behalf of the
+  Reviewer (who will never log in) is honest and countable rather than
+  attributed to whoever typed it.
 
 ## Withheld until N exists
 

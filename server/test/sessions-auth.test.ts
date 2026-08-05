@@ -226,41 +226,81 @@ describe("session REST ownership", () => {
 });
 
 describe("ratings stamp raterId from auth", () => {
-  test("ignores client raterId when auth is enabled", async () => {
-    const traineeId = "rated-trainee";
+  async function debriefedSession(traineeId: string): Promise<string> {
     const createRes = await api("/api/sessions", {
       method: "POST",
       headers: authHeader("inst-rater", "instructor"),
-      body: JSON.stringify({
-        scenarioSlug: SCENARIO_SLUG,
-        traineeId,
-        traineeTimeInTrainingDays: 45,
-      }),
+      body: JSON.stringify({ scenarioSlug: SCENARIO_SLUG, traineeId }),
     });
     expect(createRes.status).toBe(201);
     const { session } = (await createRes.json()) as { session: { id: string } };
-
     const appendRes = await api(`/api/sessions/${session.id}/events`, {
       method: "POST",
       headers: authHeader("inst-rater", "instructor"),
       body: JSON.stringify({ events: buildDemoEvents(traineeId) }),
     });
     expect(appendRes.status).toBe(201);
+    return session.id;
+  }
 
-    const rateRes = await api(`/api/sessions/${session.id}/ratings`, {
+  test("a self-rating is stamped from auth, as both rater and submitter", async () => {
+    const sessionId = await debriefedSession("rated-trainee");
+    const rateRes = await api(`/api/sessions/${sessionId}/ratings`, {
       method: "POST",
       headers: authHeader("inst-rater", "instructor"),
       body: JSON.stringify({
-        raterId: "client-should-be-ignored",
         ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [4] }],
       }),
     });
     expect(rateRes.status).toBe(201);
 
-    const aarRes = await api(`/api/sessions/${session.id}/aar`, {
+    const aarRes = await api(`/api/sessions/${sessionId}/aar`, {
       headers: authHeader("inst-rater", "instructor"),
     });
-    const aar = (await aarRes.json()) as { ratings: { raterId: string }[] };
+    const aar = (await aarRes.json()) as {
+      ratings: { raterId: string; submittedByUserId: string }[];
+    };
     expect(aar.ratings.every((r) => r.raterId === "inst-rater")).toBe(true);
+    expect(aar.ratings.every((r) => r.submittedByUserId === "inst-rater")).toBe(true);
+  });
+
+  test("a non-manager cannot file a rating under someone else's name", async () => {
+    // Proxying exists for the Reviewer, who will never log in (§1.6) — not as a
+    // way for one rater to put words in another rater's mouth.
+    const sessionId = await debriefedSession("proxy-forgery-trainee");
+    const rateRes = await api(`/api/sessions/${sessionId}/ratings`, {
+      method: "POST",
+      headers: authHeader("inst-rater", "instructor"),
+      body: JSON.stringify({
+        raterId: "someone-else",
+        ratings: [{ domain: "task_management", score: 4, evidenceEventSeqs: [4] }],
+      }),
+    });
+    expect(rateRes.status).toBe(403);
+  });
+
+  test("a manager may proxy a rating, and the record keeps both identities", async () => {
+    const sessionId = await debriefedSession("proxied-trainee");
+    const rateRes = await api(`/api/sessions/${sessionId}/ratings`, {
+      method: "POST",
+      headers: authHeader("dept-manager", "manager"),
+      body: JSON.stringify({
+        raterId: "the-reviewer",
+        ratings: [{ domain: "task_management", score: 5, evidenceEventSeqs: [4] }],
+      }),
+    });
+    expect(rateRes.status).toBe(201);
+
+    const aarRes = await api(`/api/sessions/${sessionId}/aar`, {
+      headers: authHeader("dept-manager", "manager"),
+    });
+    const aar = (await aarRes.json()) as {
+      ratings: { raterId: string; submittedByUserId: string }[];
+    };
+    // Whose judgment it is, and who typed it, stay separately visible — a
+    // proxied entry is honest and countable rather than a quiet falsehood.
+    expect(aar.ratings).toHaveLength(1);
+    expect(aar.ratings[0]?.raterId).toBe("the-reviewer");
+    expect(aar.ratings[0]?.submittedByUserId).toBe("dept-manager");
   });
 });

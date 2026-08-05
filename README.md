@@ -52,3 +52,17 @@ Production roles: Clerk `user.publicMetadata.vetcrewRole` (`manager` \| `instruc
 - Two scoring axes: technical checklist/tasks + ANTS (formative until three raters).
 - Cross-person readiness bands withheld (`cohort_insufficient`) until cohort N exists.
 - Unreviewed scenarios (`clinically_reviewed: false`) are internal-testing only.
+
+### Scenario modes
+
+Every scenario declares a `mode` (default `practice`), and the session freezes the
+resolved value at creation:
+
+| Mode | Instructor | Lifecycle | On the evidence desk? |
+|---|---|---|---|
+| `assessment` | **Observer only** — pause and inject refused at both transports; seed pinned in the file | `debrief → scored → archived`; `scored` needs three assigned raters × every declared domain | Yes |
+| `practice` | Full flexibility | never reaches `scored`; `debrief → archived` | No |
+| `tutorial` | Full flexibility | never reaches `scored`; `debrief → archived` | No |
+
+Assessment scenarios must declare at least three ANTS domains and pin a `seed`.
+Rater roster: `PUT /api/sessions/:id/raters`, amendable until `debrief`.

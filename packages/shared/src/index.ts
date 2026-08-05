@@ -66,11 +66,13 @@ export {
 export {
   antsDomainSchema,
   antsRatingSchema,
+  scenarioModeSchema,
   scenarioSchema,
   simSessionSchema,
   type AntsDomain,
   type AntsRating,
   type Scenario,
+  type ScenarioMode,
   type SimSession,
 } from "./entities.js";
 export {

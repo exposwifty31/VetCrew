@@ -16,6 +16,7 @@ import { Server, type Socket } from "socket.io";
 
 import type { TokenAuthReader } from "../auth.js";
 import type { Db } from "../db/client.js";
+import { refuseClientPhaseChange, refuseInjection } from "../mode-policy.js";
 import { assertRoleStationBinding } from "../routes/sessions.js";
 import type { RoomRegistry } from "./room-registry.js";
 import type { SessionRoom } from "./session-room.js";
@@ -147,16 +148,22 @@ export function authorizeIntent(
   intent: ClientIntent,
   room: SessionRoom,
 ): { ok: true } | { ok: false; code: "role_bound" | "validation"; message: string } {
-  // `scored` is server-derived only — the ratings route appends it after the
-  // rating set is complete, which does not pass through here. No client may
-  // assert it, in any mode or role. (Dropping the time-in-training DB check
-  // removes the constraint that used to block this at the storage layer.)
-  if (intent.type === "phase_change" && intent.phase === "scored") {
-    return {
-      ok: false,
-      code: "validation",
-      message: "scored is set by the server when the rating set is complete, not by a client",
-    };
+  // Mode is enforced HERE, at the transport layer, because the difference
+  // between the two platforms has to be a capability the system withholds
+  // rather than a rule an examiner is trusted to follow (CLAUDE.md §1.1).
+  // Applied before the role branches so it binds instructors too — in
+  // assessment the instructor *is* the examiner, and observing is all they do.
+  if (intent.type === "phase_change") {
+    const refusal = refuseClientPhaseChange(room.mode, room.phase, intent.phase);
+    if (refusal !== null) {
+      return { ok: false, code: "validation", message: refusal };
+    }
+  }
+  if (intent.type === "injection") {
+    const refusal = refuseInjection(room.mode);
+    if (refusal !== null) {
+      return { ok: false, code: "validation", message: refusal };
+    }
   }
   if (binding.stationKind === "instructor") {
     if (intent.type === "task_start" || intent.type === "task_submit" || intent.type === "action") {

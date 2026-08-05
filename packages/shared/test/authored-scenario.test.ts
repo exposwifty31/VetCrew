@@ -54,6 +54,60 @@ describe("authored scenario contract", () => {
     expect(authoredScenarioSchema.safeParse(broken).success).toBe(false);
   });
 
+  describe("mode (CLAUDE.md §1.1, D3)", () => {
+    function demo(overrides: Record<string, unknown>): Record<string, unknown> {
+      const raw = JSON.parse(readFileSync(demoPath, "utf8")) as Record<string, unknown>;
+      return { ...raw, ...overrides };
+    }
+
+    test("defaults to practice — the locked mode is never reached by omission", () => {
+      const raw = demo({});
+      delete raw["mode"];
+      const result = authoredScenarioSchema.safeParse(raw);
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.mode).toBe("practice");
+    });
+
+    test("both shipped scenarios are practice, not assessment", () => {
+      for (const path of [demoPath, steppedPath]) {
+        const raw = JSON.parse(readFileSync(path, "utf8")) as { mode: string };
+        expect(raw.mode).toBe("practice");
+      }
+    });
+
+    test("an assessment must declare at least 3 ANTS domains", () => {
+      // D2 as amended: completion is measured against the DECLARED set, which
+      // makes that set load-bearing — a token one or two would let an
+      // assessment be "complete" while testing almost nothing.
+      const twoDomains = demo({
+        mode: "assessment",
+        seed: 7,
+        scoringDimensions: ["situation_awareness", "decision_making"],
+      });
+      expect(authoredScenarioSchema.safeParse(twoDomains).success).toBe(false);
+
+      const threeDomains = demo({
+        mode: "assessment",
+        seed: 7,
+        scoringDimensions: ["task_management", "situation_awareness", "decision_making"],
+      });
+      expect(authoredScenarioSchema.safeParse(threeDomains).success).toBe(true);
+    });
+
+    test("an assessment must pin a seed so every candidate faces the same run", () => {
+      const noSeed = demo({
+        mode: "assessment",
+        scoringDimensions: ["task_management", "situation_awareness", "decision_making"],
+      });
+      expect(authoredScenarioSchema.safeParse(noSeed).success).toBe(false);
+    });
+
+    test("practice needs neither a pinned seed nor three domains", () => {
+      const practice = demo({ mode: "practice", scoringDimensions: ["decision_making"] });
+      expect(authoredScenarioSchema.safeParse(practice).success).toBe(true);
+    });
+  });
+
   test("rejects engine triggers keyed off actions outside the verb menu", () => {
     const raw = JSON.parse(readFileSync(demoPath, "utf8")) as {
       engine: { vitals: Record<string, unknown>; triggers: unknown[] };

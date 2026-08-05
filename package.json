@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p server/tsconfig.json && pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:e2e": "playwright test",
+    "test:e2e": "NODE_OPTIONS='--conditions=development' playwright test",
     "i18n:check": "tsx scripts/check-i18n-parity.ts",
     "guard:deps": "tsx scripts/check-boundaries.ts",
     "guard:dead": "knip",
