@@ -23,7 +23,6 @@ import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 const TEST_DATABASE_URL =
   process.env["TEST_DATABASE_URL"] ?? "postgres://localhost:5432/vetcrew_test";
 
-const SCENARIO_SLUG = "base-rung-resp-distress";
 const TRAINEE = "manager-evidence-trainee";
 const ORIGINAL_TEST_AUTH = process.env.VETCREW_TEST_AUTH;
 const ORIGINAL_ALLOW_UNREVIEWED = process.env.VETCREW_ALLOW_UNREVIEWED_SCORES;
