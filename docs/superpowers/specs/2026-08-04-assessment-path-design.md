@@ -60,11 +60,13 @@ Enforce the two boundaries that are claims you would have to defend to a candida
 
 `authoredScenarioSchema` gains a required field beside `clinicallyReviewed`:
 
-```
+```text
 mode: "assessment" | "practice" | "tutorial"
 ```
 
-**Required, with no default.** A default silently makes every new scenario one thing, and the whole point of D3 is that the bank you land in is a deliberate choice.
+~~**Required, with no default.** A default silently makes every new scenario one thing, and the whole point of D3 is that the bank you land in is a deliberate choice.~~
+
+**Superseded by what shipped (2026-08-05): parsing defaults an omitted `mode` to `practice`, and authored files declare theirs explicitly.** The "deliberate choice" argument is right about the goal and wrong about the mechanism. What must never happen by omission is landing in the **locked** bank — a scenario that silently became an assessment would gain examiner restrictions and become scorable against a real candidate without anyone choosing that. Defaulting to `practice` makes the dangerous direction unreachable by accident, while an assessment stays deliberate by construction: it must *also* declare at least three ANTS domains and pin a seed, neither of which has a default. A hard requirement would only have converted every legacy or hand-written scenario into a parse error, which buys nothing the refinements do not already give.
 
 It mirrors to a non-null `mode` column on `vc_scenarios`, exactly as `clinicallyReviewed` already does. **`compileScenario` must not copy it into `ScenarioDef`.** That is D3's real constraint: mode must never reach `EngineState`, for the same reason clinical-review metadata never does — content metadata that can alter replay is a determinism hazard. This deserves an explicit test, not just a convention.
 
