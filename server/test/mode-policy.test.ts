@@ -17,6 +17,10 @@ describe("assessment withholds capability, it does not ask for restraint", () =>
     expect(refuseClientPhaseChange("assessment", "debrief", "archived")).toContain(
       "must be scored before it is archived",
     );
+    // Scoped to the debrief ORIGIN, not to `archived` in general — a blanket
+    // refusal would also block the legitimate scored -> archived close-out, and
+    // that pair alone would not distinguish the two.
+    expect(refuseClientPhaseChange("assessment", "running", "archived")).toBeNull();
   });
 
   test("but the ordinary assessment path is untouched", () => {

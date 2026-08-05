@@ -22,6 +22,16 @@ export default async function globalSetup(): Promise<void> {
   if (databaseUrl === undefined || databaseUrl.length === 0) {
     throw new Error("e2e global setup requires DATABASE_URL");
   }
+  // This writes assessment content into whatever DATABASE_URL points at, and an
+  // assessment scenario nobody authored on purpose is exactly what must not
+  // exist in a hiring tool. Refuse anything that does not name itself a test
+  // database, the same guard the DB-backed suites already apply.
+  const dbName = new URL(databaseUrl).pathname.replace(/^\//, "");
+  if (!/test/i.test(dbName)) {
+    throw new Error(
+      `e2e DATABASE_URL database "${dbName}" does not look like a test database (must contain "test")`,
+    );
+  }
   const { pool, db } = createDb(databaseUrl);
   try {
     // The API server runs migrations on boot too; this is idempotent and makes

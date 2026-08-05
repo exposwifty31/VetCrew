@@ -324,10 +324,11 @@ describe("score -> source-event traceability", () => {
 
   test("a valid evidence-linked rating is stored and the session becomes scored", async () => {
     const session = await createSession({ scenarioSlug: ASSESSMENT_SLUG });
-    await api(`/api/sessions/${session.id}/raters`, {
+    const rosterRes = await api(`/api/sessions/${session.id}/raters`, {
       method: "PUT",
       body: JSON.stringify({ raterUserIds: ASSESSMENT_RATERS }),
     });
+    expect(rosterRes.status).toBe(200);
     await appendEvents(session.id, demoEvents());
 
     // D2: the set completes only when EVERY assigned rater has covered EVERY
@@ -339,16 +340,19 @@ describe("score -> source-event traceability", () => {
         method: "POST",
         body: JSON.stringify({
           raterId,
-          ratings: [
-            { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-            { domain: "situation_awareness", score: 3, evidenceEventSeqs: [4] },
-            { domain: "decision_making", score: 2, evidenceEventSeqs: [7] },
-          ],
+          // Derived from the fixture, so declaring a fourth domain there makes
+          // every rater cover it rather than silently leaving the completion
+          // assertion below proving less than its comment claims.
+          ratings: ASSESSMENT_DOMAINS.map((domain) => ({
+            domain,
+            score: 4,
+            evidenceEventSeqs: [4, 7],
+          })),
         }),
       });
       expect(partial.status).toBe(201);
-      const progress = (await partial.json()) as { complete: boolean; ratersSubmitted: number };
-      expect(progress.ratersSubmitted).toBe(index + 1);
+      const progress = (await partial.json()) as { complete: boolean; ratersComplete: number };
+      expect(progress.ratersComplete).toBe(index + 1);
       expect(progress.complete).toBe(index === ASSESSMENT_RATERS.length - 1);
     }
 

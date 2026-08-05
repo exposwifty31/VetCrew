@@ -1,4 +1,5 @@
-import { bigint, integer, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { bigint, integer, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 import { vcTable } from "./_table.js";
 import { scenarios } from "./scenarios.js";
@@ -48,6 +49,12 @@ export const simSessions = vcTable("sim_sessions", {
  * set. Freezing it at creation only bought a permanently unscorable session
  * the first time a rater went on leave, with a re-sit for the candidate.
  *
+ * Amendments are retained rather than overwritten: a removed rater keeps its
+ * row with `removedAt` set. Swapping a rater is the sanctioned alternative to
+ * archiving an assessment unscored, and that is only defensible if the swap
+ * leaves a trace — who was dropped, who did it, and when. **The live roster is
+ * `removedAt IS NULL`**; every read must say so.
+ *
  * Mentor exclusion is procedural, not API-enforced (§1.6).
  */
 export const sessionRaters = vcTable(
@@ -58,9 +65,18 @@ export const sessionRaters = vcTable(
     sessionId: uuid("session_id").notNull().references(() => simSessions.id),
     /** Clerk subject id of the assigned rater. */
     raterUserId: text("rater_user_id").notNull(),
+    assignedByUserId: text("assigned_by_user_id"),
+    removedAt: timestamp("removed_at", { withTimezone: true }),
+    removedByUserId: text("removed_by_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [unique("vc_session_raters_session_rater").on(table.sessionId, table.raterUserId)],
+  // Partial unique on the LIVE rows only — a rater may be removed and later
+  // re-added, which a whole-table constraint would reject.
+  (table) => [
+    uniqueIndex("vc_session_raters_live")
+      .on(table.sessionId, table.raterUserId)
+      .where(sql`${table.removedAt} is null`),
+  ],
 );
 
 /** Role stations are thin clients with genuinely partial views (§4). */

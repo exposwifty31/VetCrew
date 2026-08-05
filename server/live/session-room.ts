@@ -179,9 +179,18 @@ export class SessionRoom {
         tenantId: this.tenantId,
         sessionId: this.sessionId,
         bodies,
+        // Everything reaching this method is either a client intent or a tick,
+        // and ticks are neither a phase change nor an injection — so the mode
+        // policy costs them nothing and re-checks intents under the row lock.
+        // `authorizeIntent` already refused these at the socket; this is the
+        // backstop for two server instances racing on the same session.
+        clientOriginated: true,
       });
       if (result.kind === "not_found") {
         throw new Error(`session ${this.sessionId} vanished under the room`);
+      }
+      if (result.kind === "refused") {
+        throw new Error(result.reason);
       }
       for (const event of result.events) {
         this.state = reduce(this.state, event);

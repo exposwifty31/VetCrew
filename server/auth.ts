@@ -2,6 +2,8 @@ import { verifyToken } from "@clerk/backend";
 import { getAuth } from "@clerk/express";
 import type { NextFunction, Request, Response } from "express";
 
+import { isBypassEnabled } from "./env.js";
+
 export type VetcrewRole = "manager" | "instructor" | "trainee";
 
 export type AuthSnapshot = {
@@ -21,10 +23,7 @@ const TEST_BEARER_RE = /^test:([^:]+):(manager|instructor|trainee)$/;
  * in the module that owns the behaviour, not only at boot.
  */
 export function isTestAuthEnabled(): boolean {
-  if (process.env.NODE_ENV === "production") {
-    return false;
-  }
-  return process.env.VETCREW_TEST_AUTH === "1";
+  return isBypassEnabled("VETCREW_TEST_AUTH");
 }
 
 export function isAuthEnabled(clerkEnabled: boolean): boolean {

@@ -168,10 +168,21 @@ Unit A (already merged separately): time-in-training removal + the client-`score
 
 Unit B, in one change: scenario `mode` (authored, mirrored to a column, **snapshotted onto the session** per §3.3) · mode enforced at both the socket and REST transports (§1.1) · assessment pins its seed (§3.1) · FSM widened with the desk's mode filter (§2.2) · `vc_session_raters` + `assertSessionAccess` admitting raters (§2.4) · the D2 completion rule replacing first-submission-wins · AAR rater blinding until scored (§2.1) · assessment cannot be archived from debrief (§3.2, closed by construction rather than by attribution).
 
+### Added in review (CodeRabbit, 2026-08-05)
+
+Four of the review's findings were real defects in the first cut and are fixed:
+
+- **The blinding filter keyed on the wrong identity.** It compared `submitted_by_user_id` to the caller, which hid a proxied rating from the rater whose judgment it is and showed it to whoever transcribed it. Now a row is "yours" if you are its `rater_id` *or* its submitter.
+- **The mode check was a TOCTOU race.** Phase was read before `appendSessionEventsTx` took its `FOR UPDATE` lock, so a concurrent append could move an assessment to `debrief` and a stale check would then wave through the `archived` the rule exists to refuse. The policy now runs *inside* the locked append (`clientOriginated: true`), which also covers the socket path against two server instances.
+- **The migration deleted superseded ratings.** Scores, evidence seqs and log-head attestations are the whole defensibility story; a migration must not destroy them. They move to `vc_ants_ratings_archive`, and the runtime upsert archives the prior row before overwriting — so amendment history exists after all.
+- **Roster amendments left no trace**, while this document, `CLAUDE.md` and `mode-policy.ts` all called the swap the auditable alternative to archiving unscored. Amendments are now retained in place (`removed_at`, `removed_by_user_id`, `assigned_by_user_id`); the live roster is `removed_at IS NULL` and `GET /:id/raters` returns the history.
+
+Also fixed: the client could no longer proxy at all (`submitRatings` dropped `raterId` for every authenticated call), `ratersSubmitted` was renamed `ratersComplete` because it counts raters who covered *every* declared domain, and the bypass flags now share one `isBypassEnabled` helper keyed on `BYPASS_FLAGS` so a future flag gets the runtime guard automatically rather than by hand.
+
 ### Still open, deliberately deferred
 
+- **Freeze the whole authored scenario revision, not just `mode`.** `syncScenarios` rewrites `scenarios.definition` for an existing version on every boot, and replay/checklist/task scoring all read the live row — so a file edit without a version bump can still change the score of a completed assessment. Real, and **pre-existing**: this PR froze `mode` because that is what its own rules depend on. The fix is a definition snapshot or content hash on the session plus rerouting every replay and scoring path through it, which is its own change and sits naturally beside the event-log hash chain already next-but-one on the roadmap.
 - **Actor attribution on `phase_change`** (§3.2 a/b) and the manager desk's started-vs-scored count (§3.2 c). Not needed to close the burial hole — assessment simply cannot archive from debrief — but still the right thing for the log.
-- **Rating amendment history** (§4). The unique constraint on `(session, rater, domain)` plus upsert means a rater can correct themselves before the set completes, but the prior value is overwritten rather than superseded.
-- **Rater notification / "awaiting 2 of 3"** (§4). The ratings response now returns `ratersSubmitted` / `ratersAssigned`, so the data exists; nothing surfaces it yet.
+- **Rater notification / "awaiting 2 of 3"** (§4). The ratings response returns `ratersComplete` / `ratersAssigned`, so the data exists; nothing surfaces it yet.
 - **A UI that creates an assessment session** (§4) — still curl-only, including the roster picker and the user directory it needs.
-- **Familiarisation-run record** (§4) and the within-person trend's post-fork content question.
+- **Familiarisation-run record** (§4), and the within-person trend, which after the fork plots nothing for the practice population it was built for until a mode-specific history query exists.

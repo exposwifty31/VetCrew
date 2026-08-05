@@ -15,7 +15,7 @@ import {
   engineEventSchema,
   scenarioModeSchema,
 } from "@vetcrew/shared";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
@@ -33,6 +33,7 @@ import {
   sessionRaters,
   simSessions,
 } from "../db/schema/index.js";
+import { isBypassEnabled } from "../env.js";
 import { attestEvidenceSeqs, loadEventLogRows } from "../evidence-attest.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
 import { isScorable, refuseClientPhaseChange, refuseInjection } from "../mode-policy.js";
@@ -104,10 +105,7 @@ function paramId(req: Request): string | null {
  * boot production with the flag set, so this is defence in depth.
  */
 function allowUnreviewedScores(): boolean {
-  if (process.env.NODE_ENV === "production") {
-    return false;
-  }
-  return process.env.VETCREW_ALLOW_UNREVIEWED_SCORES === "1";
+  return isBypassEnabled("VETCREW_ALLOW_UNREVIEWED_SCORES");
 }
 
 async function loadSession(db: Db, tenantId: string, id: string) {
@@ -246,6 +244,8 @@ async function isAssignedRater(
         eq(sessionRaters.tenantId, tenantId),
         eq(sessionRaters.sessionId, sessionId),
         eq(sessionRaters.raterUserId, userId),
+        // A removed rater loses access with the assignment.
+        isNull(sessionRaters.removedAt),
       ),
     );
   return rows.length > 0;
@@ -424,34 +424,21 @@ export function createSessionRouter(
     }
     // Mode is withheld capability, not honour system (CLAUDE.md §1.1) — the
     // REST append path has to refuse exactly what the socket refuses, or the
-    // locked platform is one curl away from being unlocked.
-    const mode = scenarioModeSchema.parse(session.mode);
-    let phase = session.phase as SessionPhase;
-    for (const body of parsed.data.events) {
-      if (body.type !== "phase_change") continue;
-      const refusal = refuseClientPhaseChange(mode, phase, body.phase);
-      if (refusal !== null) {
-        res.status(409).json({ error: refusal });
-        return;
-      }
-      if (canTransition(phase, body.phase)) phase = body.phase;
-    }
-    for (const body of parsed.data.events) {
-      if (body.type !== "injection") continue;
-      const refusal = refuseInjection(mode);
-      if (refusal !== null) {
-        res.status(409).json({ error: refusal });
-        return;
-      }
-    }
+    // locked platform is one curl away from being unlocked. The refusal is
+    // evaluated inside the append transaction, against the locked session row,
+    // so a concurrent phase change cannot make this decision stale.
     const result = await appendSessionEvents(db, {
       tenantId,
       sessionId: id,
       bodies: parsed.data.events,
+      clientOriginated: true,
     });
     switch (result.kind) {
       case "not_found":
         res.status(404).json({ error: "session not found" });
+        return;
+      case "refused":
+        res.status(409).json({ error: result.reason });
         return;
       case "ok":
         res.status(201).json({
@@ -509,10 +496,18 @@ export function createSessionRouter(
       .select()
       .from(antsRatings)
       .where(eq(antsRatings.sessionId, session.id));
+    // Own = "my judgment" (raterId) OR "what I typed" (submittedByUserId). Both
+    // clauses are needed once proxying exists: filtering on the submitter alone
+    // hid a proxied rating from the rater it belongs to while showing it to the
+    // person who transcribed it — exactly backwards. The submitter clause stays
+    // so a manager who entered the Reviewer's sheet can still see what they
+    // filed; they typed it, so it anchors nothing they did not already know.
     const ratings =
       blindRatings && authEnabled
         ? ratingRows.filter(
-            (row) => auth.userId !== null && row.submittedByUserId === auth.userId,
+            (row) =>
+              auth.userId !== null &&
+              (row.raterId === auth.userId || row.submittedByUserId === auth.userId),
           )
         : ratingRows;
     res.json({
@@ -558,14 +553,30 @@ export function createSessionRouter(
       return;
     }
     const rows = await db
-      .select({ raterUserId: sessionRaters.raterUserId })
+      .select({
+        raterUserId: sessionRaters.raterUserId,
+        assignedByUserId: sessionRaters.assignedByUserId,
+        removedAt: sessionRaters.removedAt,
+        removedByUserId: sessionRaters.removedByUserId,
+        createdAt: sessionRaters.createdAt,
+      })
       .from(sessionRaters)
       .where(and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, id)))
       .orderBy(asc(sessionRaters.createdAt));
     res.json({
       sessionId: id,
       required: REQUIRED_RATERS,
-      raterUserIds: rows.map((row) => row.raterUserId),
+      raterUserIds: rows.filter((row) => row.removedAt === null).map((row) => row.raterUserId),
+      // Amendment history: who was dropped, by whom, when. Swapping a rater is
+      // the sanctioned alternative to archiving an assessment unscored, so the
+      // swap has to leave a trace of its own.
+      history: rows.map((row) => ({
+        raterUserId: row.raterUserId,
+        assignedByUserId: row.assignedByUserId,
+        assignedAt: row.createdAt.toISOString(),
+        removedAt: row.removedAt?.toISOString() ?? null,
+        removedByUserId: row.removedByUserId,
+      })),
     });
   });
 
@@ -607,13 +618,39 @@ export function createSessionRouter(
       if (session.phase === "debrief" || session.phase === "scored" || session.phase === "archived") {
         return { kind: "locked" as const, phase: session.phase };
       }
-      await tx
-        .delete(sessionRaters)
-        .where(and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, id)));
-      if (raterUserIds.length > 0) {
+      // Amend rather than overwrite: drop nobody's row, just mark the ones
+      // leaving the roster as removed, and add only the genuinely new names.
+      // A hard replace would erase the fact that a rater was ever assigned,
+      // which is the one thing a swap needs to leave behind.
+      const live = await tx
+        .select({ id: sessionRaters.id, raterUserId: sessionRaters.raterUserId })
+        .from(sessionRaters)
+        .where(
+          and(
+            eq(sessionRaters.tenantId, tenantId),
+            eq(sessionRaters.sessionId, id),
+            isNull(sessionRaters.removedAt),
+          ),
+        );
+      const keep = new Set(raterUserIds);
+      const removedIds = live.filter((row) => !keep.has(row.raterUserId)).map((row) => row.id);
+      if (removedIds.length > 0) {
         await tx
-          .insert(sessionRaters)
-          .values(raterUserIds.map((raterUserId) => ({ tenantId, sessionId: id, raterUserId })));
+          .update(sessionRaters)
+          .set({ removedAt: new Date(), removedByUserId: auth.userId })
+          .where(inArray(sessionRaters.id, removedIds));
+      }
+      const alreadyLive = new Set(live.map((row) => row.raterUserId));
+      const added = raterUserIds.filter((raterUserId) => !alreadyLive.has(raterUserId));
+      if (added.length > 0) {
+        await tx.insert(sessionRaters).values(
+          added.map((raterUserId) => ({
+            tenantId,
+            sessionId: id,
+            raterUserId,
+            assignedByUserId: auth.userId,
+          })),
+        );
       }
       return { kind: "ok" as const };
     });
@@ -712,7 +749,7 @@ export function createSessionRouter(
       | { kind: "wrong_phase"; phase: string }
       | { kind: "not_assigned" }
       | { kind: "unknown_evidence"; seqs: number[] }
-      | { kind: "ok"; complete: boolean; ratersSubmitted: number; ratersAssigned: number };
+      | { kind: "ok"; complete: boolean; ratersComplete: number; ratersAssigned: number };
     const result: RatingsResult = await db.transaction(async (tx) => {
       const rows = await tx
         .select()
@@ -730,7 +767,11 @@ export function createSessionRouter(
         .select({ raterUserId: sessionRaters.raterUserId })
         .from(sessionRaters)
         .where(
-          and(eq(sessionRaters.tenantId, tenantId), eq(sessionRaters.sessionId, session.id)),
+          and(
+            eq(sessionRaters.tenantId, tenantId),
+            eq(sessionRaters.sessionId, session.id),
+            isNull(sessionRaters.removedAt),
+          ),
         );
       const assigned = roster.map((row) => row.raterUserId);
       // Assessment scores come only from the named three. "All three submitted"
@@ -754,10 +795,28 @@ export function createSessionRouter(
         return { kind: "unknown_evidence", seqs: attested.seqs };
       }
       const { logHeadSeq, logHeadHash } = attested.attestation;
+      // A rater correcting their own entry supersedes the previous row rather
+      // than erasing it: the old score, the evidence seqs it cited and its
+      // log-head attestation are archived first. Append-only does not mean
+      // values are immutable, it means corrections leave the original readable
+      // — and a hiring record that silently changed underneath a reviewer is
+      // exactly what §2.3 traceability forbids.
+      const domains = parsed.data.ratings.map((rating) => rating.domain);
+      await tx.execute(sql`
+        insert into vc_ants_ratings_archive
+          (id, tenant_id, session_id, rater_id, submitted_by_user_id, domain, score,
+           evidence_event_seqs, log_head_seq, log_head_hash, created_at, archived_reason)
+        select id, tenant_id, session_id, rater_id, submitted_by_user_id, domain, score,
+               evidence_event_seqs, log_head_seq, log_head_hash, created_at,
+               'superseded by a later submission from the same rater'
+          from vc_ants_ratings
+         where session_id = ${session.id}
+           and rater_id = ${raterId}
+           and domain in ${domains}
+        on conflict (id) do nothing
+      `);
       // Upsert: one live rating per (session, rater, domain). Completion is a
-      // query over these rows, so duplicates would make it unanswerable. A
-      // rater correcting their own entry before the set completes overwrites
-      // it; an amendment HISTORY is a follow-up (design-alignment §4).
+      // query over these rows, so duplicates would make it unanswerable.
       await tx
         .insert(antsRatings)
         .values(
@@ -821,7 +880,7 @@ export function createSessionRouter(
       return {
         kind: "ok",
         complete,
-        ratersSubmitted: completeRaters.length,
+        ratersComplete: completeRaters.length,
         ratersAssigned: assigned.length,
       };
     });
@@ -846,7 +905,7 @@ export function createSessionRouter(
         res.status(201).json({
           rated: parsed.data.ratings.length,
           complete: result.complete,
-          ratersSubmitted: result.ratersSubmitted,
+          ratersComplete: result.ratersComplete,
           ratersAssigned: result.ratersAssigned,
         });
         return;

@@ -6,6 +6,7 @@ import type {
 } from "@vetcrew/engine";
 import type {
   AntsDomain,
+  ScenarioMode,
   TraineeEvidenceResponse,
   TraineeTrendResponse,
 } from "@vetcrew/shared";
@@ -30,7 +31,7 @@ export interface AarResponse {
     id: string;
     phase: SessionPhase;
     /** Assessment blinds raters from each other until the session is scored. */
-    mode: "assessment" | "practice" | "tutorial";
+    mode: ScenarioMode;
     seed: number;
     traineeId: string | null;
     scenarioVersion: string;
@@ -143,16 +144,24 @@ export async function submitRatings(
   raterId: string,
   ratings: { domain: AntsDomain; score: number; evidenceEventSeqs: number[] }[],
   token?: string | null,
+  /**
+   * Set only when a manager is entering someone else's scores — the Reviewer's
+   * paper sheet, in practice. Then `raterId` is sent as a deliberate claim that
+   * the judgment belongs to that person, and the server records the manager as
+   * `submittedByUserId` beside it.
+   */
+  options?: { readonly onBehalfOf?: boolean },
 ): Promise<void> {
   const authenticated = token !== null && token !== undefined && token.length > 0;
+  // Signed in and rating yourself: identity comes from the token, so the typed
+  // name is not sent. `raterId` on the wire means "this is someone ELSE's
+  // judgment", which the server accepts only from a manager — sending a
+  // self-typed name would read as a proxy claim and be refused.
+  const sendRaterId = !authenticated || options?.onBehalfOf === true;
   const res = await fetch(`/api/sessions/${sessionId}/ratings`, {
     method: "POST",
     headers: jsonHeaders(token),
-    // When signed in, identity comes from the token and the typed name is not
-    // sent: `raterId` on the wire now means "this is someone ELSE's judgment",
-    // which the server only accepts from a manager entering an off-system
-    // rater's scores. Sending a self-typed name would read as a proxy claim.
-    body: JSON.stringify(authenticated ? { ratings } : { raterId, ratings }),
+    body: JSON.stringify(sendRaterId ? { raterId, ratings } : { ratings }),
   });
   if (!res.ok) throw new HttpError(res.status, "ratings");
 }

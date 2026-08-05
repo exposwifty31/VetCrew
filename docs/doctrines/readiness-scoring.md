@@ -84,12 +84,19 @@ anything consequential.
   UI never shows a band. No normative distribution exists (§6.2); a verdict without N
   is an opinion with a number attached.
 - The **within-person** axis (a technician against their own earlier sessions,
-  ordered chronologically) needs no norms and serves the refresher use case
-  immediately. There is **no time-in-training axis** — it was unfrozen on
-  2026-08-05 (§4, D1): a candidate takes a single assessment session, so there is
-  no longitudinal metric to measure against. The `trainee_time_in_training_days`
-  column is retained but dormant (nullable, unread); the scored-needs-TiT check
-  constraint was dropped in migration 0007.
+  ordered chronologically) needs no norms and would serve the refresher use case.
+  There is **no time-in-training axis** — it was unfrozen on 2026-08-05 (§4, D1):
+  a candidate takes a single assessment session, so there is no longitudinal
+  metric to measure against. The `trainee_time_in_training_days` column is
+  retained but dormant (nullable, unread); the scored-needs-TiT check constraint
+  was dropped in migration 0007.
+- **The within-person trend is DEFERRED, not live.** It was built for population
+  2 (voluntary practice), but the trend query reads assessment-mode terminal
+  sessions, and practice sessions never reach one — so today it plots nothing for
+  the people it exists to serve. Deciding what it plots (almost certainly
+  practice sessions, filtered by mode) needs a mode-specific history query and a
+  surface to show it on. Until then, do not describe practice history as
+  contributing to any trend.
 
 ## Clinical gate
 

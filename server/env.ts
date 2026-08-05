@@ -24,6 +24,24 @@ export type Env = z.infer<typeof envSchema>;
 /** Escape hatches that must never be live in production (CLAUDE.md §2.5, §8). */
 const BYPASS_FLAGS = ["VETCREW_TEST_AUTH", "VETCREW_ALLOW_UNREVIEWED_SCORES"] as const;
 
+type BypassFlag = (typeof BYPASS_FLAGS)[number];
+
+/**
+ * The single runtime read for every bypass flag — never honoured in production,
+ * whatever the environment says.
+ *
+ * Routing all of them through one helper keyed on `BYPASS_FLAGS` means a flag
+ * added to that list gets both halves of the protection at once: the boot
+ * refusal below AND a runtime guard. Hand-written `NODE_ENV === "production"`
+ * checks at each call site would give the next escape hatch only the first.
+ */
+export function isBypassEnabled(flag: BypassFlag): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+  return process.env[flag] === "1";
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = envSchema.safeParse(source);
   if (!parsed.success) {

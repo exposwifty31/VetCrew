@@ -277,6 +277,14 @@ describe("ratings stamp raterId from auth", () => {
       }),
     });
     expect(rateRes.status).toBe(403);
+
+    // A 403 that still wrote the row would leave a forged attribution in the
+    // record — the status code alone does not prove the refusal was effective.
+    const aarRes = await api(`/api/sessions/${sessionId}/aar`, {
+      headers: authHeader("inst-rater", "instructor"),
+    });
+    const aar = (await aarRes.json()) as { ratings: unknown[] };
+    expect(aar.ratings).toHaveLength(0);
   });
 
   test("a manager may proxy a rating, and the record keeps both identities", async () => {

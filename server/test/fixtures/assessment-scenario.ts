@@ -1,5 +1,8 @@
-import type { AntsDomain } from "@vetcrew/shared";
-import { authoredScenarioSchema, type AuthoredScenario } from "@vetcrew/shared";
+import {
+  authoredScenarioSchema,
+  type AntsDomain,
+  type AuthoredScenario,
+} from "@vetcrew/shared";
 
 import type { Db } from "../../db/client.js";
 import { loadScenarioFiles, syncScenarios } from "../../scenarios.js";
@@ -19,12 +22,16 @@ import { loadScenarioFiles, syncScenarios } from "../../scenarios.js";
  */
 export const ASSESSMENT_SLUG = "test-assessment-scenario";
 
-/** An assessment must declare at least three domains (D2, as amended). */
-export const ASSESSMENT_DOMAINS: readonly AntsDomain[] = [
+/**
+ * An assessment must declare at least three domains (D2, as amended).
+ * `as const satisfies` keeps the exact tuple types, so indexed access stays
+ * defined under `noUncheckedIndexedAccess` while still validating each domain.
+ */
+export const ASSESSMENT_DOMAINS = [
   "task_management",
   "situation_awareness",
   "decision_making",
-];
+] as const satisfies readonly AntsDomain[];
 
 /** A vet, the Reviewer, and a senior technician who is not the mentor (§1.6). */
 export const ASSESSMENT_RATERS = ["rater-vet", "rater-reviewer", "rater-senior-tech"] as const;

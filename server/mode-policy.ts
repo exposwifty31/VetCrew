@@ -37,7 +37,8 @@ export function refuseClientPhaseChange(
     // Without this, widening the FSM to give practice a terminal state would
     // hand assessment a burial mechanism: a run that was going badly could
     // leave with no score and no trace of why. The release valve for a genuinely
-    // stuck session is amending the rater roster (which is logged), not
+    // stuck session is amending the rater roster (which retains the removed
+    // rater, with who removed them and when — see `vc_session_raters`), not
     // archiving the candidate's session unscored.
     return "an assessment session must be scored before it is archived";
   }

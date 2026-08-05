@@ -239,9 +239,9 @@ describe("D2: the set is complete only when every assigned rater covers every de
       }),
     });
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { complete: boolean; ratersSubmitted: number };
+    const body = (await res.json()) as { complete: boolean; ratersComplete: number };
     expect(body.complete).toBe(false);
-    expect(body.ratersSubmitted).toBe(0);
+    expect(body.ratersComplete).toBe(0);
   });
 
   test("a domain the scenario does not declare is refused", async () => {
@@ -267,8 +267,8 @@ describe("D2: the set is complete only when every assigned rater covers every de
     for (const [index, raterId] of ASSESSMENT_RATERS.entries()) {
       const res = await rate(id, raterId);
       expect(res.status).toBe(201);
-      const body = (await res.json()) as { complete: boolean; ratersSubmitted: number };
-      expect(body.ratersSubmitted).toBe(index + 1);
+      const body = (await res.json()) as { complete: boolean; ratersComplete: number };
+      expect(body.ratersComplete).toBe(index + 1);
       expect(body.complete).toBe(index === 2);
     }
   });
@@ -282,6 +282,79 @@ describe("D2: the set is complete only when every assigned rater covers every de
       expect(res.status).toBe(201);
       expect(((await res.json()) as { complete: boolean }).complete).toBe(false);
     }
+  });
+
+  test("a manager-proxied rating counts toward the roster it names", async () => {
+    // The Reviewer never logs in, so the ONLY way she completes her third of an
+    // assessment is proxied. If proxy entries did not count toward completion,
+    // the three-rater model would be unreachable in the one configuration it
+    // was designed for.
+    const id = await createSession(ASSESSMENT_SLUG, "proxy-completion-candidate");
+    await assignRaters(id, ASSESSMENT_RATERS);
+    await runToDebrief(id, "proxy-completion-candidate");
+
+    expect((await rate(id, ASSESSMENT_RATERS[0])).status).toBe(201);
+    expect((await rate(id, ASSESSMENT_RATERS[1])).status).toBe(201);
+
+    const proxied = await api(`/api/sessions/${id}/ratings`, {
+      method: "POST",
+      headers: MANAGER,
+      body: JSON.stringify({
+        raterId: ASSESSMENT_RATERS[2],
+        ratings: ASSESSMENT_DOMAINS.map((domain) => ({
+          domain,
+          score: 4,
+          evidenceEventSeqs: [4, 7],
+        })),
+      }),
+    });
+    expect(proxied.status).toBe(201);
+    const body = (await proxied.json()) as { complete: boolean; ratersComplete: number };
+    expect(body.ratersComplete).toBe(3);
+    expect(body.complete).toBe(true);
+
+    // And the record keeps both identities on the proxied third.
+    const aar = await api(`/api/sessions/${id}/aar`, { headers: MANAGER });
+    const rows = (await aar.json()) as {
+      ratings: { raterId: string; submittedByUserId: string }[];
+    };
+    const proxiedRows = rows.ratings.filter((r) => r.raterId === ASSESSMENT_RATERS[2]);
+    expect(proxiedRows).toHaveLength(ASSESSMENT_DOMAINS.length);
+    expect(proxiedRows.every((r) => r.submittedByUserId === "assess-manager")).toBe(true);
+  });
+});
+
+describe("a rater swap leaves a trace (§3.2)", () => {
+  test("the removed rater is retained in the roster history and loses access", async () => {
+    // Swapping a rater is the sanctioned alternative to archiving an assessment
+    // unscored — which is only defensible if the swap is itself recorded.
+    const id = await createSession(ASSESSMENT_SLUG, "swap-candidate");
+    await assignRaters(id, ASSESSMENT_RATERS);
+    await assignRaters(id, ["rater-vet", "rater-reviewer", "rater-stand-in"]);
+
+    const read = await api(`/api/sessions/${id}/raters`, { headers: INSTRUCTOR });
+    const body = (await read.json()) as {
+      raterUserIds: string[];
+      history: {
+        raterUserId: string;
+        assignedByUserId: string | null;
+        removedAt: string | null;
+        removedByUserId: string | null;
+      }[];
+    };
+    expect(body.raterUserIds).not.toContain("rater-senior-tech");
+
+    const dropped = body.history.find((row) => row.raterUserId === "rater-senior-tech");
+    expect(dropped?.removedAt).not.toBeNull();
+    expect(dropped?.removedByUserId).toBe("assess-instructor");
+    const replacement = body.history.find((row) => row.raterUserId === "rater-stand-in");
+    expect(replacement?.removedAt).toBeNull();
+    expect(replacement?.assignedByUserId).toBe("assess-instructor");
+
+    // Access follows the live roster, not the history.
+    await runToDebrief(id, "swap-candidate");
+    expect((await rate(id, "rater-senior-tech")).status).toBe(403);
+    expect((await rate(id, "rater-stand-in")).status).toBe(201);
   });
 });
 

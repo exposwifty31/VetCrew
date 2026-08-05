@@ -89,7 +89,7 @@ async function scoreSession(sessionId: string, score: number): Promise<void> {
       }),
     });
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { complete: boolean; ratersSubmitted: number };
+    const body = (await res.json()) as { complete: boolean; ratersComplete: number };
     // Only the third rater completes the set.
     expect(body.complete).toBe(index === ASSESSMENT_RATERS.length - 1);
   }
