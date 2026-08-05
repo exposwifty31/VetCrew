@@ -27,7 +27,6 @@ export function technicalPercent(
 export interface TrendPointInput {
   readonly sessionId: string;
   readonly createdAtMs: number;
-  readonly timeInTrainingDays: number;
   readonly technicalPercent: number;
   readonly overallAnts: number | null;
   /** Per-domain scores for directional hints only — never drives overallDrift. */
@@ -82,12 +81,9 @@ function driftFromSeries(values: readonly (number | null)[]): OverallDrift {
  * ANTS if technical is flat. Domain hints are directional only.
  */
 export function buildTraineeTrend(points: readonly TrendPointInput[]): TraineeTrendModel {
-  const series = [...points].sort((a, b) => {
-    if (a.timeInTrainingDays !== b.timeInTrainingDays) {
-      return a.timeInTrainingDays - b.timeInTrainingDays;
-    }
-    return a.createdAtMs - b.createdAtMs;
-  });
+  // Within-person ordering is chronological — there is no longitudinal
+  // time-in-training axis (CLAUDE.md §4, D1: unfrozen 2026-08-05).
+  const series = [...points].sort((a, b) => a.createdAtMs - b.createdAtMs);
 
   const technicalDrift = driftFromSeries(series.map((p) => p.technicalPercent));
   const antsDrift = driftFromSeries(series.map((p) => p.overallAnts));

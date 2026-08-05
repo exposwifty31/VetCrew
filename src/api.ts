@@ -6,6 +6,7 @@ import type {
 } from "@vetcrew/engine";
 import type {
   AntsDomain,
+  ScenarioMode,
   TraineeEvidenceResponse,
   TraineeTrendResponse,
 } from "@vetcrew/shared";
@@ -29,9 +30,10 @@ export interface AarResponse {
   session: {
     id: string;
     phase: SessionPhase;
+    /** Assessment blinds raters from each other until the session is scored. */
+    mode: ScenarioMode;
     seed: number;
     traineeId: string | null;
-    traineeTimeInTrainingDays: number | null;
     scenarioVersion: string;
   };
   scenario: {
@@ -53,7 +55,10 @@ export interface AarResponse {
   tasks: TaskEvaluation;
   ratings: {
     id: string;
+    /** Whose judgment it is. */
     raterId: string;
+    /** Who entered it — differs only for a proxied entry. */
+    submittedByUserId: string;
     domain: AntsDomain;
     score: number;
     evidenceEventSeqs: number[];
@@ -83,7 +88,6 @@ export async function createSession(
   input: {
     scenarioSlug: string;
     traineeId?: string;
-    traineeTimeInTrainingDays?: number;
     seed?: number;
   },
   token?: string | null,
@@ -140,11 +144,24 @@ export async function submitRatings(
   raterId: string,
   ratings: { domain: AntsDomain; score: number; evidenceEventSeqs: number[] }[],
   token?: string | null,
+  /**
+   * Set only when a manager is entering someone else's scores — the Reviewer's
+   * paper sheet, in practice. Then `raterId` is sent as a deliberate claim that
+   * the judgment belongs to that person, and the server records the manager as
+   * `submittedByUserId` beside it.
+   */
+  options?: { readonly onBehalfOf?: boolean },
 ): Promise<void> {
+  const authenticated = token !== null && token !== undefined && token.length > 0;
+  // Signed in and rating yourself: identity comes from the token, so the typed
+  // name is not sent. `raterId` on the wire means "this is someone ELSE's
+  // judgment", which the server accepts only from a manager — sending a
+  // self-typed name would read as a proxy claim and be refused.
+  const sendRaterId = !authenticated || options?.onBehalfOf === true;
   const res = await fetch(`/api/sessions/${sessionId}/ratings`, {
     method: "POST",
     headers: jsonHeaders(token),
-    body: JSON.stringify({ raterId, ratings }),
+    body: JSON.stringify(sendRaterId ? { raterId, ratings } : { ratings }),
   });
   if (!res.ok) throw new HttpError(res.status, "ratings");
 }

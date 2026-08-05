@@ -37,7 +37,7 @@ function LazyRoute({ children }: { children: ReactNode }) {
 
 interface Health {
   ok: boolean;
-  auth: "clerk" | "dev-bypass";
+  auth: "clerk" | "test" | "dev-bypass";
   db: "ready" | "starting" | "not-configured";
 }
 
@@ -207,7 +207,6 @@ function HomePage({
         {
           scenarioSlug: "base-rung-stepped-tasks",
           traineeId: "pitch-trainee",
-          traineeTimeInTrainingDays: 90,
         },
         token,
       );
@@ -226,7 +225,6 @@ function HomePage({
         {
           scenarioSlug: "base-rung-resp-distress",
           traineeId: "pitch-trainee",
-          traineeTimeInTrainingDays: 90,
         },
         token,
       );

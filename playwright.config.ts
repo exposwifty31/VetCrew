@@ -19,6 +19,9 @@ const webPort = Number(process.env["VETCREW_WEB_PORT"] ?? 5173);
  */
 export default defineConfig({
   testDir: "e2e",
+  // Seeds an assessment-mode scenario; practice scenarios cannot reach `scored`,
+  // so the scoring flow would otherwise have no e2e coverage at all.
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   fullyParallel: false,
   use: {

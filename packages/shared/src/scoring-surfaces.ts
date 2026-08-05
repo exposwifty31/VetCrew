@@ -16,7 +16,6 @@ export const evidenceSessionSchema = z.object({
   scenarioSlug: z.string().min(1),
   scenarioVersion: z.string().min(1),
   clinicallyReviewed: z.boolean(),
-  traineeTimeInTrainingDays: z.number().int().nonnegative(),
   technicalPercent: z.number().min(0).max(100),
   overallAnts: z.number().min(1).max(5).nullable(),
   ratedDomainCount: z.number().int().nonnegative(),
@@ -45,7 +44,6 @@ export const domainHintSchema = z.object({
 export const trendPointSchema = z.object({
   sessionId: z.string().uuid(),
   createdAtMs: z.number().int().nonnegative(),
-  timeInTrainingDays: z.number().int().nonnegative(),
   technicalPercent: z.number().min(0).max(100),
   overallAnts: z.number().min(1).max(5).nullable(),
   clinicallyReviewed: z.boolean(),

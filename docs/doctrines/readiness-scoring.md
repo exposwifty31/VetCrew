@@ -59,25 +59,49 @@ anything consequential.
 - **One live rater = formative feedback only.** Never a hiring input.
 - **Consequential (hiring) judgments need three raters** — the threshold the CPR
   reliability literature and AVECCTN's own practice independently converge on.
-- **At the pilot site there is exactly one qualified rater.** Therefore any
-  inter-rater target (e.g. "two raters, ICC ≥ 0.75") is achievable only via
-  **recorded sessions scored asynchronously by raters sourced outside the hospital**
-  (other ECC-credentialed technicians, remote). A proposal that names an inter-rater
-  gate must name where raters two and three come from, or the gate is decoration.
+- **The three are internal: a vet, the Reviewer, and a senior technician who is
+  not the candidate's mentor** (corrected 2026-08-05; there are ten senior
+  technicians). An earlier version of this file said raters two and three had to
+  come from *outside* the hospital. That rested on a conflation: the US
+  veterinary-technician degree matters for judging whether scenario *content* is
+  clinically correct (§2.5, the Reviewer's job) and has little to do with judging
+  whether a candidate managed a deteriorating patient competently. ANTS is
+  designed for domain experts, not holders of a specific credential. External
+  raters are also undesirable — applicant data should not leave the hospital.
+  A proposal that names an inter-rater gate must still say who fills the seats.
+- **Enforced, not aspirational (2026-08-05).** Per-session rater assignment
+  (`vc_session_raters`) names which three; a session reaches `scored` only when
+  every assigned rater has rated every domain the scenario declares, and never
+  with fewer than three assigned. Raters see only their own rows until the set is
+  complete — three anchored judgments are not three judgments. Ratings carry
+  `submitted_by_user_id` beside `rater_id`, so a rating entered on behalf of the
+  Reviewer (who will never log in) is honest and countable rather than
+  attributed to whoever typed it.
 
 ## Withheld until N exists
 
 - Cross-person readiness bands: the manager API returns `cohort_insufficient` and the
   UI never shows a band. No normative distribution exists (§6.2); a verdict without N
   is an opinion with a number attached.
-- The **within-person** axis (a technician against their own earlier sessions and
-  time-in-training) needs no norms and serves the refresher use case immediately.
-  `trainee_time_in_training_days` is captured on every scored session from the first,
-  because the axis cannot be backfilled (§4).
+- The **within-person** axis (a technician against their own earlier sessions,
+  ordered chronologically) needs no norms and would serve the refresher use case.
+  There is **no time-in-training axis** — it was unfrozen on 2026-08-05 (§4, D1):
+  a candidate takes a single assessment session, so there is no longitudinal
+  metric to measure against. The `trainee_time_in_training_days` column is
+  retained but dormant (nullable, unread); the scored-needs-TiT check constraint
+  was dropped in migration 0007.
+- **The within-person trend is DEFERRED, not live.** It was built for population
+  2 (voluntary practice), but the trend query reads assessment-mode terminal
+  sessions, and practice sessions never reach one — so today it plots nothing for
+  the people it exists to serve. Deciding what it plots (almost certainly
+  practice sessions, filtered by mode) needs a mode-specific history query and a
+  surface to show it on. Until then, do not describe practice history as
+  contributing to any trend.
 
 ## Clinical gate
 
 No scenario scores a real person until it carries `clinically_reviewed: true` with an
 identifiable reviewer (DB-enforced: `vc_scenarios_reviewer_required`). The
 `VETCREW_ALLOW_UNREVIEWED_SCORES` escape hatch is CI/local-only and must never be set
-in production (§2.5, §8).
+in production (§2.5, §8) — enforced at boot since 2026-08: `loadEnv` refuses to start a
+production server carrying this flag, and the ratings route ignores it in production.

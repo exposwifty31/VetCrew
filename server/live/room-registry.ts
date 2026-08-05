@@ -1,5 +1,5 @@
 import { replay, type EngineEvent, type ScenarioDef } from "@vetcrew/engine";
-import { authoredScenarioSchema, engineEventSchema } from "@vetcrew/shared";
+import { authoredScenarioSchema, engineEventSchema, scenarioModeSchema } from "@vetcrew/shared";
 import { and, asc, eq } from "drizzle-orm";
 
 import type { Db } from "../db/client.js";
@@ -56,6 +56,10 @@ export class RoomRegistry {
       sessionId,
       seed: session.seed,
       scenario,
+      // The session's frozen copy, NOT `scenarioRow.mode` — a scenario file
+      // edited without a version bump is re-upserted on the next boot, which
+      // would otherwise restate the mode of every past session that used it.
+      mode: scenarioModeSchema.parse(session.mode),
       events,
     });
     this.rooms.set(sessionId, room);

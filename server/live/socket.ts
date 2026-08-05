@@ -16,6 +16,7 @@ import { Server, type Socket } from "socket.io";
 
 import type { TokenAuthReader } from "../auth.js";
 import type { Db } from "../db/client.js";
+import { refuseClientPhaseChange, refuseInjection } from "../mode-policy.js";
 import { assertRoleStationBinding } from "../routes/sessions.js";
 import type { RoomRegistry } from "./room-registry.js";
 import type { SessionRoom } from "./session-room.js";
@@ -28,7 +29,7 @@ export const INSTRUCTOR_DEMO_SCENARIO_SLUG = "base-rung-resp-distress";
 const TRAINEE_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
 const INSTRUCTOR_SCENARIOS = new Set([STATION_SCENARIO_SLUG, INSTRUCTOR_DEMO_SCENARIO_SLUG]);
 
-type SocketBinding = {
+export type SocketBinding = {
   readonly sessionId: string;
   readonly role: string;
   readonly actorId: string;
@@ -142,11 +143,28 @@ function emitPresence(socket: Socket, sessionId: string, room: SessionRoom): voi
   socket.emit(LIVE_EVENTS.presence, payload);
 }
 
-function authorizeIntent(
+export function authorizeIntent(
   binding: SocketBinding,
   intent: ClientIntent,
   room: SessionRoom,
 ): { ok: true } | { ok: false; code: "role_bound" | "validation"; message: string } {
+  // Mode is enforced HERE, at the transport layer, because the difference
+  // between the two platforms has to be a capability the system withholds
+  // rather than a rule an examiner is trusted to follow (CLAUDE.md §1.1).
+  // Applied before the role branches so it binds instructors too — in
+  // assessment the instructor *is* the examiner, and observing is all they do.
+  if (intent.type === "phase_change") {
+    const refusal = refuseClientPhaseChange(room.mode, room.phase, intent.phase);
+    if (refusal !== null) {
+      return { ok: false, code: "validation", message: refusal };
+    }
+  }
+  if (intent.type === "injection") {
+    const refusal = refuseInjection(room.mode);
+    if (refusal !== null) {
+      return { ok: false, code: "validation", message: refusal };
+    }
+  }
   if (binding.stationKind === "instructor") {
     if (intent.type === "task_start" || intent.type === "task_submit" || intent.type === "action") {
       return { ok: false, code: "role_bound", message: "instructor cannot send trainee intents" };

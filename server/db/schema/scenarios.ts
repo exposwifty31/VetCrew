@@ -15,6 +15,11 @@ export const scenarios = vcTable(
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     slug: text("slug").notNull(),
     version: text("version").notNull(),
+    /**
+     * Mirrored from the authored file (CLAUDE.md §1.1, D3) — a column so
+     * policy can filter on it in SQL, never a per-session choice.
+     */
+    mode: text("mode").notNull().default("practice"),
     clinicallyReviewed: boolean("clinically_reviewed").notNull().default(false),
     clinicalReviewer: text("clinical_reviewer"),
     definition: jsonb("definition").notNull(),

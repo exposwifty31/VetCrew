@@ -2,6 +2,8 @@ import { verifyToken } from "@clerk/backend";
 import { getAuth } from "@clerk/express";
 import type { NextFunction, Request, Response } from "express";
 
+import { isBypassEnabled } from "./env.js";
+
 export type VetcrewRole = "manager" | "instructor" | "trainee";
 
 export type AuthSnapshot = {
@@ -14,8 +16,14 @@ export type AuthReader = (req: Request) => AuthSnapshot;
 
 const TEST_BEARER_RE = /^test:([^:]+):(manager|instructor|trainee)$/;
 
-function isTestAuthEnabled(): boolean {
-  return process.env.VETCREW_TEST_AUTH === "1";
+/**
+ * Defence in depth. `loadEnv` refuses to boot production with this flag set,
+ * but `parseTestBearer` is reachable directly from tests and could be reached
+ * by a future entry point that never calls `loadEnv` — so the guarantee lives
+ * in the module that owns the behaviour, not only at boot.
+ */
+export function isTestAuthEnabled(): boolean {
+  return isBypassEnabled("VETCREW_TEST_AUTH");
 }
 
 export function isAuthEnabled(clerkEnabled: boolean): boolean {

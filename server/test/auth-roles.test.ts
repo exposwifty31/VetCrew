@@ -17,12 +17,18 @@ import {
 } from "../auth.js";
 
 const ORIGINAL_TEST_AUTH = process.env.VETCREW_TEST_AUTH;
+const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 
 afterEach(() => {
   if (ORIGINAL_TEST_AUTH === undefined) {
     delete process.env.VETCREW_TEST_AUTH;
   } else {
     process.env.VETCREW_TEST_AUTH = ORIGINAL_TEST_AUTH;
+  }
+  if (ORIGINAL_NODE_ENV === undefined) {
+    delete process.env.NODE_ENV;
+  } else {
+    process.env.NODE_ENV = ORIGINAL_NODE_ENV;
   }
 });
 
@@ -93,6 +99,43 @@ describe("parseTestBearer", () => {
     expect(parseTestBearer("Bearer clerk-jwt")).toBeNull();
     expect(parseTestBearer("Bearer test:user-only")).toBeNull();
     expect(parseTestBearer("Bearer test:user:admin")).toBeNull();
+  });
+
+  test("is inert in production even when the flag is set", () => {
+    // Defence in depth: loadEnv refuses to boot production with the flag set,
+    // but parseTestBearer is reachable directly, so the guarantee lives in the
+    // module that owns the behaviour too.
+    process.env.VETCREW_TEST_AUTH = "1";
+    process.env.NODE_ENV = "production";
+    expect(parseTestBearer("Bearer test:user-1:manager")).toBeNull();
+  });
+
+  test("still parses outside production, which is what keeps CI working", () => {
+    process.env.VETCREW_TEST_AUTH = "1";
+    process.env.NODE_ENV = "test";
+    expect(parseTestBearer("Bearer test:user-1:manager")).toEqual({
+      isAuthenticated: true,
+      userId: "user-1",
+      role: "manager",
+    } satisfies AuthSnapshot);
+  });
+});
+
+describe("readAuthFromToken in production", () => {
+  const ORIGINAL_NODE = process.env.NODE_ENV;
+  afterEach(() => {
+    if (ORIGINAL_NODE === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = ORIGINAL_NODE;
+  });
+
+  test("ignores a test bearer in production", async () => {
+    process.env.VETCREW_TEST_AUTH = "1";
+    process.env.NODE_ENV = "production";
+    await expect(readAuthFromToken("test:user-1:manager")).resolves.toEqual({
+      isAuthenticated: false,
+      userId: null,
+      role: null,
+    });
   });
 });
 

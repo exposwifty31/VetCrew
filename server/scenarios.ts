@@ -52,6 +52,7 @@ export async function syncScenarios(
         tenantId,
         slug: authored.slug,
         version: authored.version,
+        mode: authored.mode,
         clinicallyReviewed: authored.clinicallyReviewed,
         clinicalReviewer: authored.clinicalReviewer,
         definition: authored,
@@ -59,6 +60,7 @@ export async function syncScenarios(
       .onConflictDoUpdate({
         target: [scenarios.tenantId, scenarios.slug, scenarios.version],
         set: {
+          mode: authored.mode,
           clinicallyReviewed: authored.clinicallyReviewed,
           clinicalReviewer: authored.clinicalReviewer,
           definition: authored,

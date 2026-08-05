@@ -13,6 +13,12 @@ import { createManagerRouter } from "../routes/manager.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { compileScenario, loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
+import {
+  ASSESSMENT_DOMAINS,
+  ASSESSMENT_RATERS,
+  ASSESSMENT_SLUG,
+  seedAssessmentScenario,
+} from "./fixtures/assessment-scenario.js";
 import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
 /**
@@ -89,6 +95,7 @@ beforeAll(async () => {
   await runMigrations(pool);
   tenantId = await ensurePilotTenant(db);
   await syncScenarios(db, tenantId, loadScenarioFiles());
+  await seedAssessmentScenario(db, tenantId);
 
   const app = express();
   app.use(express.json());
@@ -188,12 +195,24 @@ describe("event-log persistence + replay round-trip", () => {
 
   test("an illegal phase jump stays in the log but the projection refuses it", async () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
-    // draft -> scored is not a legal transition; the event is recorded, the
+    // draft -> debrief is not a legal transition; the event is recorded, the
     // session's projected phase must remain draft (FSM, CLAUDE.md §4).
-    await appendEvents(session.id, [{ type: "phase_change", phase: "scored" }]);
+    await appendEvents(session.id, [{ type: "phase_change", phase: "debrief" }]);
     const list = await api("/api/sessions");
     const listing = (await list.json()) as { sessions: { id: string; phase: string }[] };
     expect(listing.sessions.find((s) => s.id === session.id)?.phase).toBe("draft");
+  });
+
+  test("a client cannot assert scored over REST, in any mode", async () => {
+    // `scored` is server-derived: the ratings route appends it once the rating
+    // set is complete. The socket already refuses it; the REST append path has
+    // to refuse it too, or the rule is one curl away from being bypassed.
+    const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
+    const res = await api(`/api/sessions/${session.id}/events`, {
+      method: "POST",
+      body: JSON.stringify({ events: [{ type: "phase_change", phase: "scored" }] }),
+    });
+    expect(res.status).toBe(409);
   });
 });
 
@@ -270,7 +289,10 @@ describe("score -> source-event traceability", () => {
     expect(body.error).toContain("999");
   });
 
-  test("a session without time-in-training cannot be scored", async () => {
+  test("a session without time-in-training can still be scored (§4, D1: axis removed)", async () => {
+    // There is no longitudinal time-in-training axis (§4, D1) — a candidate
+    // takes one session — so scoring no longer gates on it. The old 422
+    // no_time_in_training path and its DB constraint were both removed.
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
     await appendEvents(session.id, demoEvents());
     const res = await api(`/api/sessions/${session.id}/ratings`, {
@@ -280,7 +302,7 @@ describe("score -> source-event traceability", () => {
         ratings: [{ domain: "task_management", score: 3, evidenceEventSeqs: [4] }],
       }),
     });
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(201);
   });
 
   test("a session that is not in debrief cannot be rated", async () => {
@@ -301,23 +323,38 @@ describe("score -> source-event traceability", () => {
   });
 
   test("a valid evidence-linked rating is stored and the session becomes scored", async () => {
-    const session = await createSession({
-      scenarioSlug: SCENARIO_SLUG,
-      traineeTimeInTrainingDays: 365,
+    const session = await createSession({ scenarioSlug: ASSESSMENT_SLUG });
+    const rosterRes = await api(`/api/sessions/${session.id}/raters`, {
+      method: "PUT",
+      body: JSON.stringify({ raterUserIds: ASSESSMENT_RATERS }),
     });
+    expect(rosterRes.status).toBe(200);
     await appendEvents(session.id, demoEvents());
-    const res = await api(`/api/sessions/${session.id}/ratings`, {
-      method: "POST",
-      body: JSON.stringify({
-        raterId: "it-rater",
-        ratings: [
-          { domain: "task_management", score: 4, evidenceEventSeqs: [4, 7] },
-          { domain: "situation_awareness", score: 3, evidenceEventSeqs: [4] },
-          { domain: "decision_making", score: 2, evidenceEventSeqs: [7] },
-        ],
-      }),
-    });
-    expect(res.status).toBe(201);
+
+    // D2: the set completes only when EVERY assigned rater has covered EVERY
+    // declared domain. Raters one and two must be accepted and must NOT score
+    // the session — the old behaviour flipped it to `scored` on the first
+    // submission and then 409'd the other two out entirely.
+    for (const [index, raterId] of ASSESSMENT_RATERS.entries()) {
+      const partial = await api(`/api/sessions/${session.id}/ratings`, {
+        method: "POST",
+        body: JSON.stringify({
+          raterId,
+          // Derived from the fixture, so declaring a fourth domain there makes
+          // every rater cover it rather than silently leaving the completion
+          // assertion below proving less than its comment claims.
+          ratings: ASSESSMENT_DOMAINS.map((domain) => ({
+            domain,
+            score: 4,
+            evidenceEventSeqs: [4, 7],
+          })),
+        }),
+      });
+      expect(partial.status).toBe(201);
+      const progress = (await partial.json()) as { complete: boolean; ratersComplete: number };
+      expect(progress.ratersComplete).toBe(index + 1);
+      expect(progress.complete).toBe(index === ASSESSMENT_RATERS.length - 1);
+    }
 
     const aar = await api(`/api/sessions/${session.id}/aar`);
     const body = (await aar.json()) as {
@@ -329,7 +366,9 @@ describe("score -> source-event traceability", () => {
     // The scored transition went THROUGH the log: replay agrees with the
     // projection column (audit F-b — no derived state without a source event).
     expect(body.aar.finalPhase).toBe("scored");
-    expect(body.ratings).toHaveLength(3);
+    // Three raters × three declared domains, and once scored the AAR stops
+    // blinding raters from each other — comparison is the point at that stage.
+    expect(body.ratings).toHaveLength(ASSESSMENT_RATERS.length * ASSESSMENT_DOMAINS.length);
     const tm = body.ratings.find((r) => r.domain === "task_management");
     expect(tm?.evidenceEventSeqs).toEqual([4, 7]);
 
@@ -396,10 +435,51 @@ describe("integrity constraints (migrations 0002/0003)", () => {
     ).rejects.toThrow(/vc_sim_sessions_seed_u32/);
   });
 
-  test("a session cannot enter the scored phase without time-in-training", async () => {
-    const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
+  test("a roster amendment cannot be recorded without attribution", async () => {
+    // Retaining a removed rater is only worth doing if the row says who made
+    // the change; the DB refuses a half-written amendment either way round.
+    const session = await createSession({ scenarioSlug: ASSESSMENT_SLUG });
     await expect(
-      pool.query("update vc_sim_sessions set phase = 'scored' where id = $1", [session.id]),
-    ).rejects.toThrow(/vc_sim_sessions_scored_needs_time_in_training/);
+      pool.query(
+        `insert into vc_session_raters (tenant_id, session_id, rater_user_id)
+         values ($1, $2, 'no-assigner')`,
+        [tenantId, session.id],
+      ),
+    ).rejects.toThrow(/assigned_by_user_id/);
+
+    await pool.query(
+      `insert into vc_session_raters
+         (tenant_id, session_id, rater_user_id, assigned_by_user_id)
+       values ($1, $2, 'attributed-rater', 'the-instructor')`,
+      [tenantId, session.id],
+    );
+    await expect(
+      pool.query(
+        `update vc_session_raters set removed_at = now()
+          where session_id = $1 and rater_user_id = 'attributed-rater'`,
+        [session.id],
+      ),
+    ).rejects.toThrow(/vc_session_raters_removal_attribution/);
+    // ...and an actor with no removal is refused from the other direction.
+    await expect(
+      pool.query(
+        `update vc_session_raters set removed_by_user_id = 'someone'
+          where session_id = $1 and rater_user_id = 'attributed-rater'`,
+        [session.id],
+      ),
+    ).rejects.toThrow(/vc_session_raters_removal_attribution/);
+  });
+
+  test("a session may enter the scored phase without time-in-training (§4, D1: axis removed)", async () => {
+    const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
+    // The scored-needs-TiT constraint was dropped in migration 0007 — a
+    // candidate takes one session, so there is no longitudinal axis to gate on.
+    await pool.query("update vc_sim_sessions set phase = 'scored' where id = $1", [session.id]);
+    const { rows } = await pool.query<{ phase: string; trainee_time_in_training_days: number | null }>(
+      "select phase, trainee_time_in_training_days from vc_sim_sessions where id = $1",
+      [session.id],
+    );
+    expect(rows[0]?.phase).toBe("scored");
+    expect(rows[0]?.trainee_time_in_training_days).toBeNull();
   });
 });

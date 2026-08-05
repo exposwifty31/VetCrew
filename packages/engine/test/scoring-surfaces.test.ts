@@ -46,12 +46,11 @@ describe("cohortBandStatus", () => {
 });
 
 describe("buildTraineeTrend", () => {
-  test("orders by time-in-training then createdAt", () => {
+  test("orders chronologically by createdAt", () => {
     const model = buildTraineeTrend([
       {
         sessionId: "b",
         createdAtMs: 2,
-        timeInTrainingDays: 90,
         technicalPercent: 80,
         overallAnts: 4,
         clinicallyReviewed: false,
@@ -59,7 +58,6 @@ describe("buildTraineeTrend", () => {
       {
         sessionId: "a",
         createdAtMs: 1,
-        timeInTrainingDays: 30,
         technicalPercent: 50,
         overallAnts: 3,
         clinicallyReviewed: false,
@@ -75,7 +73,6 @@ describe("buildTraineeTrend", () => {
       {
         sessionId: "a",
         createdAtMs: 1,
-        timeInTrainingDays: 30,
         technicalPercent: 70,
         overallAnts: 3,
         clinicallyReviewed: false,
@@ -90,7 +87,6 @@ describe("buildTraineeTrend", () => {
       {
         sessionId: "a",
         createdAtMs: 1,
-        timeInTrainingDays: 30,
         technicalPercent: 70,
         overallAnts: 3,
         domainScores: { situation_awareness: 4, decision_making: 2 },
@@ -99,7 +95,6 @@ describe("buildTraineeTrend", () => {
       {
         sessionId: "b",
         createdAtMs: 2,
-        timeInTrainingDays: 60,
         technicalPercent: 70,
         overallAnts: 3,
         domainScores: { situation_awareness: 2, decision_making: 4 },

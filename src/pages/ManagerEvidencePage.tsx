@@ -262,7 +262,6 @@ function ManagerEvidenceBody({
                 }}
               >
                 {t("manager.trend.point", {
-                  days: point.timeInTrainingDays,
                   tech: point.technicalPercent,
                   ants: point.overallAnts ?? "—",
                 })}
@@ -326,7 +325,6 @@ function ManagerEvidenceBody({
                   }}
                 >
                   {session.scenarioSlug} · v{session.scenarioVersion} ·{" "}
-                  {t("manager.evidence.tit", { days: session.traineeTimeInTrainingDays })} ·{" "}
                   {t("manager.evidence.tech", { percent: session.technicalPercent })} ·{" "}
                   {t("manager.evidence.ants", {
                     score: session.overallAnts ?? "—",

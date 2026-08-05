@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 
-import { createReadAuthFromToken, isAuthEnabled, readAuth, requireSignedIn } from "./auth.js";
+import {
+  createReadAuthFromToken,
+  isAuthEnabled,
+  isTestAuthEnabled,
+  readAuth,
+  requireSignedIn,
+} from "./auth.js";
 import { createDb } from "./db/client.js";
 import { runMigrations } from "./db/migrate.js";
 import { loadEnv } from "./env.js";
@@ -42,12 +48,22 @@ if (secretKey !== undefined && publishableKey !== undefined) {
 
 let dbReady = false;
 
+/**
+ * Test auth is checked before Clerk at request time, so the health endpoint has
+ * to report the path that actually wins rather than the one that is configured.
+ * Production can no longer boot in the "test" state at all.
+ */
+function resolveAuthMode(clerk: boolean): "test" | "clerk" | "dev-bypass" {
+  if (isTestAuthEnabled()) return "test";
+  return clerk ? "clerk" : "dev-bypass";
+}
+
 app.get("/api/health", (_req, res) => {
   const dbStatus =
     dbReady ? "ready" : env.DATABASE_URL === undefined ? "not-configured" : "starting";
   const payload = {
     ok: dbReady || env.DATABASE_URL === undefined,
-    auth: clerkEnabled ? ("clerk" as const) : ("dev-bypass" as const),
+    auth: resolveAuthMode(clerkEnabled),
     db: dbStatus as "ready" | "starting" | "not-configured",
   };
   // Fail the probe while Postgres is configured but not yet migrated/ready.

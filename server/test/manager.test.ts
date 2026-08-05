@@ -12,6 +12,12 @@ import { createManagerRouter } from "../routes/manager.js";
 import { createSessionRouter } from "../routes/sessions.js";
 import { loadScenarioFiles, syncScenarios } from "../scenarios.js";
 import { ensurePilotTenant } from "../tenancy.js";
+import {
+  ASSESSMENT_DOMAINS,
+  ASSESSMENT_RATERS,
+  ASSESSMENT_SLUG,
+  seedAssessmentScenario,
+} from "./fixtures/assessment-scenario.js";
 import { demoEvents as buildDemoEvents } from "./fixtures/demo-events.js";
 
 const TEST_DATABASE_URL =
@@ -57,20 +63,36 @@ async function appendEvents(sessionId: string, events: EngineEventBody[]): Promi
   expect(res.status).toBe(201);
 }
 
-async function scoreSession(sessionId: string, score: number): Promise<void> {
-  const res = await api(`/api/sessions/${sessionId}/ratings`, {
-    method: "POST",
-    body: JSON.stringify({
-      raterId: "manager-test-rater",
-      ratings: [
-        { domain: "task_management", score, evidenceEventSeqs: [4, 7] },
-        { domain: "situation_awareness", score, evidenceEventSeqs: [4] },
-        { domain: "decision_making", score, evidenceEventSeqs: [7] },
-        { domain: "team_working", score, evidenceEventSeqs: [4] },
-      ],
-    }),
+async function assignRaters(sessionId: string, raters: readonly string[]): Promise<void> {
+  const res = await api(`/api/sessions/${sessionId}/raters`, {
+    method: "PUT",
+    body: JSON.stringify({ raterUserIds: raters }),
   });
-  expect(res.status).toBe(201);
+  expect(res.status).toBe(200);
+}
+
+/**
+ * Drive a session all the way to `scored`: the set is complete only when EVERY
+ * assigned rater has covered EVERY domain the scenario declares (D2).
+ */
+async function scoreSession(sessionId: string, score: number): Promise<void> {
+  for (const [index, raterId] of ASSESSMENT_RATERS.entries()) {
+    const res = await api(`/api/sessions/${sessionId}/ratings`, {
+      method: "POST",
+      body: JSON.stringify({
+        raterId,
+        ratings: ASSESSMENT_DOMAINS.map((domain) => ({
+          domain,
+          score,
+          evidenceEventSeqs: [4, 7],
+        })),
+      }),
+    });
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { complete: boolean; ratersComplete: number };
+    // Only the third rater completes the set.
+    expect(body.complete).toBe(index === ASSESSMENT_RATERS.length - 1);
+  }
 }
 
 beforeAll(async () => {
@@ -87,6 +109,7 @@ beforeAll(async () => {
   await runMigrations(pool);
   tenantId = await ensurePilotTenant(db);
   await syncScenarios(db, tenantId, loadScenarioFiles());
+  await seedAssessmentScenario(db, tenantId);
 
   const app = express();
   app.use(express.json());
@@ -113,28 +136,25 @@ afterAll(async () => {
 describe("manager evidence + trend", () => {
   test("lists scored sessions for a trainee and withholds cohort bands", async () => {
     const early = await createSession({
-      scenarioSlug: SCENARIO_SLUG,
+      scenarioSlug: ASSESSMENT_SLUG,
       traineeId: TRAINEE,
-      traineeTimeInTrainingDays: 30,
-      seed: 111,
     });
+    await assignRaters(early.id, ASSESSMENT_RATERS);
     await appendEvents(early.id, buildDemoEvents(TRAINEE));
     await scoreSession(early.id, 3);
 
     const later = await createSession({
-      scenarioSlug: SCENARIO_SLUG,
+      scenarioSlug: ASSESSMENT_SLUG,
       traineeId: TRAINEE,
-      traineeTimeInTrainingDays: 90,
-      seed: 222,
     });
+    await assignRaters(later.id, ASSESSMENT_RATERS);
     await appendEvents(later.id, buildDemoEvents(TRAINEE));
     await scoreSession(later.id, 4);
 
     // Non-scored session must not appear.
     await createSession({
-      scenarioSlug: SCENARIO_SLUG,
+      scenarioSlug: ASSESSMENT_SLUG,
       traineeId: TRAINEE,
-      traineeTimeInTrainingDays: 10,
     });
 
     const evidenceRes = await api(`/api/trainees/${TRAINEE}/evidence`);
@@ -145,7 +165,6 @@ describe("manager evidence + trend", () => {
         sessionId: string;
         technicalPercent: number;
         overallAnts: number | null;
-        traineeTimeInTrainingDays: number;
         clinicallyReviewed: boolean;
         logHeadSeq: number | null;
         logHeadHash: string | null;
@@ -170,10 +189,11 @@ describe("manager evidence + trend", () => {
     const trend = (await trendRes.json()) as {
       bandStatus: string;
       overallDrift: string;
-      series: { sessionId: string; timeInTrainingDays: number }[];
+      series: { sessionId: string }[];
     };
     expect(trend.bandStatus).toBe("cohort_insufficient");
-    expect(trend.series.map((p) => p.timeInTrainingDays)).toEqual([30, 90]);
+    // Ordering is chronological now that there is no time-in-training axis (§4, D1).
+    expect(trend.series.map((p) => p.sessionId)).toEqual([early.id, later.id]);
     expect(trend.overallDrift).toMatch(/none|up|down/);
   });
 
@@ -185,14 +205,17 @@ describe("manager evidence + trend", () => {
     const otherTenantId = otherTenant.rows[0]?.id;
     if (otherTenantId === undefined) throw new Error("other tenant missing");
     const scenario = await pool.query<{ id: string }>(
-      `insert into vc_scenarios (tenant_id, slug, version, clinically_reviewed, definition)
-       values ($1, 'mgr-other-scenario', '0.0.1', false, '{}') returning id`,
+      `insert into vc_scenarios (tenant_id, slug, version, mode, clinically_reviewed, definition)
+       values ($1, 'mgr-other-scenario', '0.0.1', 'assessment', false, '{}') returning id`,
       [otherTenantId],
     );
+    // Deliberately assessment + scored, so the ONLY thing keeping this row off
+    // the desk is the tenant filter — otherwise the mode filter would make this
+    // test pass for the wrong reason.
     await pool.query(
       `insert into vc_sim_sessions
-         (tenant_id, scenario_id, scenario_version, seed, phase, trainee_id, trainee_time_in_training_days)
-       values ($1, $2, '0.0.1', 9, 'scored', $3, 40)`,
+         (tenant_id, scenario_id, scenario_version, mode, seed, phase, trainee_id)
+       values ($1, $2, '0.0.1', 'assessment', 9, 'scored', $3)`,
       [otherTenantId, scenario.rows[0]?.id, TRAINEE],
     );
 
