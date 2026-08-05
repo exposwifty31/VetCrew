@@ -244,6 +244,44 @@ describe("D2: the set is complete only when every assigned rater covers every de
     expect(body.ratersComplete).toBe(0);
   });
 
+  test("a rater correcting themselves supersedes the prior row, which is archived", async () => {
+    // The amendment path: append-only does not mean values are immutable, it
+    // means the original stays readable. Nothing else exercises a SECOND
+    // submission for the same (session, rater, domain), which is the only way
+    // the archive-then-upsert ever runs.
+    const id = await createSession(ASSESSMENT_SLUG, "amend-candidate");
+    await assignRaters(id, ASSESSMENT_RATERS);
+    await runToDebrief(id, "amend-candidate");
+
+    expect((await rate(id, ASSESSMENT_RATERS[0], 2)).status).toBe(201);
+    expect((await rate(id, ASSESSMENT_RATERS[0], 5)).status).toBe(201);
+
+    const live = await pool.query<{ domain: string; score: number }>(
+      "select domain, score from vc_ants_ratings where session_id = $1 and rater_id = $2",
+      [id, ASSESSMENT_RATERS[0]],
+    );
+    // One live row per declared domain, carrying the corrected score.
+    expect(live.rows).toHaveLength(ASSESSMENT_DOMAINS.length);
+    expect(live.rows.every((r) => r.score === 5)).toBe(true);
+
+    const archived = await pool.query<{ score: number; archived_reason: string }>(
+      "select score, archived_reason from vc_ants_ratings_archive where session_id = $1 and rater_id = $2",
+      [id, ASSESSMENT_RATERS[0]],
+    );
+    // ...and the superseded score is still readable rather than gone, carrying
+    // WHY it was superseded — the reason is what distinguishes a rater's own
+    // correction from a row the 0008 migration collapsed, and an archive that
+    // cannot tell those apart is not much of an audit trail.
+    expect(archived.rows).toHaveLength(ASSESSMENT_DOMAINS.length);
+    expect(
+      archived.rows.every(
+        (r) =>
+          r.score === 2 &&
+          r.archived_reason === "superseded by a later submission from the same rater",
+      ),
+    ).toBe(true);
+  });
+
   test("a domain the scenario does not declare is refused", async () => {
     const id = await createSession(ASSESSMENT_SLUG, "undeclared-candidate");
     await assignRaters(id, ASSESSMENT_RATERS);

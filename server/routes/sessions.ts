@@ -2,11 +2,9 @@ import { randomInt } from "node:crypto";
 
 import {
   buildAar,
-  canTransition,
   evaluateChecklist,
   evaluateTasks,
   type EngineEvent,
-  type SessionPhase,
 } from "@vetcrew/engine";
 import {
   antsDomainSchema,
@@ -36,7 +34,7 @@ import {
 import { isBypassEnabled } from "../env.js";
 import { attestEvidenceSeqs, loadEventLogRows } from "../evidence-attest.js";
 import { appendSessionEvents, appendSessionEventsTx } from "../live/event-append.js";
-import { isScorable, refuseClientPhaseChange, refuseInjection } from "../mode-policy.js";
+import { isScorable } from "../mode-policy.js";
 import { compileScenario } from "../scenarios.js";
 
 function readAuthIfEnabled(req: Request, authEnabled: boolean, readAuthFn: AuthReader): AuthSnapshot {
