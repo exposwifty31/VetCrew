@@ -606,6 +606,11 @@ export function createSessionRouter(
       res.status(403).json({ error: "forbidden" });
       return;
     }
+    // Every roster row records who made the change, and the column is NOT NULL
+    // — a nullable actor makes "nobody recorded it" indistinguishable from "we
+    // forgot to". With auth off (dev/CI) there is no authenticated actor, so
+    // say that in the row rather than leaving a hole; production always has one.
+    const rosterActor = auth.userId ?? "dev-bypass";
     const raterUserIds = [...new Set(parsed.data.raterUserIds)];
     const outcome = await db.transaction(async (tx) => {
       const rows = await tx
@@ -637,7 +642,7 @@ export function createSessionRouter(
       if (removedIds.length > 0) {
         await tx
           .update(sessionRaters)
-          .set({ removedAt: new Date(), removedByUserId: auth.userId })
+          .set({ removedAt: new Date(), removedByUserId: rosterActor })
           .where(inArray(sessionRaters.id, removedIds));
       }
       const alreadyLive = new Set(live.map((row) => row.raterUserId));
@@ -648,7 +653,7 @@ export function createSessionRouter(
             tenantId,
             sessionId: id,
             raterUserId,
-            assignedByUserId: auth.userId,
+            assignedByUserId: rosterActor,
           })),
         );
       }

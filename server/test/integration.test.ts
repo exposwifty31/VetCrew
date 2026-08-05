@@ -435,6 +435,41 @@ describe("integrity constraints (migrations 0002/0003)", () => {
     ).rejects.toThrow(/vc_sim_sessions_seed_u32/);
   });
 
+  test("a roster amendment cannot be recorded without attribution", async () => {
+    // Retaining a removed rater is only worth doing if the row says who made
+    // the change; the DB refuses a half-written amendment either way round.
+    const session = await createSession({ scenarioSlug: ASSESSMENT_SLUG });
+    await expect(
+      pool.query(
+        `insert into vc_session_raters (tenant_id, session_id, rater_user_id)
+         values ($1, $2, 'no-assigner')`,
+        [tenantId, session.id],
+      ),
+    ).rejects.toThrow(/assigned_by_user_id/);
+
+    await pool.query(
+      `insert into vc_session_raters
+         (tenant_id, session_id, rater_user_id, assigned_by_user_id)
+       values ($1, $2, 'attributed-rater', 'the-instructor')`,
+      [tenantId, session.id],
+    );
+    await expect(
+      pool.query(
+        `update vc_session_raters set removed_at = now()
+          where session_id = $1 and rater_user_id = 'attributed-rater'`,
+        [session.id],
+      ),
+    ).rejects.toThrow(/vc_session_raters_removal_attribution/);
+    // ...and an actor with no removal is refused from the other direction.
+    await expect(
+      pool.query(
+        `update vc_session_raters set removed_by_user_id = 'someone'
+          where session_id = $1 and rater_user_id = 'attributed-rater'`,
+        [session.id],
+      ),
+    ).rejects.toThrow(/vc_session_raters_removal_attribution/);
+  });
+
   test("a session may enter the scored phase without time-in-training (§4, D1: axis removed)", async () => {
     const session = await createSession({ scenarioSlug: SCENARIO_SLUG });
     // The scored-needs-TiT constraint was dropped in migration 0007 — a

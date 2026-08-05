@@ -40,10 +40,20 @@ create table if not exists vc_session_raters (
   tenant_id uuid not null references vc_tenants(id),
   session_id uuid not null references vc_sim_sessions(id),
   rater_user_id text not null,
-  assigned_by_user_id text,
+  -- Attribution is mandatory in both directions. Retaining a removed rater is
+  -- only worth doing if the row says who made the change; a nullable actor
+  -- makes "nobody recorded it" indistinguishable from "we forgot to", which is
+  -- exactly the ambiguity an audited roster cannot carry.
+  assigned_by_user_id text not null,
   removed_at timestamptz,
   removed_by_user_id text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Removed and removed-by travel together: a removal with no actor, or an
+  -- actor with no removal, is a half-written amendment.
+  constraint vc_session_raters_removal_attribution check (
+    (removed_at is null and removed_by_user_id is null)
+    or (removed_at is not null and removed_by_user_id is not null)
+  )
 );
 
 create index if not exists vc_session_raters_session_idx

@@ -65,8 +65,10 @@ export const sessionRaters = vcTable(
     sessionId: uuid("session_id").notNull().references(() => simSessions.id),
     /** Clerk subject id of the assigned rater. */
     raterUserId: text("rater_user_id").notNull(),
-    assignedByUserId: text("assigned_by_user_id"),
+    /** Mandatory: an unattributed roster change cannot be audited. */
+    assignedByUserId: text("assigned_by_user_id").notNull(),
     removedAt: timestamp("removed_at", { withTimezone: true }),
+    /** DB-checked to be present exactly when `removedAt` is. */
     removedByUserId: text("removed_by_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
